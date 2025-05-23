@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Mesas de Pool</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/infocards.css">
+     <link rel="stylesheet" href="css/visualizarMesa.css">
+    <link rel="stylesheet" href="css/modal.css"><!-- Nuevo: estilos exclusivos del modal -->
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestión de Mesas de Pool</h1>
+        <div>
+            <a href="administrador.html" class="admin-btn">Administrador</a>
+            <a href="estadisticas.html" class="admin-btn" style="margin-left:0.7rem;">Supervisor</a>
+        </div>
+    </header>
+    <div class="info-cards" id="mesasContainer">
+        <!-- Las mesas se generarán dinámicamente aquí -->
+    </div>
+
+    <!-- Modal para realizar pedidos -->
+    <div id="pedidoModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="closePedidoModal">&times;</span>
+            <h2>Realizar Pedido</h2>
+            <form id="pedidoForm">
+                <label for="categoria">Categoría:</label>
+                <select id="categoria" name="categoria"></select>
+
+                <label>Producto:</label>
+                <div id="productosContainer" class="productos-cards"></div>
+
+                <label for="horaPedido">Hora del Pedido:</label>
+                <input type="datetime-local" id="horaPedido" name="horaPedido" required readonly>
+
+                <p><strong>Total:</strong> $<span id="totalPedido">0.00</span></p>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" id="cancelarPedidoBtn" class="cancel-btn" style="background:#e74c3c;color:#fff;">Cancelar</button>
+                    <button type="submit" class="confirm-btn">Confirmar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para visualizar detalles de mesa (asegúrate de tener este div en tu HTML) -->
+    <div id="visualizarModal" class="modal hidden">
+        <div class="modal-content" style="max-width:700px;">
+            <span class="close-btn" id="closeVisualizarModal">&times;</span>
+            <h2>Detalle de Mesa</h2>
+            <!-- Snackbar para scroll horizontal -->
+            <div id="snackbar-scroll" style="width:100%;margin-bottom:8px;">
+            </div>
+            <!-- Contenedor con scroll horizontal para la tabla de pedidas -->
+            <div id="visualizarDetalle" style="overflow-x:auto; max-width:100vw;">
+                <!-- ...el contenido de la tabla se genera dinámicamente por JS... -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/index.js"></script>
+    <script src="js/estado-pedida.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cancelarBtn = document.getElementById('cancelarPedidoBtn');
+    const pedidoModal = document.getElementById('pedidoModal');
+    if (cancelarBtn && pedidoModal) {
+        cancelarBtn.onclick = function() {
+            pedidoModal.classList.add('hidden');
+            pedidoModal.style.display = 'none';
+        };
+    }
+});
+</script>
+</body>
+</html>

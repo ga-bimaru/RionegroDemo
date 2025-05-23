@@ -1,0 +1,418 @@
+/* Variables globales */
+:root {
+    --app-container: #f3f6fd;
+    --main-color: #1f1c2e;
+    --secondary-color: #4a4a4a;
+    --button-bg: #1f1c24;
+    --projects-section: #fff;
+    --link-color: #1f1c2e;
+    --link-color-hover: #c3cff4;
+    --logout-bg: white;
+    --logout-color: black;
+}
+
+/* Estilos generales */
+body {
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #181c2b 0%, #232946 100%);
+    color: #f5f6fa;
+    display: flex;
+    flex-direction: column;
+}
+
+button, a {
+    cursor: pointer;
+}
+
+/* Header igual que administrador.css */
+header {
+    background: var(--primary, #232946);
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    border-bottom: 2.5px solid var(--accent, #00cfff);
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.04em;
+    padding: 1.2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #fff;
+    margin: 0;
+}
+
+header .admin-btn {
+    background: linear-gradient(90deg, #00cfff 60%, #007bff 100%);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 1.2rem;
+    padding: 0.7rem 2.2rem;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    border: none;
+    transition: background 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    margin-left: 0.5rem;
+    margin-right: 0.9rem;
+}
+header .admin-btn:hover {
+    background: linear-gradient(90deg, #007bff 60%, #00cfff 100%);
+    box-shadow: 0 4px 16px rgba(0,123,255,0.18);
+}
+
+/* Moderno y elegante para info-cards y tarjetas de mesa */
+.info-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+    padding: 2rem 1rem 1rem 1rem;
+    background: transparent;
+    margin-top: 100px;
+}
+
+.info-card {
+    background: var(--card-bg, #fff);
+    border-radius: var(--border-radius, 1.2rem);
+    box-shadow: var(--card-shadow, 0 8px 32px rgba(44,62,80,0.08), 0 1.5px 6px rgba(0,0,0,0.07));
+    color: var(--text-main, #232946);
+    transition: box-shadow var(--transition, 0.2s), border var(--transition, 0.2s), background var(--transition, 0.2s);
+    font-size: 1.15rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    flex: 1 1 260px;
+    max-width: 420px;   /* Aumenta el ancho máximo */
+    min-width: 320px;   /* Aumenta el ancho mínimo */
+    border: 1.5px solid #e0e7ef;
+    position: relative;
+}
+.info-card:hover {
+    box-shadow: 0 16px 32px rgba(0,123,255,0.10), 0 2px 8px rgba(0,123,255,0.10);
+    border-color: var(--accent, #00cfff);
+    background: #f8fafc;
+}
+
+.info-card img, .mesa-image {
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px rgba(0,123,255,0.10);
+    border: 2px solid #e0e7ef;
+    background: #fff;
+    width: 100%;
+    max-width: 420px;      /* Aumenta el ancho máximo */
+    height: 320px;         /* Aumenta el alto */
+    max-height: 340px;     /* Aumenta el alto máximo */
+    object-fit: contain;   /* Cambia a contain para evitar recortes */
+    margin-bottom: 10px;
+}
+
+.info-card h3 {
+    font-size: 1.4rem;
+    color: var(--primary, #232946);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+}
+
+.info-card p {
+    font-size: 1rem;
+    color: var(--text-secondary, #555);
+    margin: 0.5rem 0;
+}
+
+/* Botones principales modernos */
+button, .start-btn, .pedida-btn, .visualizar-btn, .pasar-tiempo-btn, .add-product-btn, .add-mesa-btn {
+    border: none;
+    border-radius: var(--btn-radius, 1.2rem);
+    font-size: 1.08rem;
+    font-weight: 600;
+    padding: 0.8rem 2.2rem;
+    margin: 0.2rem 0;
+    box-shadow: var(--btn-shadow, 0 2px 8px rgba(0,123,255,0.10));
+    transition: background var(--transition, 0.2s), box-shadow var(--transition, 0.2s), transform 0.1s;
+    letter-spacing: 0.02em;
+    outline: none;
+    background: var(--btn-gradient, linear-gradient(90deg, #00cfff 0%, #007bff 100%));
+    color: #fff;
+}
+.start-btn {
+    background: linear-gradient(90deg, #28a745 60%, #43e97b 100%);
+}
+.start-btn:hover {
+    background: linear-gradient(90deg, #218838 60%, #38d67a 100%);
+    transform: translateY(-2px) scale(1.04);
+}
+.pedida-btn {
+    background: linear-gradient(90deg, #ffc107 60%, #ffe259 100%);
+    color: #222;
+}
+.pedida-btn:hover {
+    background: linear-gradient(90deg, #e0a800 60%, #ffd700 100%);
+    color: #111;
+    transform: translateY(-2px) scale(1.04);
+}
+.visualizar-btn {
+    background: var(--btn-gradient, linear-gradient(90deg, #00cfff 60%, #007bff 100%));
+    color: #fff;
+}
+.visualizar-btn:hover {
+    background: var(--btn-gradient-hover, linear-gradient(90deg, #007bff 60%, #00cfff 100%));
+    transform: translateY(-2px) scale(1.04);
+}
+.pasar-tiempo-btn {
+    background: linear-gradient(90deg, #ff9800 60%, #ffd54f 100%);
+    color: #fff;
+}
+.pasar-tiempo-btn:hover {
+    background: linear-gradient(90deg, #ff6f00 60%, #ffe082 100%);
+    color: #fff;
+    transform: translateY(-2px) scale(1.04);
+}
+.add-product-btn, .add-mesa-btn {
+    background: var(--btn-gradient, linear-gradient(90deg, #00cfff 0%, #007bff 100%));
+}
+.add-product-btn:hover, .add-mesa-btn:hover {
+    background: var(--btn-gradient-hover, linear-gradient(90deg, #007bff 0%, #00cfff 100%));
+    transform: translateY(-2px) scale(1.04);
+}
+
+/* Inputs y selects modernos */
+input, select {
+    background: #f8fafc;
+    color: var(--text-main, #232946);
+    border: 1.5px solid #e0e7ef;
+    border-radius: 0.8rem;
+    padding: 0.8rem 1rem;
+    font-size: 1.08rem;
+    margin-bottom: 0.2rem;
+    transition: border var(--transition, 0.2s), background var(--transition, 0.2s);
+    outline: none;
+}
+input:focus, select:focus {
+    border-color: var(--accent, #00cfff);
+    background: #fff;
+}
+
+/* Modal elegante */
+.modal-content {
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,123,255,0.10), 0 1.5px 6px rgba(0,0,0,0.10);
+    color: var(--text-main, #232946);
+    border: 2px solid #e0e7ef;
+    font-size: 1.15rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.01em;
+    padding: 2rem;
+    max-width: 500px;
+    margin: auto;
+}
+.close-btn {
+    color: #fff;
+    background: #e74c3c;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition, 0.2s), color var(--transition, 0.2s);
+    border: none;
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    cursor: pointer;
+}
+.close-btn:hover {
+    background: #c0392b;
+    color: #fff;
+}
+
+/* Notificación de éxito elegante */
+.notification {
+    background: var(--btn-gradient, linear-gradient(90deg, #00cfff 0%, #007bff 100%));
+    color: #fff;
+    border-radius: 1.2rem;
+    box-shadow: 0 8px 16px rgba(0,123,255,0.10);
+    font-size: 1.1rem;
+    padding: 1.2rem 2rem;
+    z-index: 1000;
+    opacity: 0.98;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s, transform 0.3s;
+}
+.notification svg {
+    margin-right: 10px;
+    fill: #fff;
+    width: 28px;
+    height: 28px;
+}
+.notification.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+.notification.hidden {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+    pointer-events: none;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 10px;
+    background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+    background: #e0e7ef;
+    border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent, #00cfff);
+}
+
+/* Estilo moderno y atractivo para tablas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff !important;
+    border-radius: 1.2rem;
+    box-shadow: 0 4px 24px rgba(0,123,255,0.08), 0 1.5px 6px rgba(0,0,0,0.07);
+    overflow: hidden;
+    margin: 2rem 0;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    border: 2px solid #b0bec5;
+}
+
+thead {
+    background: #e3f2fd !important;
+    color: #232946 !important;
+}
+
+th, td {
+    padding: 1rem 1.2rem;
+    text-align: left;
+    font-size: 1.08rem;
+    border: 1px solid #b0bec5;
+    background: #fff !important;
+    color: #232946 !important;
+}
+
+th {
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid #00cfff;
+    background: #e3f2fd !important;
+}
+
+tbody tr {
+    transition: background 0.18s;
+}
+
+tbody tr:nth-child(even) {
+    background: #f8fafc !important;
+}
+
+tbody tr:hover {
+    background: #eafbe7 !important;
+}
+
+tr:last-child td {
+    border-bottom: 2px solid #b0bec5;
+}
+
+/* Responsive Excel-style tables */
+@media (max-width: 900px) {
+    table, thead, tbody, th, td, tr {
+        display: block;
+        width: 100%;
+    }
+    thead tr {
+        display: none;
+    }
+    tbody tr {
+        margin-bottom: 1.2rem;
+        background: #fff !important;
+        border-radius: 1rem;
+        box-shadow: 0 2px 8px rgba(0,123,255,0.07);
+        padding: 0.7rem 0.5rem;
+    }
+    td {
+        padding: 0.7rem 1rem;
+        border: 1px solid #b0bec5;
+        position: relative;
+        background: #fff !important;
+        color: #232946 !important;
+    }
+    td:before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #007bff;
+        display: block;
+        margin-bottom: 0.3rem;
+        font-size: 0.98rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .info-cards {
+        gap: 1rem;
+        padding: 1rem 0.2rem 1rem 0.2rem;
+    }
+    .info-card {
+        min-width: 180px;
+        max-width: 98vw;
+        font-size: 1rem;
+        padding: 1rem 0.5rem;
+    }
+    .info-card img, .mesa-image {
+        height: 150px;
+        object-fit: cover;
+    }
+    header h1 {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .info-cards {
+        flex-direction: column;
+        gap: 0.7rem;
+        padding: 0.5rem 0.1rem 0.5rem 0.1rem;
+    }
+    .info-card {
+        min-width: 120px;
+        max-width: 100vw;
+        font-size: 0.98rem;
+        padding: 0.7rem 0.2rem;
+    }
+    .info-card img, .mesa-image {
+        height: 110px;
+        object-fit: cover;
+    }
+    header {
+        padding: 0.7rem 0.5rem;
+    }
+    header h1 {
+        font-size: 1.1rem;
+    }
+    header .admin-btn {
+        margin-left: 0.2rem;
+        margin-right: 0.2rem;
+        padding: 0.5rem 1.2rem;
+        font-size: 1rem;
+    }
+}

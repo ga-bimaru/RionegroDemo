@@ -1,0 +1,418 @@
+/* Estilo de tabla igual a los modales de visualizar mesa */
+
+#editPedidosContainer table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    background: #fff;
+    border-radius: 0.7rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+}
+
+#editPedidosContainer th, #editPedidosContainer td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+    color: #232946;
+    font-size: 1.08rem;
+}
+
+#editPedidosContainer th {
+    background: #f5f7fa;
+    color: #007bff;
+    font-weight: 600;
+}
+
+#editPedidosContainer tr:last-child td {
+    border-bottom: none;
+}
+
+#editPedidosContainer h3 {
+    margin-top: 1.2rem;
+    color: #007bff;
+    font-size: 1.18rem;
+    font-weight: 600;
+}
+
+#editPedidosContainer tbody tr:hover {
+    background: #eafbe7 !important;
+    transition: background 0.18s;
+}
+
+#editPedidosContainer tbody tr:nth-child(even) {
+    background: #f8fafc !important;
+}
+
+#editPedidosContainer td.edit-table-actions {
+    min-width: 260px;
+    max-width: 340px;
+    width: 100%;
+    white-space: normal !important;
+    text-align: center;
+    vertical-align: middle;
+    padding: 1rem 0.5rem !important;
+}
+
+.edit-table-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.edit-table-actions button,
+.edit-table-actions select {
+    width: 90%;
+    min-width: 120px;
+    max-width: 260px;
+    margin-bottom: 0.3rem;
+    box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+    #editPedidosContainer table {
+        font-size: 0.98rem;
+    }
+    #editPedidosContainer th, #editPedidosContainer td {
+        padding: 0.6rem 0.5rem;
+    }
+    #editPedidosContainer td.edit-table-actions {
+        min-width: 200px;
+        max-width: 98vw;
+        padding: 0.7rem 0.2rem !important;
+    }
+    .edit-table-actions button,
+    .edit-table-actions select {
+        width: 100%;
+        min-width: 80px;
+        max-width: 98vw;
+    }
+}
+
+/* Estilo elegante y letras negras para el modal de eliminar producto */
+#modalEliminarProducto .modal-content,
+#modalEliminarProducto label,
+#modalEliminarProducto select,
+#modalEliminarProducto input[type="number"],
+#modalEliminarProducto h2 {
+    color: #232323 !important;
+    background: #fff !important;
+}
+
+#modalEliminarProducto select,
+#modalEliminarProducto input[type="number"] {
+    font-weight: 600;
+    border: 1.5px solid #e0e7ef;
+    border-radius: 0.9rem;
+    font-size: 1.18rem;
+    background: #f8fafc !important;
+    box-shadow: none;
+}
+
+#modalEliminarProducto .form-buttons-row button {
+    font-weight: 700;
+}
+
+#modalEliminarProducto .close-btn {
+    color: #fff !important;
+    background: #e74c3c !important;
+}
+
+#modalEliminarProducto h2 {
+    text-align: center;
+    color: #e74c3c;
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.02em;
+}
+
+#formEliminarProducto {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+}
+
+#formEliminarProducto label {
+    font-weight: 600;
+    color: #232946;
+    font-size: 1.08rem;
+    margin-bottom: 0.2rem;
+    margin-top: 0.7rem;
+    letter-spacing: 0.01em;
+    display: block;
+}
+
+#formEliminarProducto select,
+#formEliminarProducto input[type="number"] {
+    width: 100%;
+    padding: 1.1rem 1.2rem;
+    margin-bottom: 0.2rem;
+    border: 1.5px solid #e0e7ef;
+    border-radius: 1.1rem;
+    font-size: 1.18rem;
+    background: #f8fafc;
+    transition: border 0.2s;
+    outline: none;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+#formEliminarProducto input[type="number"]:focus,
+#formEliminarProducto select:focus {
+    border-color: #e74c3c;
+    background: #fff;
+}
+
+#cantidadEliminarContainer {
+    margin-top: 0.7rem;
+    margin-bottom: 0.7rem;
+}
+
+#modalEliminarProducto .form-buttons-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1.2rem;
+    width: 100%;
+    margin-top: 1.2rem;
+}
+
+#modalEliminarProducto .confirm-btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 1.1rem 0;
+    border-radius: 1.1rem;
+    font-size: 1.13rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(231,76,60,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+    width: 100%;
+    letter-spacing: 0.03em;
+}
+#modalEliminarProducto .confirm-btn:hover {
+    background: #c0392b;
+}
+
+#modalEliminarProducto .cancel-btn {
+    background: #b0bec5;
+    color: #232946;
+    border: none;
+    padding: 1.1rem 0;
+    border-radius: 1.1rem;
+    font-size: 1.13rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+    width: 100%;
+    letter-spacing: 0.03em;
+}
+#modalEliminarProducto .cancel-btn:hover {
+    background: #90a4ae;
+}
+
+#modalEliminarProducto .close-btn {
+    color: #fff;
+    background: #e74c3c;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    border: none;
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    cursor: pointer;
+    z-index: 10;
+}
+#modalEliminarProducto .close-btn:hover {
+    background: #c0392b;
+    color: #fff;
+}
+
+/* Modal eliminar producto: diseño visualmente atractivo y elegante */
+#modalEliminarProducto .modal-content {
+    background: #fff;
+    border-radius: 2rem !important;
+    box-shadow: 0 8px 32px rgba(231,76,60,0.13), 0 1.5px 6px rgba(0,0,0,0.10);
+    color: #232946;
+    border: 2.5px solid #e0e7ef;
+    font-size: 1.18rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.01em;
+    padding: 2.7rem 2.2rem 2.2rem 2.2rem;
+    max-width: 430px;
+    min-width: 320px;
+    margin: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    animation: modalPop 0.25s cubic-bezier(.4,1.6,.6,1) 1;
+}
+
+@media (max-width: 600px) {
+    #modalEliminarProducto .modal-content {
+        padding: 1.2rem 0.5rem 1rem 0.5rem;
+        min-width: 0;
+        max-width: 98vw;
+    }
+    #formEliminarProducto {
+        max-width: 98vw;
+    }
+    #modalEliminarProducto .form-buttons-row {
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+}
+
+/* Modal de confirmación de eliminación */
+#modalConfirmarEliminar.modal {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(20, 20, 30, 0.92);
+    z-index: 4000;
+}
+#modalConfirmarEliminar .modal-content {
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(231,76,60,0.13), 0 1.5px 6px rgba(0,0,0,0.10);
+    color: #232946;
+    border: 2.5px solid #e0e7ef;
+    font-size: 1.13rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.01em;
+    padding: 2.2rem 2rem 2rem 2rem;
+    max-width: 370px;
+    min-width: 240px;
+    margin: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    animation: modalPop 0.22s cubic-bezier(.4,1.6,.6,1) 1;
+}
+#modalConfirmarEliminar .close-btn {
+    color: #fff;
+    background: #e74c3c;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    border: none;
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    cursor: pointer;
+    z-index: 10;
+}
+#modalConfirmarEliminar .close-btn:hover {
+    background: #c0392b;
+    color: #fff;
+}
+#modalConfirmarEliminar .form-buttons-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1.2rem;
+    width: 100%;
+    margin-top: 1.2rem;
+}
+#modalConfirmarEliminar .confirm-btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 1rem 0;
+    border-radius: 1rem;
+    font-size: 1.13rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(231,76,60,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+    width: 100%;
+    letter-spacing: 0.03em;
+}
+#modalConfirmarEliminar .confirm-btn:hover {
+    background: #c0392b;
+}
+#modalConfirmarEliminar .cancel-btn {
+    background: #b0bec5;
+    color: #232946;
+    border: none;
+    padding: 1rem 0;
+    border-radius: 1rem;
+    font-size: 1.13rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+    width: 100%;
+    letter-spacing: 0.03em;
+}
+#modalConfirmarEliminar .cancel-btn:hover {
+    background: #90a4ae;
+}
+
+/* Estilo para la notificación elegante */
+.notification {
+    background: linear-gradient(90deg, #00cfff 0%, #007bff 100%);
+    color: #fff;
+    border-radius: 1.2rem;
+    box-shadow: 0 8px 16px rgba(0,123,255,0.10);
+    font-size: 1.1rem;
+    padding: 1.2rem 2rem;
+    z-index: 4000;
+    opacity: 0.98;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 280px;
+    max-width: 350px;
+    min-height: 60px;
+    transition: opacity 0.3s, transform 0.3s;
+}
+.notification svg {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    margin-right: 10px;
+    fill: #fff;
+}
+.notification span {
+    display: block;
+    font-size: 1.08rem;
+    font-weight: 500;
+}
+.notification.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    transition: opacity 0.3s, transform 0.3s;
+}
+.notification.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.95);
+    transition: opacity 0.3s, transform 0.3s;
+}

@@ -1,0 +1,213 @@
+/* Archivo: infocards.css */
+
+/* Contenedor de las tarjetas */
+.info-cards {
+    display: grid; /* Usar grid para organizar las tarjetas */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Ajustar automáticamente las columnas */
+    gap: 1rem; /* Espacio entre las tarjetas */
+    width: 100%;
+    height: calc(100vh - 100px); /* Ocupar toda la pantalla menos el header */
+    box-sizing: border-box;
+    padding: 1rem; /* Espacio alrededor del contenedor */
+}
+
+/* Contenedor de cada tarjeta */
+.info-card {
+    display: flex; /* Usar flexbox para alinear horizontalmente */
+    align-items: center;
+    border: 2.5px solid #e0e7ef;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 1.5px 6px rgba(0,0,0,0.07);
+    padding: 2rem 1.5rem;
+    background-color: #fff;
+    width: 100%;
+    height: 100%; /* Ocupar todo el espacio de la celda */
+    gap: 2rem; /* Espacio entre la imagen y los detalles */
+    transition: box-shadow 0.2s, border 0.2s;
+    font-size: 1.2rem;
+}
+
+.info-card:hover {
+    box-shadow: 0 16px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.10);
+    border-color: #007bff;
+}
+
+/* Contenedor de la imagen */
+.mesa-image-container {
+    flex: 1; /* La imagen ocupará más espacio relativo */
+    max-width: 48%; /* La imagen ocupará el 40% del ancho de la tarjeta */
+    height: 180px; /* Asegurar que ocupe toda la altura de la tarjeta */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mesa-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ajustar la imagen sin recortarla */
+    border-radius: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+}
+
+/* Contenedor de los detalles */
+.mesa-details {
+    flex: 2; /* Los detalles ocuparán más espacio relativo */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.2rem;
+    text-align: left; /* Alinear el texto a la izquierda */
+}
+
+.mesa-details h3 {
+    font-size: 2.1rem; /* Ajustar el tamaño del título */
+    margin: 0 0 0.5rem 0;
+    color: #007bff;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.mesa-details p {
+    font-size: 1.3rem; /* Ajustar el tamaño del texto */
+    margin: 0;
+    color: #444;
+    font-weight: 500;
+}
+
+/* Contenedor del contador y botones */
+.contador {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    align-items: flex-start;
+}
+
+.contador p {
+    font-size: 1.25rem;
+    margin: 0;
+    color: #222;
+    font-weight: 600;
+}
+
+/* Botones */
+button {
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: 0.8rem;
+    cursor: pointer;
+    font-size: 1.15rem;
+    font-weight: 600;
+    transition: background-color 0.3s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.start-btn {
+    background: linear-gradient(90deg, #28a745 60%, #43e97b 100%);
+    color: #fff;
+}
+
+.start-btn:hover {
+    background: linear-gradient(90deg, #218838 60%, #38d67a 100%);
+}
+
+.pedida-btn {
+    background: linear-gradient(90deg, #ffc107 60%, #ffe259 100%);
+    color: #fff;
+}
+
+.pedida-btn:hover {
+    background: linear-gradient(90deg, #e0a800 60%, #ffd700 100%);
+}
+
+.visualizar-btn {
+    background: linear-gradient(90deg, #007bff 60%, #00c6ff 100%);
+    color: #fff;
+}
+
+.visualizar-btn:hover {
+    background: linear-gradient(90deg, #0056b3 60%, #00aaff 100%);
+}
+
+/* Modal */
+.modal {
+    display: none; /* Ocultar el modal por defecto */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Asegurar que el modal esté por encima de otros elementos */
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.hidden {
+    display: none; /* Clase para ocultar el modal */
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Media Queries para diseño responsivo */
+
+/* Pantallas medianas (tablets) */
+@media (max-width: 768px) {
+    .info-cards {
+        grid-template-columns: repeat(2, 1fr); /* 2 columnas */
+    }
+
+    .mesa-details h3 {
+        font-size: 1.3rem; /* Reducir el tamaño del título */
+    }
+
+    .mesa-details p {
+        font-size: 1rem; /* Reducir el tamaño del texto */
+    }
+}
+
+/* Pantallas pequeñas (móviles) */
+@media (max-width: 480px) {
+    .info-cards {
+        grid-template-columns: 1fr; /* 1 columna */
+    }
+
+    .mesa-details h3 {
+        font-size: 1.2rem; /* Reducir aún más el tamaño del título */
+    }
+
+    .mesa-details p {
+        font-size: 0.9rem; /* Reducir aún más el tamaño del texto */
+    }
+
+    .info-card {
+        flex-direction: column; /* Cambiar a diseño vertical */
+        padding: 0.5rem;
+    }
+
+    .mesa-image-container {
+        max-width: 100%; /* La imagen ocupará todo el ancho */
+        height: auto; /* Ajustar la altura automáticamente */
+    }
+
+    .mesa-image {
+        height: auto; /* Ajustar la altura automáticamente */
+    }
+}

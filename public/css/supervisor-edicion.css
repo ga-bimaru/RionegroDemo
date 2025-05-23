@@ -1,0 +1,574 @@
+/* Modo oscuro y estilo moderno supervisor edición */
+:root {
+    --primary: #232946;
+    --accent: #00cfff;
+    --secondary: #eebbc3;
+    --background: #181c2b;
+    --card-bg: #232946;
+    --highlight-bg: linear-gradient(90deg, #00cfff 0%, #007bff 100%);
+    --text-main: #f5f6fa;
+    --text-secondary: #bfc9d8;
+    --border-radius: 1.2rem;
+    --shadow: 0 8px 32px rgba(0,207,255,0.08), 0 1.5px 6px rgba(0,0,0,0.10);
+    --transition: 0.2s;
+}
+
+body {
+    background: var(--background);
+    color: var(--text-main);
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+}
+
+header {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    border-bottom: 2.5px solid var(--accent);
+    padding: 1.2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin: 0;
+}
+
+.admin-btn {
+    background: var(--highlight-bg);
+    color: #fff;
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    padding: 0.7rem 2.2rem;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    border: none;
+    transition: background var(--transition), box-shadow var(--transition);
+    text-decoration: none;
+}
+.admin-btn:hover {
+    background: linear-gradient(90deg, #007bff 0%, #00cfff 100%);
+    box-shadow: 0 4px 16px rgba(0,123,255,0.18);
+}
+
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 1rem 2rem 1rem;
+}
+
+.sidebar-estadisticas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 70px;
+    height: 100vh;
+    background: #232946;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 500;
+    box-shadow: 2px 0 12px rgba(0,207,255,0.08);
+}
+.sidebar-user {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.sidebar-user svg {
+    display: block;
+    margin: 0 auto;
+    background: #232946;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,207,255,0.10);
+}
+
+.sidebar-back {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.sidebar-back-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1.2rem;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    transition: background 0.18s;
+    width: 48px;
+    height: 48px;
+}
+.sidebar-back-link:hover {
+    background: #00cfff22;
+}
+.sidebar-back-link svg {
+    display: block;
+}
+
+.main-estadisticas-content {
+    margin-left: 70px;
+}
+
+@media (max-width: 700px) {
+    .sidebar-estadisticas {
+        display: none;
+    }
+    .main-estadisticas-content {
+        margin-left: 0;
+    }
+}
+
+section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 2rem 2.5rem;
+    margin-bottom: 2.5rem;
+    border: 1.5px solid #2d3a4a;
+}
+
+h2 {
+    color: var(--accent);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.03em;
+}
+
+select {
+    background: #181c2b;
+    color: var(--text-main);
+    border: 1.5px solid #00cfff;
+    border-radius: 0.8rem;
+    padding: 0.7rem 1.2rem;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    outline: none;
+    transition: border 0.2s;
+}
+select:focus {
+    border-color: #007bff;
+}
+
+/* Elimina todo el diseño de tablas de este archivo para evitar conflictos */
+/* No pongas reglas para table, thead, th, td, #editPedidosContainer table, etc. aquí. 
+   El diseño de las tablas ahora debe estar en un archivo aparte. */
+
+/* Contenedor con scroll horizontal para tablas grandes */
+#editPedidosContainer {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.5rem;
+    background: transparent;
+    border-radius: 1.2rem;
+    box-shadow: none;
+}
+
+/* Tabla moderna, ancha, con scroll horizontal si es necesario */
+#editPedidosContainer table {
+    min-width: 900px;
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff !important;
+    border-radius: 1.2rem;
+    box-shadow: 0 4px 24px rgba(0,123,255,0.08), 0 1.5px 6px rgba(0,0,0,0.07);
+    margin: 0;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    border: 2px solid #b0bec5;
+}
+
+#editPedidosContainer thead {
+    background: #e3f2fd !important;
+    color: #232946 !important;
+}
+
+#editPedidosContainer th, #editPedidosContainer td {
+    padding: 1rem 1.2rem;
+    text-align: left;
+    font-size: 1.08rem;
+    /* Elimina los bordes internos para evitar doble borde con tabla-supervisor.css */
+    border: none !important;
+    background: #fff !important;
+    color: #232946 !important;
+    white-space: nowrap;
+}
+
+#editPedidosContainer th {
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid #00cfff;
+    background: #e3f2fd !important;
+}
+
+#editPedidosContainer tbody tr {
+    transition: background 0.18s;
+}
+
+#editPedidosContainer tbody tr:nth-child(even) {
+    background: #f8fafc !important;
+}
+
+#editPedidosContainer tbody tr:hover {
+    background: #eafbe7 !important;
+}
+
+/* Bordes tipo Excel bien visibles para tablas de edición */
+#editPedidosContainer table,
+#editPedidosContainer th,
+#editPedidosContainer td {
+    border: 2px solid #007bff !important;
+}
+
+#editPedidosContainer table {
+    border-radius: 1.2rem;
+    overflow: hidden;
+    background: #fff !important;
+    box-shadow: 0 4px 24px rgba(0,123,255,0.08), 0 1.5px 6px rgba(0,0,0,0.07);
+}
+
+#editPedidosContainer th {
+    background: #e3f2fd !important;
+    color: #232946 !important;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid #00cfff !important;
+}
+
+#editPedidosContainer td {
+    background: #fff !important;
+    color: #232946 !important;
+}
+
+#editPedidosContainer tbody tr:nth-child(even) {
+    background: #f8fafc !important;
+}
+
+#editPedidosContainer tbody tr:hover {
+    background: #eafbe7 !important;
+}
+
+/* --- CORRECCIÓN: BORDES Y COLORES DE TABLA SIEMPRE VISIBLES --- */
+#editPedidosContainer table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border: 2.5px solid #007bff !important;
+    background: #fff !important;
+    border-radius: 1.2rem !important;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,123,255,0.08), 0 1.5px 6px rgba(0,0,0,0.07);
+}
+
+#editPedidosContainer th,
+#editPedidosContainer td {
+    border: 2px solid #007bff !important;
+    background: #fff !important;
+    color: #232946 !important;
+    padding: 1rem 1.2rem;
+    font-size: 1.08rem;
+    white-space: nowrap;
+}
+
+#editPedidosContainer th {
+    background: #e3f2fd !important;
+    color: #232946 !important;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-bottom: 2.5px solid #00cfff !important;
+}
+
+#editPedidosContainer tbody tr {
+    background: #fff !important;
+    transition: background 0.18s;
+}
+
+#editPedidosContainer tbody tr:nth-child(even) {
+    background: #f8fafc !important;
+}
+
+#editPedidosContainer tbody tr:hover {
+    background: #eafbe7 !important;
+}
+
+/* Elimina bordes dobles en las esquinas */
+#editPedidosContainer table th:first-child,
+#editPedidosContainer table td:first-child {
+    border-left-width: 2.5px !important;
+}
+#editPedidosContainer table th:last-child,
+#editPedidosContainer table td:last-child {
+    border-right-width: 2.5px !important;
+}
+#editPedidosContainer table tr:first-child th {
+    border-top-width: 2.5px !important;
+}
+#editPedidosContainer table tr:last-child td {
+    border-bottom-width: 2.5px !important;
+}
+
+/* Responsive: tabla scrolleable horizontal en móviles */
+@media (max-width: 900px) {
+    #editPedidosContainer {
+        padding: 0.5rem 0.1rem 1rem 0.1rem;
+    }
+    #editPedidosContainer table {
+        min-width: 700px;
+        font-size: 0.98rem;
+    }
+    #editPedidosContainer th, #editPedidosContainer td {
+        padding: 0.7rem 0.5rem;
+        font-size: 0.97rem;
+    }
+}
+
+.edit-table-actions button {
+    margin: 0 0.2rem;
+    padding: 0.4rem 1rem;
+    border-radius: 0.7rem;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(90deg, #00cfff 0%, #007bff 100%);
+    color: #fff;
+    transition: background 0.2s;
+}
+.edit-table-actions button.delete {
+    background: #e74c3c;
+}
+.edit-table-actions button.add {
+    background: #43e97b;
+    color: #232946;
+}
+.edit-table-actions button.toggle-pay {
+    background: #ffc107;
+    color: #232946;
+}
+
+.select-eliminar-producto {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border-radius: 0.7rem;
+    border: 1.5px solid #00cfff;
+    font-size: 1.05rem;
+    margin-bottom: 0.7rem;
+    background: #181c2b;
+    color: #f5f6fa;
+}
+.select-eliminar-producto:focus {
+    border-color: #007bff;
+}
+
+/* Modal centrado y elegante para agregar producto */
+.modal {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(20, 20, 30, 0.92);
+    z-index: 3000;
+}
+.modal:not(.hidden) {
+    display: flex !important;
+}
+.modal-content-agregar-producto {
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,207,255,0.13), 0 1.5px 6px rgba(0,0,0,0.10);
+    color: #232946;
+    border: 2.5px solid #00cfff33;
+    font-size: 1.15rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.01em;
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    max-width: 420px;
+    min-width: 320px;
+    margin: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    animation: modalPop 0.25s cubic-bezier(.4,1.6,.6,1) 1;
+}
+@keyframes modalPop {
+    0% { transform: scale(0.96) translateY(40px); opacity: 0.5; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+#formAgregarProducto {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+}
+#formAgregarProducto label {
+    font-weight: 600;
+    color: #232946;
+    font-size: 1.08rem;
+    margin-bottom: 0.2rem;
+    margin-top: 0.7rem;
+    letter-spacing: 0.01em;
+}
+#formAgregarProducto select,
+#formAgregarProducto input[type="number"] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.2rem;
+    border: 1.5px solid #e0e7ef;
+    border-radius: 0.8rem;
+    font-size: 1.13rem;
+    background: #f8fafc;
+    transition: border 0.2s;
+    outline: none;
+    box-sizing: border-box;
+    text-align: center;
+}
+#formAgregarProducto select:focus,
+#formAgregarProducto input:focus {
+    border-color: #00cfff;
+    background: #fff;
+}
+.form-buttons-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1.2rem;
+    width: 100%;
+    margin-top: 1.2rem;
+}
+.confirm-btn {
+    background: linear-gradient(90deg, #00cfff 60%, #007bff 100%);
+    color: #fff;
+    border: none;
+    padding: 0.9rem 0;
+    border-radius: 1rem;
+    font-size: 1.13rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+    width: 100%;
+    letter-spacing: 0.03em;
+}
+.confirm-btn:hover {
+    background: linear-gradient(90deg, #007bff 60%, #00cfff 100%);
+    box-shadow: 0 4px 16px rgba(0,123,255,0.18);
+}
+.cancel-btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 0.9rem 0;
+    border-radius: 1rem;
+    font-size: 1.13rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+    width: 100%;
+    letter-spacing: 0.03em;
+}
+.cancel-btn:hover {
+    background: #c0392b;
+}
+.close-btn {
+    color: #fff;
+    background: #e74c3c;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    border: none;
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    cursor: pointer;
+    z-index: 10;
+}
+.close-btn:hover {
+    background: #c0392b;
+    color: #fff;
+}
+@media (max-width: 600px) {
+    .modal-content-agregar-producto {
+        padding: 1.2rem 0.5rem 1rem 0.5rem;
+        min-width: 0;
+        max-width: 98vw;
+    }
+    #formAgregarProducto {
+        max-width: 98vw;
+    }
+    .form-buttons-row {
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+}
+
+#modalAgregarProducto .modal-content-agregar-producto,
+#modalAgregarProducto .modal-content {
+    background: #fff !important;
+    color: #232946 !important;
+}
+
+#modalAgregarProducto label,
+#modalAgregarProducto h2,
+#modalAgregarProducto select,
+#modalAgregarProducto input[type="number"] {
+    color: #232946 !important;
+    background: #f8fafc !important;
+}
+
+#modalAgregarProducto input[type="number"],
+#modalAgregarProducto select {
+    border: 1.5px solid #e0e7ef !important;
+    border-radius: 0.9rem !important;
+    font-size: 1.18rem !important;
+    padding: 1.1rem 1.2rem !important;
+    background: #f8fafc !important;
+    color: #232946 !important;
+}
+
+#modalAgregarProducto input[type="number"]:focus,
+#modalAgregarProducto select:focus {
+    border-color: #007bff !important;
+    background: #fff !important;
+}
+
+#modalAgregarProducto .confirm-btn,
+#modalAgregarProducto .cancel-btn {
+    font-size: 1.13rem !important;
+    font-weight: bold !important;
+    border-radius: 1rem !important;
+    padding: 1.1rem 0 !important;
+    width: 100% !important;
+}
+
+#modalAgregarProducto .confirm-btn {
+    background: linear-gradient(90deg, #00cfff 60%, #007bff 100%) !important;
+    color: #fff !important;
+}
+
+#modalAgregarProducto .cancel-btn {
+    background: #e74c3c !important;
+    color: #fff !important;
+}
+
+#modalAgregarProducto .close-btn {
+    color: #fff !important;
+    background: #e74c3c !important;
+}

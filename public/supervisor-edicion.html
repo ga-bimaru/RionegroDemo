@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edición de Pedidas - Supervisor</title>
+    <link rel="stylesheet" href="css/tabla-supervisor.css">
+    <link rel="stylesheet" href="css/supervisor-edicion.css">
+    <style>
+        .edit-table-actions button {
+            margin: 0 0.2rem;
+            padding: 0.4rem 1rem;
+            border-radius: 0.7rem;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(90deg, #00cfff 0%, #007bff 100%);
+            color: #fff;
+            transition: background 0.2s;
+        }
+        .edit-table-actions button.delete {
+            background: #e74c3c;
+        }
+        .edit-table-actions button.add {
+            background: #43e97b;
+            color: #232946;
+        }
+        .edit-table-actions button.toggle-pay {
+            background: #ffc107;
+            color: #232946;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="sidebar-estadisticas">
+        <div class="sidebar-user">
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="19" cy="19" r="19" fill="#00cfff"/>
+                <path d="M19 19.5c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6 2.686 6 6 6zm0 2c-4.418 0-13 2.21-13 6.625V32h26v-3.875C32 23.71 23.418 21.5 19 21.5z" fill="#fff"/>
+            </svg>
+        </div>
+        <div class="sidebar-edit">
+            <!-- Icono de edición SVG como botón -->
+            <a href="supervisor-edicion.html" title="Edición de Pedidas" class="sidebar-edit-link">
+                <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+                    <rect width="24" height="24" rx="12" fill="#007bff"/>
+                    <path d="M7 17.25V19h1.75l7.06-7.06-1.75-1.75L7 17.25zm9.71-8.04a1.003 1.003 0 0 0 0-1.42l-1.5-1.5a1.003 1.003 0 0 0-1.42 0l-1.13 1.13 2.92 2.92 1.13-1.13z" fill="#fff"/>
+                </svg>
+            </a>
+        </div>
+        <div class="sidebar-back">
+            <!-- Icono de volver SVG como botón -->
+            <a href="estadisticas.html" title="Volver a Estadísticas" class="sidebar-back-link">
+                <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+                    <rect width="24" height="24" rx="12" fill="#232946"/>
+                    <path d="M15.5 19a1 1 0 0 1-.7-1.71L17.09 15H8a1 1 0 1 1 0-2h9.09l-2.29-2.29A1 1 0 1 1 16.5 9.29l4 4a1 1 0 0 1 0 1.42l-4 4a1 1 0 0 1-.7.29z" fill="#00cfff"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+    <div class="main-estadisticas-content">
+        <header>
+            <h1>Edición de Pedidas</h1>
+            <a href="estadisticas.html" class="admin-btn">Volver a Estadísticas</a>
+        </header>
+        <main>
+            <section>
+                <h2 class="titulo-edicion-mesas">Selecciona una mesa para editar sus pedidas</h2>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:1.2rem;margin-bottom:1.5rem;">
+                    <label for="selectMesaEdit" style="font-weight:600;color:#007bff;font-size:1.13rem;">Mesa:</label>
+                    <select id="selectMesaEdit" style="padding:0.7rem 1.2rem;font-size:1.1rem;border-radius:0.7rem;min-width:180px;max-width:320px;">
+                        <!-- Opciones generadas dinámicamente -->
+                    </select>
+                </div>
+                <div id="editPedidosContainer"></div>
+            </section>
+        </main>
+    </div>
+    <script src="js/supervisor-edicion.js"></script>
+    <script src="js/estado-pedida.js"></script>
+    <!-- Modal para agregar producto a una pedida -->
+    <div id="modalAgregarProducto" class="modal hidden">
+        <div class="modal-content modal-content-agregar-producto">
+            <span class="close-btn" id="closeAgregarProductoModal">&times;</span>
+            <h2 style="text-align:center;color:#007bff;">Agregar Producto a Pedida</h2>
+            <form id="formAgregarProducto">
+                <label for="categoriaAgregar">Categoría:</label>
+                <select id="categoriaAgregar" name="categoria"></select>
+                <label for="productoAgregar">Producto:</label>
+                <select id="productoAgregar" name="producto"></select>
+                <label for="cantidadAgregar">Cantidad:</label>
+                <input type="number" id="cantidadAgregar" name="cantidad" min="1" value="1" required>
+                <div class="form-buttons-row" style="margin-top:1.2rem;">
+                    <button type="button" id="cancelarAgregarProductoBtn" class="cancel-btn">Cancelar</button>
+                    <button type="submit" class="confirm-btn">Agregar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Modal para eliminar producto de una pedida -->
+    <div id="modalEliminarProducto" class="modal hidden">
+        <div class="modal-content" style="max-width:420px;">
+            <span class="close-btn" id="closeEliminarProductoModal">&times;</span>
+            <h2 style="text-align:center;color:#e74c3c;">Eliminar Producto de Pedida</h2>
+            <form id="formEliminarProducto">
+                <label for="productoEliminar">Producto:</label>
+                <select id="productoEliminar" name="producto"></select>
+                <div id="cantidadEliminarContainer" style="display:none;">
+                    <label for="cantidadEliminar">Cantidad a eliminar:</label>
+                    <input type="number" id="cantidadEliminar" name="cantidad" min="1" value="1">
+                </div>
+                <div class="form-buttons-row" style="margin-top:1.2rem;">
+                    <button type="button" id="cancelarEliminarProductoBtn" class="cancel-btn">Cancelar</button>
+                    <button type="submit" class="confirm-btn" style="background:#e74c3c;">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

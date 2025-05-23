@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Mesas de Pool</title>
+    <link rel="stylesheet" href="/CSS/administrador.css">
+    <style>
+        /* Ajusta la notificación para que sea más compacta y similar a la imagen */
+        .notification {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 280px;
+            max-width: 350px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            font-size: 1.08rem;
+            background: #eafbe7;
+            color: #232946;
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 4000;
+        }
+        .notification svg {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+        }
+        .notification span {
+            display: block;
+            font-size: 1.08rem;
+            font-weight: 500;
+        }
+        /* Opcional: animación de entrada/salida */
+        .notification.show {
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        .notification.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        /* Ajuste para que la imagen de mesa y la notificación tengan alturas similares */
+        .mesa-image {
+            max-height: 60px;
+            width: auto;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        .notification {
+            min-height: 60px;
+        }
+
+        /* Estilos para organizar las tarjetas de mesas */
+        .info-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .info-card {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            min-width: 320px;
+            max-width: 420px;
+            width: 100%;
+            gap: 18px;
+            margin-bottom: 0;
+        }
+        .mesa-image-container {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            background: #f4f4f4;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .mesa-image {
+            max-width: 100%;
+            max-height: 70px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .mesa-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .mesa-details h3 {
+            margin: 0 0 6px 0;
+            font-size: 1.18rem;
+            font-weight: 600;
+        }
+        .contador {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .contador button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            background: #e0e7ef;
+            color: #232946;
+            font-size: 0.98rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .contador button:hover {
+            background: #cfd8dc;
+        }
+        @media (max-width: 900px) {
+            .info-cards {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .info-card {
+                max-width: 98vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestión de Mesas de Pool</h1>
+        <a href="index.html" class="admin-btn">Administrador</a>
+    </header>
+    <div class="info-cards">
+        <div class="info-card large">
+            <div class="search-container">
+                <button class="search-btn" id="searchBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.85-3.85zm-5.442 1.398a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"></path>
+                    </svg>
+                </button>
+                <select class="search-select" id="searchRef">
+                    <option value="todos">Todos</option>
+                    <option value="cervezas">Cervezas</option>
+                    <option value="cigarrillos">Cigarrillos</option>
+                    <option value="gaseosas">Gaseosas</option>
+                    <option value="paqueteria">Paquetería</option>
+                </select>
+                <input type="text" class="search-input" id="searchName" placeholder="Buscar por nombre">
+            </div>
+        </div>
+        <div class="info-card add-product-card">
+            <button class="add-product-btn" id="openModalBtn">Agregar productos</button>
+        </div>
+        <div class="info-card add-mesa-card">
+            <button class="add-mesa-btn" id="addMesaBtn">Agregar Mesa</button>
+        </div>
+    </div>
+    <div class="info-cards" id="productCards">
+        <!-- Los productos se generarán dinámicamente aquí -->
+        <!-- Ejemplo de tarjeta de producto:
+        <div class="info-card" data-id="1" data-categoria="cervezas" data-precio="5000" data-imagen="url">
+            <span class="product-name">Nombre Producto</span>
+            ...
+            <button class="edit-product-btn">Editar</button>
+        </div>
+        -->
+    </div>
+    <!-- Modal para editar producto -->
+    <div id="editProductModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="closeEditModalBtn" title="Cerrar">&times;</span>
+            <h2>Editar Producto</h2>
+            <form id="editProductForm">
+                <input type="hidden" id="editProductId" name="id_producto">
+                <label for="editProductName">Nombre del Producto:</label>
+                <input type="text" id="editProductName" name="nombre" required>
+
+                <label for="editProductCategory">Categoría:</label>
+                <select id="editProductCategory" name="categoria" required>
+                    <option value="cervezas">Cervezas</option>
+                    <option value="cigarrillos">Cigarrillos</option>
+                    <option value="gaseosas">Gaseosas</option>
+                    <option value="paqueteria">Paquetería</option>
+                </select>
+
+                <label for="editProductPrice">Precio:</label>
+                <input type="number" id="editProductPrice" name="precio" step="0.01" required>
+
+                <label for="editProductImage">Imagen (URL):</label>
+                <input type="text" id="editProductImage" name="imagen">
+
+                <div class="form-buttons-row">
+                    <button type="submit">Guardar Cambios</button>
+                    <button type="button" id="closeEditModalBtnFooter">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="successNotification" class="notification hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+            <path d="M10.97 6.97a.75.75 0 0 1 1.07 1.05l-3 3a.75.75 0 0 1-1.08 0l-1.5-1.5a.75.75 0 1 1 1.08-1.06l.97.97 2.47-2.47z"/>
+        </svg>
+        <span>Producto agregado exitosamente</span>
+    </div>
+    <div id="addProductModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Agregar Producto</h2>
+            <form id="addProductForm">
+                <label for="productName">Nombre del Producto:</label>
+                <input type="text" id="productName" name="nombre" required>
+
+                <label for="productCategory">Categoría:</label>
+                <select id="productCategory" name="categoria" required>
+                    <option value="cervezas">Cervezas</option>
+                    <option value="cigarrillos">Cigarrillos</option>
+                    <option value="gaseosas">Gaseosas</option>
+                    <option value="paqueteria">Paquetería</option>
+                </select>
+
+                <label for="productPrice">Precio:</label>
+                <input type="number" id="productPrice" name="precio" step="0.01" required>
+
+                <label for="productImage">Imagen (URL):</label>
+                <input type="text" id="productImage" name="imagen">
+
+                <div class="form-buttons-row">
+                    <button type="submit">Guardar Producto</button>
+                    <button type="button" id="closeModalBtn">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="/JS/administrador.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Delegación para el botón editar (debe existir en cada tarjeta de producto)
+        document.getElementById('productCards').addEventListener('click', function(e) {
+            if (e.target.classList.contains('edit-product-btn')) {
+                const card = e.target.closest('.info-card');
+                const id = card.dataset.id;
+                const nombre = card.querySelector('.product-name').textContent;
+                const categoria = card.dataset.categoria;
+                const precio = card.dataset.precio;
+                const imagen = card.dataset.imagen;
+
+                document.getElementById('editProductId').value = id;
+                document.getElementById('editProductName').value = nombre;
+                document.getElementById('editProductCategory').value = categoria;
+                document.getElementById('editProductPrice').value = precio;
+                document.getElementById('editProductImage').value = imagen;
+
+                document.getElementById('editProductModal').classList.remove('hidden');
+                document.getElementById('editProductModal').scrollIntoView({behavior: "smooth", block: "center"});
+            }
+        });
+
+        // Cerrar modal de edición (icono o botón)
+        function cerrarEditModal() {
+            document.getElementById('editProductModal').classList.add('hidden');
+        }
+        document.getElementById('closeEditModalBtn').onclick = cerrarEditModal;
+        document.getElementById('closeEditModalBtnFooter').onclick = cerrarEditModal;
+
+        // Enviar formulario de edición (AJAX)
+        document.getElementById('editProductForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editProductId').value;
+            const nombre = document.getElementById('editProductName').value;
+            const categoria = document.getElementById('editProductCategory').value;
+            const precio = document.getElementById('editProductPrice').value;
+            const imagen = document.getElementById('editProductImage').value;
+            try {
+                const res = await fetch('/api/productos/' + id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, categoria, precio, imagen })
+                });
+                if (res.ok) {
+                    showNotification('Producto actualizado correctamente');
+                    document.getElementById('editProductModal').classList.add('hidden');
+                    location.reload();
+                } else {
+                    alert('Error al actualizar el producto');
+                }
+            } catch (err) {
+                alert('Error al actualizar el producto');
+            }
+        };
+
+        // Mostrar mensaje de transferencia exitosa igual que los demás
+        window.mostrarTransferenciaExitosa = function() {
+            // Verifica si showNotification está disponible y úsala, nunca uses alert aquí
+            if (typeof showNotification === 'function') {
+                showNotification('Tiempo y pedidos transferidos correctamente.');
+            }
+            // No pongas alert aquí, así nunca verás el mensaje de localhost
+        };
+        // Llama a mostrarTransferenciaExitosa() cuando completes la transferencia
+    });
+    </script>
+</body>
+</html>

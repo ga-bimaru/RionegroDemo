@@ -1,0 +1,509 @@
+/* Modal general */
+.modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(20, 20, 30, 0.92);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    transition: background 0.3s;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 2.5rem 0;
+    border-radius: 2rem;
+    width: 100vw;
+    max-width: 100vw;
+    min-width: 0;
+    min-height: 480px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.10);
+    border: 2.5px solid #e0e7ef;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    font-size: 1.25rem;
+    font-family: 'Segoe UI', 'DM Sans', Arial, sans-serif;
+    letter-spacing: 0.01em;
+    box-sizing: border-box;
+    margin: 0;
+    animation: modalPop 0.25s cubic-bezier(.4,1.6,.6,1) 1;
+}
+
+@keyframes modalPop {
+    0% { transform: scale(0.96) translateY(40px); opacity: 0.5; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+#pedidoForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    width: 96vw;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 0 2vw;
+    box-sizing: border-box;
+    background: #f8fafc;
+    border-radius: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.06);
+}
+
+#pedidoForm label {
+    font-weight: 600;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+    display: block;
+    font-size: 1.1em;
+    color: #222;
+    letter-spacing: 0.01em;
+}
+
+#pedidoForm select,
+#pedidoForm input[type="datetime-local"] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.2rem;
+    border: 1.5px solid #e0e7ef;
+    border-radius: 0.8rem;
+    font-size: 1.15rem;
+    background: #f8fafc;
+    transition: border 0.2s;
+    outline: none;
+    box-sizing: border-box;
+}
+#pedidoForm select:focus,
+#pedidoForm input:focus {
+    border-color: #007bff;
+}
+
+#pedidoForm p {
+    font-size: 1.3rem;
+    color: #222;
+    margin: 1.2rem 0 1.5rem 0;
+    text-align: right;
+}
+
+#resumenPedidoContainer {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.06);
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.2rem;
+    margin-top: 0.5rem;
+    font-size: 1.08rem;
+    max-width: 600px;
+    align-self: center;
+    border: 1.5px solid #e0e7ef;
+}
+
+.close-btn {
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    font-size: 2.5rem;
+    color: #888;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    z-index: 10;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.close-btn:hover {
+    color: #fff;
+    background: #e74c3c;
+}
+
+.confirm-btn {
+    background: linear-gradient(90deg, #007bff 60%, #00c6ff 100%);
+    color: #fff;
+    border: none;
+    padding: 1.2rem 0;
+    border-radius: 1rem;
+    font-size: 1.35rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    margin-top: 0.5rem;
+    transition: background 0.2s, box-shadow 0.2s;
+    width: 100%;
+    letter-spacing: 0.03em;
+}
+.confirm-btn:hover {
+    background: linear-gradient(90deg, #0056b3 60%, #00aaff 100%);
+    box-shadow: 0 4px 16px rgba(0,123,255,0.18);
+}
+
+h2 {
+    text-align: center;
+    color: #007bff;
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.02em;
+    text-shadow: 0 2px 8px rgba(0,123,255,0.07);
+}
+
+/* Productos */
+.productos-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    margin-bottom: 1.2rem;
+    justify-content: flex-start;
+    max-height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #f8fafc;
+    border-radius: 1rem;
+    padding: 1.2rem 0.5rem;
+}
+
+.producto-card {
+    background: #fff;
+    border: 2px solid #e0e7ef;
+    border-radius: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    padding: 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 135px;
+    min-width: 110px;
+    max-width: 150px;
+    cursor: pointer;
+    transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+.producto-card:hover,
+.producto-card.seleccionado {
+    border: 2.5px solid #007bff;
+    background: #eaf4ff;
+    box-shadow: 0 4px 16px rgba(0,123,255,0.10);
+}
+
+.producto-img {
+    width: 62px;
+    height: 62px;
+    object-fit: cover;
+    border-radius: 0.8rem;
+    margin-bottom: 0.5rem;
+    background: #fff;
+    border: 1px solid #e0e7ef;
+}
+
+.producto-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.12rem;
+}
+
+.producto-nombre {
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: #222;
+    text-align: center;
+    word-break: break-word;
+}
+
+.producto-precio {
+    font-size: 1.02rem;
+    color: #007bff;
+    font-weight: 700;
+    margin-top: 0.1rem;
+}
+
+.cantidad-container {
+    margin-top: 0.5rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.35rem;
+}
+.cantidad-btn {
+    background: #e0e7ef;
+    color: #222;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1.18rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.cantidad-btn:hover {
+    background: #007bff;
+    color: #fff;
+}
+.cantidad-input {
+    width: 40px;
+    min-width: 32px;
+    max-width: 50px;
+    text-align: center;
+    font-size: 1.05rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.15rem 0.3rem;
+    margin: 0 0.1rem;
+    background: #fff;
+}
+
+/* --- ESTILO DETALLE DE MESA IGUAL A styles.css --- */
+#visualizarDetalle table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    background: rgba(34, 40, 49, 0.93);
+    border-radius: 1.2rem;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 207, 255, 0.10), 0 1.5px 6px rgba(0,0,0,0.10);
+    color: #f5f6fa;
+    font-size: 1.08rem;
+    border: 2.5px solid #00cfff33;
+}
+#visualizarDetalle th, #visualizarDetalle td {
+    padding: 0.9rem 1.2rem;
+    border-bottom: 1px solid #00cfff22;
+    text-align: left;
+}
+#visualizarDetalle th {
+    background: linear-gradient(90deg, #232946 60%, #0f2027 100%);
+    color: #00cfff;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    font-size: 1.08rem;
+    border-bottom: 2px solid #00cfff33;
+}
+#visualizarDetalle tr:last-child td {
+    border-bottom: none;
+}
+#visualizarDetalle h3 {
+    margin-top: 1.2rem;
+    color: #00cfff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-shadow: 0 2px 8px rgba(0,207,255,0.07);
+}
+#visualizarDetalle em {
+    color: #fff;
+    opacity: 0.7;
+    font-size: 1.1rem;
+}
+#visualizarDetalle .snackbar-scroll {
+    background: #232946;
+    color: #00cfff;
+    padding: 8px 22px;
+    border-radius: 1.2rem;
+    display: block;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(0,207,255,0.08);
+    opacity: 0.92;
+    margin-bottom: 10px;
+    margin-top: 2px;
+    text-align: center;
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
+}
+
+/* Ajuste para scroll horizontal en tablas grandes */
+#visualizarDetalle > div[style*="overflow-x:auto"] {
+    background: transparent;
+    border-radius: 1.2rem;
+    box-shadow: none;
+    padding: 0;
+}
+
+/* Responsive para detalles de mesa */
+@media (max-width: 900px) {
+    #visualizarDetalle table {
+        font-size: 0.98rem;
+    }
+    #visualizarDetalle th, #visualizarDetalle td {
+        padding: 0.6rem 0.5rem;
+    }
+}
+@media (max-width: 600px) {
+    #visualizarDetalle table {
+        font-size: 0.93rem;
+    }
+    #visualizarDetalle th, #visualizarDetalle td {
+        padding: 0.4rem 0.2rem;
+    }
+    #visualizarDetalle h3 {
+        font-size: 1.05rem;
+    }
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+    .modal-content {
+        padding: 0.7rem 0.1rem 0.7rem 0.1rem;
+        width: 100vw;
+        max-width: 100vw;
+        font-size: 1.05rem;
+        border-radius: 1rem;
+    }
+    #pedidoForm {
+        width: 99vw;
+        padding: 0 1vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 0.5rem 0.1rem 0.5rem 0.1rem;
+        width: 100vw;
+        max-width: 100vw;
+        font-size: 0.98rem;
+        border-radius: 0.6rem;
+    }
+    #pedidoForm {
+        width: 100vw;
+        padding: 0 0.5vw;
+    }
+}
+
+/* Modal de transferencia moderno y elegante */
+#transferirTiempoModal .modal-content {
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,123,255,0.10), 0 1.5px 6px rgba(0,0,0,0.10);
+    color: #232946;
+    border: 2px solid #e0e7ef;
+    font-size: 1.13rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.01em;
+    padding: 2.2rem 2rem 2rem 2rem;
+    max-width: 420px;
+    margin: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+#transferirTiempoModal .close-btn {
+    color: #fff;
+    background: #e74c3c;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    border: none;
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    cursor: pointer;
+    z-index: 10;
+}
+#transferirTiempoModal .close-btn:hover {
+    background: #c0392b;
+    color: #fff;
+}
+
+#transferirTiempoModal h3 {
+    margin-top: 0.5rem;
+    margin-bottom: 1.2rem;
+    color: #007bff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-align: center;
+}
+
+#formTransferirTiempo label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #232946;
+    display: block;
+    font-size: 1.08rem;
+}
+
+#formTransferirTiempo select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin: 1rem 0 1.5rem 0;
+    border: 1.5px solid #e0e7ef;
+    border-radius: 0.8rem;
+    font-size: 1.08rem;
+    background: #f8fafc;
+    color: #232946;
+    transition: border 0.2s;
+    outline: none;
+}
+#formTransferirTiempo select:focus {
+    border-color: #00cfff;
+    background: #fff;
+}
+
+#formTransferirTiempo .transferir-btn,
+#formTransferirTiempo .cancelar-btn {
+    padding: 0.7rem 2.2rem;
+    border: none;
+    border-radius: 1rem;
+    font-size: 1.08rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    letter-spacing: 0.02em;
+}
+
+#formTransferirTiempo .transferir-btn {
+    background: linear-gradient(90deg, #007bff 60%, #00cfff 100%);
+    color: #fff;
+}
+#formTransferirTiempo .transferir-btn:hover {
+    background: linear-gradient(90deg, #00cfff 60%, #007bff 100%);
+}
+
+#formTransferirTiempo .cancelar-btn {
+    background: #e74c3c;
+    color: #fff;
+}
+#formTransferirTiempo .cancelar-btn:hover {
+    background: #c0392b;
+}
+
+/* Botones alineados a la derecha */
+#formTransferirTiempo .botones-transferir {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+    #transferirTiempoModal .modal-content {
+        padding: 1rem 0.3rem 1.2rem 0.3rem;
+        max-width: 99vw;
+    }
+    #formTransferirTiempo .transferir-btn,
+    #formTransferirTiempo .cancelar-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 1rem;
+    }
+}
