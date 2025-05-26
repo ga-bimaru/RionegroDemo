@@ -392,7 +392,7 @@ app.get('/api/mesas/:id_mesa/detalle', async (req, res) => {
         if (id_alquiler) {
             debug.info(`GET /api/mesas/${id_mesa}/detalle - Consultando pedidos para alquiler ${id_alquiler}`);
             const [pedidosRows] = await pool.query(
-                `SELECT p.cantidad, p.subtotal, p.hora_pedido, pr.nombre AS nombre_producto
+                `SELECT p.id_alquiler, p.cantidad, p.subtotal, p.hora_pedido, p.estado, pr.nombre AS nombre_producto
                  FROM pedido p
                  JOIN producto pr ON p.id_producto = pr.id_producto
                  WHERE p.id_alquiler = ?
@@ -891,17 +891,70 @@ async function eliminarProductoDePedida(id_mesa, key_pedida, id_producto, cantid
 
 // API para marcar una pedida como pagada
 app.post('/api/pedidos/marcar-pedida-pagada', async (req, res) => {
-    const { id_alquiler, hora_pedido } = req.body;
-    if (!id_alquiler || !hora_pedido) {
+    const { id_alquiler, hora_pedido, estado } = req.body;
+    if (!id_alquiler || !hora_pedido || !estado) {
+        console.error('[API][marcar-pedida-pagada] Faltan datos:', req.body);
         return res.status(400).json({ error: 'Faltan datos' });
     }
+    if (estado !== 'Ya Pagada' && estado !== 'Por Pagar') {
+        console.error('[API][marcar-pedida-pagada] Estado inválido:', estado);
+        return res.status(400).json({ error: 'Estado inválido' });
+    }
     try {
-        await pool.query(
-            `UPDATE pedido SET estado='Ya Pagada' WHERE id_alquiler=? AND hora_pedido=?`,
-            [id_alquiler, hora_pedido]
+        const idAlquilerNum = Number(id_alquiler);
+        if (isNaN(idAlquilerNum)) {
+            console.error('[API][marcar-pedida-pagada] id_alquiler no es un número:', id_alquiler);
+            return res.status(400).json({ error: 'id_alquiler inválido' });
+        }
+        // Convertir hora_pedido a objeto Date y ajustar a zona horaria local (Bogotá)
+        let horaJs = hora_pedido;
+        if (horaJs.includes('T')) horaJs = horaJs.replace('Z', '');
+        let fechaReferencia = new Date(horaJs);
+        // Ajustar a hora local si viene en UTC
+        if (hora_pedido.endsWith('Z')) {
+            // Bogotá es UTC-5
+            fechaReferencia = new Date(fechaReferencia.getTime() - (5 * 60 * 60 * 1000));
+        }
+        if (isNaN(fechaReferencia.getTime())) {
+            console.error('[API][marcar-pedida-pagada] hora_pedido inválida:', hora_pedido);
+            return res.status(400).json({ error: 'hora_pedido inválida' });
+        }
+        // Buscar todos los pedidos de ese alquiler y comparar minuto en hora local
+        const [pedidos] = await pool.query(
+            `SELECT id_pedido, hora_pedido FROM pedido WHERE id_alquiler=?`,
+            [idAlquilerNum]
         );
+        let idsActualizar = [];
+        pedidos.forEach(p => {
+            // Convertir la hora de la BD a objeto Date en local
+            let fechaBd = new Date(p.hora_pedido);
+            // Si la hora de la BD está en UTC, ajusta a local
+            if (typeof p.hora_pedido === 'string' && p.hora_pedido.endsWith('Z')) {
+                fechaBd = new Date(fechaBd.getTime() - (5 * 60 * 60 * 1000));
+            }
+            if (
+                fechaBd.getFullYear() === fechaReferencia.getFullYear() &&
+                fechaBd.getMonth() === fechaReferencia.getMonth() &&
+                fechaBd.getDate() === fechaReferencia.getDate() &&
+                fechaBd.getHours() === fechaReferencia.getHours() &&
+                fechaBd.getMinutes() === fechaReferencia.getMinutes()
+            ) {
+                idsActualizar.push(p.id_pedido);
+            }
+        });
+        if (idsActualizar.length === 0) {
+            console.error('[API][marcar-pedida-pagada] No se encontró ninguna pedida para actualizar. id_alquiler:', idAlquilerNum, 'hora_pedido:', hora_pedido, 'hora_pedido_local:', fechaReferencia.toISOString());
+            return res.status(404).json({ error: 'No se encontró la pedida para actualizar' });
+        }
+        // Actualizar todos los pedidos encontrados
+        const [result] = await pool.query(
+            `UPDATE pedido SET estado=? WHERE id_pedido IN (${idsActualizar.map(() => '?').join(',')})`,
+            [estado, ...idsActualizar]
+        );
+        console.log(`[API][marcar-pedida-pagada] Estado actualizado correctamente a ${estado}. id_alquiler: ${idAlquilerNum}, pedidos afectados: ${idsActualizar.join(', ')}`);
         res.json({ success: true });
     } catch (err) {
+        console.error('[API][marcar-pedida-pagada] Error en la consulta:', err);
         res.status(500).json({ error: err.message });
     }
 });

@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS pedido (
     FOREIGN KEY (id_producto) REFERENCES producto(id_producto)
         ON DELETE RESTRICT -- No permitir borrar productos con pedidos
         ON UPDATE CASCADE,
-    INDEX (id_alquiler) -- Índice para buscar pedidos por alquiler
+    INDEX (id_alquiler) -- Índice para buscar pedidos por alquilerÑ
 );
 
 -- Después de crear las tablas, inserta un usuario por defecto para pruebas

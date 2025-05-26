@@ -1206,9 +1206,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
                 const totalPedida = grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
-                const keyPedida = grupo.hora; // clave única por hora agrupada
-                // --- NUEVO: Determinar estado desde BD ---
+                // Tomar el id_alquiler del primer producto del grupo
+                const id_alquiler = grupo.productos[0]?.id_alquiler;
+                // Estado real desde BD
                 const esPagada = grupo.productos.every(p => p.estado === 'Ya Pagada');
+                const estadoBoton = esPagada ? 'Ya Pagada' : 'Por Pagar';
+                const nuevoEstado = esPagada ? 'Por Pagar' : 'Ya Pagada';
 
                 if (!esPagada) totalAcumulado += totalPedida;
 
@@ -1221,8 +1224,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <td>${p.cantidad}</td>
                             <td>$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
                             ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">
-                                <button class="btn-pagar-pedida" data-mesa="${mesaId}" data-idalquiler="${p.id_alquiler}" data-horapedido="${p.hora_pedido}" style="background:${esPagada ? '#43e97b' : '#007bff'};color:${esPagada ? '#232946' : '#fff'};border:none;border-radius:0.7rem;padding:0.5rem 1.2rem;cursor:pointer;">
-                                    ${esPagada ? 'Ya Pagada' : 'Por Pagar'}
+                                <button class="btn-pagar-pedida" 
+                                    data-mesa="${mesaId}" 
+                                    data-idalquiler="${id_alquiler}" 
+                                    data-horapedido="${p.hora_pedido}" 
+                                    data-estado="${estadoBoton}"
+                                    style="background:${esPagada ? '#43e97b' : '#007bff'};color:${esPagada ? '#232946' : '#fff'};border:none;border-radius:0.7rem;padding:0.5rem 1.2rem;cursor:pointer;">
+                                    ${estadoBoton}
                                 </button>
                             </td>` : ''}
                         </tr>
@@ -1278,27 +1286,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            // Evento para marcar pedida como pagada
+            // Evento para alternar estado de la pedida
             detalle.querySelectorAll('.btn-pagar-pedida').forEach(btn => {
                 btn.onclick = async function() {
-                    if (btn.textContent === 'Ya Pagada') return;
                     const id_alquiler = btn.getAttribute('data-idalquiler');
                     const hora_pedido = btn.getAttribute('data-horapedido');
+                    const estadoActual = btn.getAttribute('data-estado');
+                    const nuevoEstado = estadoActual === 'Ya Pagada' ? 'Por Pagar' : 'Ya Pagada';
                     try {
                         const res = await fetch('/api/pedidos/marcar-pedida-pagada', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id_alquiler, hora_pedido })
+                            body: JSON.stringify({ id_alquiler, hora_pedido, estado: nuevoEstado })
                         });
                         const data = await res.json();
                         if (data.success) {
-                            showNotification('Pedida marcada como pagada');
+                            showNotification('Estado de la pedida actualizado');
                             await mostrarTotalesMesa(mesaId); // Refresca la vista
                         } else {
-                            showNotification('Error al marcar como pagada');
+                            showNotification('Error al actualizar el estado');
+                            console.error(data.error);
                         }
                     } catch (err) {
-                        showNotification('Error al marcar como pagada');
+                        showNotification('Error al actualizar el estado');
+                        console.error(err);
                     }
                 };
             });
