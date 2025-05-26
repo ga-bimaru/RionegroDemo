@@ -888,3 +888,20 @@ async function eliminarProductoDePedida(id_mesa, key_pedida, id_producto, cantid
         return { success: false, error: e.message };
     }
 }
+
+// API para marcar una pedida como pagada
+app.post('/api/pedidos/marcar-pedida-pagada', async (req, res) => {
+    const { id_alquiler, hora_pedido } = req.body;
+    if (!id_alquiler || !hora_pedido) {
+        return res.status(400).json({ error: 'Faltan datos' });
+    }
+    try {
+        await pool.query(
+            `UPDATE pedido SET estado='Ya Pagada' WHERE id_alquiler=? AND hora_pedido=?`,
+            [id_alquiler, hora_pedido]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});

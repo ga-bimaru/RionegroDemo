@@ -1207,11 +1207,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 const totalPedida = grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
                 const keyPedida = grupo.hora; // clave única por hora agrupada
-                // --- Aquí se usa el estado real de la pedida ---
-                const estadoPedida = (typeof window.obtenerEstadoPedida === 'function')
-                    ? window.obtenerEstadoPedida(mesaId, keyPedida, 'Por Pagar')
-                    : 'Por Pagar';
-                const esPagada = estadoPedida === 'Ya Pagada';
+                // --- NUEVO: Determinar estado desde BD ---
+                const esPagada = grupo.productos.every(p => p.estado === 'Ya Pagada');
 
                 if (!esPagada) totalAcumulado += totalPedida;
 
@@ -1224,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <td>${p.cantidad}</td>
                             <td>$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
                             ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">
-                                <button class="btn-pagar-pedida" data-mesa="${mesaId}" data-key="${keyPedida}" style="background:${esPagada ? '#43e97b' : '#007bff'};color:${esPagada ? '#232946' : '#fff'};border:none;border-radius:0.7rem;padding:0.5rem 1.2rem;cursor:pointer;">
+                                <button class="btn-pagar-pedida" data-mesa="${mesaId}" data-idalquiler="${p.id_alquiler}" data-horapedido="${p.hora_pedido}" style="background:${esPagada ? '#43e97b' : '#007bff'};color:${esPagada ? '#232946' : '#fff'};border:none;border-radius:0.7rem;padding:0.5rem 1.2rem;cursor:pointer;">
                                     ${esPagada ? 'Ya Pagada' : 'Por Pagar'}
                                 </button>
                             </td>` : ''}
@@ -1279,6 +1276,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                     modal.classList.add('hidden');
                     modal.style.display = 'none';
                 }
+            });
+
+            // Evento para marcar pedida como pagada
+            detalle.querySelectorAll('.btn-pagar-pedida').forEach(btn => {
+                btn.onclick = async function() {
+                    if (btn.textContent === 'Ya Pagada') return;
+                    const id_alquiler = btn.getAttribute('data-idalquiler');
+                    const hora_pedido = btn.getAttribute('data-horapedido');
+                    try {
+                        const res = await fetch('/api/pedidos/marcar-pedida-pagada', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id_alquiler, hora_pedido })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            showNotification('Pedida marcada como pagada');
+                            await mostrarTotalesMesa(mesaId); // Refresca la vista
+                        } else {
+                            showNotification('Error al marcar como pagada');
+                        }
+                    } catch (err) {
+                        showNotification('Error al marcar como pagada');
+                    }
+                };
             });
 
         } catch (err) {

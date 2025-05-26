@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS pedido (
     hora_pedido DATETIME NOT NULL,
     cantidad INT NOT NULL DEFAULT 1,
     subtotal DECIMAL(10, 2) NOT NULL,
+    estado ENUM('Por Pagar', 'Ya Pagada') NOT NULL DEFAULT 'Por Pagar',
     FOREIGN KEY (id_alquiler) REFERENCES alquiler(id_alquiler)
         ON DELETE CASCADE -- Si se borra un alquiler, se borran sus pedidos
         ON UPDATE CASCADE,
@@ -83,7 +84,7 @@ ON DUPLICATE KEY UPDATE nombre=VALUES(nombre);
 
 -- Crear un trigger para actualizar automáticamente el estado de la mesa cuando cambia un alquiler
 DELIMITER //
-CREATE TRIGGER IF NOT EXISTS after_alquiler_update 
+CREATE TRIGGER after_alquiler_update 
 AFTER UPDATE ON alquiler
 FOR EACH ROW
 BEGIN
@@ -92,7 +93,7 @@ BEGIN
     END IF;
 END//
 
-CREATE TRIGGER IF NOT EXISTS after_alquiler_insert
+CREATE TRIGGER after_alquiler_insert
 AFTER INSERT ON alquiler
 FOR EACH ROW
 BEGIN
@@ -102,6 +103,4 @@ BEGIN
 END//
 DELIMITER ;
 
--- Si el error persiste, es porque la tabla 'pedida' sigue existiendo y tiene una clave foránea hacia 'alquiler'.
--- Debes asegurarte de que la tabla 'pedida' realmente se elimine antes de intentar eliminar 'alquiler'.
--- Si no necesitas la tabla 'pedida', puedes eliminarla definitivamente del esquema y del código.
+-- Esquema limpio y funcional. No existe la tabla 'pedida' ni referencias a ella.
