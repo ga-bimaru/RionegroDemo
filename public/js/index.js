@@ -1034,9 +1034,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!agrupados[key]) agrupados[key] = [];
                     agrupados[key].push(p);
                 });
+                // --- NUEVO: Mantener el mismo orden y numeración que en visualizar ---
                 const pedidosAgrupados = Object.entries(agrupados)
                     .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([hora, productos]) => ({ hora, productos }));
+                    .map(([hora, productos], idx) => ({
+                        hora,
+                        productos,
+                        numero: idx + 1 // número de pedida consistente
+                    }));
 
                 // Separa pedidas pagadas y por pagar
                 const pedidasPagadas = pedidosAgrupados.filter(grupo =>
@@ -1046,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     grupo.productos.some(p => p.estado !== 'Ya Pagada')
                 );
 
-                // --- Tabla de pedidas ya pagadas (idéntica a la de productos por pagar) ---
+                // --- Tabla de pedidas ya pagadas (con número consistente) ---
                 let htmlPagadas = `<div style="margin-bottom:1.2rem;">`;
                 if (pedidasPagadas.length === 0) {
                     htmlPagadas += `<div style="background:#f5f7fa;padding:1rem;border-radius:0.7rem;color:#888;text-align:center;font-weight:500;">
@@ -1091,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         grupo.productos.forEach((p, idx) => {
                             htmlPagadas += `
                                 <tr>
-                                    ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${idxPedida}</td>` : ''}
+                                    ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${grupo.numero}</td>` : ''}
                                     ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
                                     <td>${p.nombre_producto}</td>
                                     <td style="text-align:center;">${p.cantidad}</td>
@@ -1102,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         });
                         htmlPagadas += `
                             <tr>
-                                <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${idxPedida}:</td>
+                                <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${grupo.numero}:</td>
                                 <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
                             </tr>
                         `;
@@ -1114,12 +1119,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 htmlPagadas += `</div>`;
 
-                // --- Tabla de productos de pedidas por pagar ---
+                // --- Tabla de productos de pedidas por pagar (con número consistente) ---
                 let totalProductos = 0;
                 let htmlTabla = '';
-                let idxPedida = 0;
                 pedidasPorPagar.forEach((grupo) => {
-                    idxPedida++;
                     let horaLegible = '-';
                     if (grupo.hora) {
                         const horaBD = grupo.productos[0]?.hora_pedido;
@@ -1141,7 +1144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     grupo.productos.forEach((p, idx) => {
                         htmlTabla += `
                             <tr>
-                                ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${idxPedida}</td>` : ''}
+                                ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${grupo.numero}</td>` : ''}
                                 ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
                                 <td>${p.nombre_producto}</td>
                                 <td style="text-align:center;">${p.cantidad}</td>
@@ -1152,7 +1155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                     htmlTabla += `
                         <tr>
-                            <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${idxPedida}:</td>
+                            <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${grupo.numero}:</td>
                             <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
                         </tr>
                     `;
@@ -1276,9 +1279,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!agrupados[key]) agrupados[key] = [];
                     agrupados[key].push(p);
                 });
+                // --- CORREGIDO: Asignar número de pedida aquí ---
                 pedidosAgrupados = Object.entries(agrupados)
                     .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([hora, productos]) => ({ hora, productos }));
+                    .map(([hora, productos], idx) => ({
+                        hora,
+                        productos,
+                        numero: idx + 1 // número de pedida consistente
+                    }));
             }
 
             let html = `
@@ -1296,15 +1304,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <tbody>
             `;
             let totalAcumulado = 0;
-            pedidosAgrupados.forEach((grupo, idxGrupo) => {
+            pedidosAgrupados.forEach((grupo) => {
                 let horaLegible = '-';
                 if (grupo.hora) {
-                    // Tomar la hora de la pedida del primer producto del grupo
                     const horaBD = grupo.productos[0]?.hora_pedido;
                     let fechaObj;
                     if (horaBD) {
-                        // Si viene en formato ISO, úsalo tal cual
-                        // Si viene como 'YYYY-MM-DD HH:mm:ss', reemplaza el espacio por 'T'
                         let str = horaBD.includes('T') ? horaBD : horaBD.replace(' ', 'T');
                         fechaObj = new Date(str);
                     }
@@ -1318,19 +1323,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
                 const totalPedida = grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
-                // Tomar el id_alquiler del primer producto del grupo
                 const id_alquiler = grupo.productos[0]?.id_alquiler;
-                // Estado real desde BD
                 const esPagada = grupo.productos.every(p => p.estado === 'Ya Pagada');
                 const estadoBoton = esPagada ? 'Ya Pagada' : 'Por Pagar';
-                const nuevoEstado = esPagada ? 'Por Pagar' : 'Ya Pagada';
 
                 if (!esPagada) totalAcumulado += totalPedida;
 
                 grupo.productos.forEach((p, idx) => {
                     html += `
                         <tr>
-                            ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${idxGrupo + 1}</td>` : ''}
+                            ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${grupo.numero}</td>` : ''}
                             ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
                             <td>${p.nombre_producto}</td>
                             <td>${p.cantidad}</td>
@@ -1350,7 +1352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 html += `
                     <tr>
-                        <td colspan="4" style="text-align:right;font-weight:bold;">Total de la pedida N° ${idxGrupo + 1}:</td>
+                        <td colspan="4" style="text-align:right;font-weight:bold;">Total de la pedida N° ${grupo.numero}:</td>
                         <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
                         <td></td>
                     </tr>
