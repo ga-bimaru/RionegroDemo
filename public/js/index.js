@@ -396,7 +396,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             // Pide los detalles al backend
             const res = await fetch(`/api/mesas/${mesaId}/detalle`);
-            if (!res.ok) throw new Error('Error al obtener detalles de la mesa');
+            // --- NUEVO: Verifica que la respuesta sea JSON antes de parsear ---
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await res.text();
+                throw new Error('Respuesta inesperada del servidor: ' + text.substring(0, 200));
+            }
             const data = await res.json();
 
             // --- CORRECCIÓN: Usa la hora de inicio EXACTA y actualiza correctamente el tiempo transcurrido ---
@@ -1017,7 +1022,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (document.getElementById('modalFacturaDetener')) return;
 
         fetch(`/api/mesas/${mesaId}/detalle`)
-            .then(res => res.json())
+            .then(async res => {
+                // --- NUEVO: Verifica que la respuesta sea JSON antes de parsear ---
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await res.text();
+                    throw new Error('Respuesta inesperada del servidor: ' + text.substring(0, 200));
+                }
+                return res.json();
+            })
             .then(data => {
                 // Agrupar pedidos por hora_pedido (redondeando a minutos)
                 const agrupados = {};
@@ -1258,8 +1271,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- NUEVO: Mostrar totales de pedidas ---
     async function mostrarTotalesMesa(mesaId) {
         try {
+            // Pide los detalles al backend
             const res = await fetch(`/api/mesas/${mesaId}/detalle`);
-            if (!res.ok) throw new Error('Error al obtener detalles de la mesa');
+            // --- NUEVO: Verifica que la respuesta sea JSON antes de parsear ---
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await res.text();
+                throw new Error('Respuesta inesperada del servidor: ' + text.substring(0, 200));
+            }
             const data = await res.json();
 
             // Agrupar pedidos por hora_pedido (redondeando a minutos)
@@ -1269,6 +1288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 data.pedidos.forEach(p => {
                     let key = '';
                     if (p.hora_pedido) {
+                        // Agrupa por fecha y hora:minuto (YYYY-MM-DD HH:mm)
                         const d = new Date(p.hora_pedido);
                         key = d.getFullYear() + '-' +
                             String(d.getMonth() + 1).padStart(2, '0') + '-' +
@@ -1400,37 +1420,137 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            // Evento para alternar estado de la pedida
+            // Evento para alternar estado de la pedida con confirmación
             detalle.querySelectorAll('.btn-pagar-pedida').forEach(btn => {
                 btn.onclick = async function() {
                     const id_alquiler = btn.getAttribute('data-idalquiler');
                     const hora_pedido = btn.getAttribute('data-horapedido');
                     const estadoActual = btn.getAttribute('data-estado');
                     const nuevoEstado = estadoActual === 'Ya Pagada' ? 'Por Pagar' : 'Ya Pagada';
-                    try {
-                        const res = await fetch('/api/pedidos/marcar-pedida-pagada', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id_alquiler, hora_pedido, estado: nuevoEstado })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            showNotification('Estado de la pedida actualizado');
-                            await mostrarTotalesMesa(mesaId); // Refresca la vista
-                        } else {
-                            showNotification('Error al actualizar el estado');
-                            console.error(data.error);
-                        }
-                    } catch (err) {
-                        showNotification('Error al actualizar el estado');
-                        console.error(err);
+
+                    // --- NUEVO: Modal de confirmación ---
+                    let confirmModal = document.getElementById('modalConfirmarEstadoPedida');
+                    if (confirmModal) confirmModal.remove();
+                    confirmModal = document.createElement('div');
+                    confirmModal.id = 'modalConfirmarEstadoPedida';
+                    confirmModal.style.position = 'fixed';
+                    confirmModal.style.top = 0;
+                    confirmModal.style.left = 0;
+                    confirmModal.style.width = '100vw';
+                    confirmModal.style.height = '100vh';
+                    confirmModal.style.background = 'rgba(30,30,40,0.45)';
+                    confirmModal.style.display = 'flex';
+                    confirmModal.style.justifyContent = 'center';
+                    confirmModal.style.alignItems = 'center';
+                    confirmModal.style.zIndex = 9999;
+
+                    // Determinar el texto de la pregunta según el estado actual
+                    let pregunta = '';
+                    if (estadoActual === 'Por Pagar') {
+                        pregunta = '¿Deseas colocar esta pedida como "ya pagada"?';
+                    } else {
+                        pregunta = '¿Deseas colocar esta pedida como "Por Pagar"?';
                     }
+
+                    confirmModal.innerHTML = `
+                        <div style="background:#fff;padding:2rem 2.5rem;border-radius:1.2rem;box-shadow:0 4px 24px rgba(30,180,120,0.18);min-width:320px;max-width:90vw;display:flex;flex-direction:column;align-items:center;">
+                            <div style="font-size:1.7rem;font-weight:700;margin-bottom:1.5rem;text-align:center;color:#000;">
+                                ${pregunta}
+                            </div>
+                            <div style="display:flex;gap:2rem;">
+                                <button id="btnConfirmarEstadoPedidaSi" style="background:#43e97b;color:#232946;padding:1.1rem 3.2rem;border:none;border-radius:0.7rem;font-size:1.35rem;font-weight:700;cursor:pointer;">Sí</button>
+                                <button id="btnConfirmarEstadoPedidaNo" style="background:#e74c3c;color:#fff;padding:1.1rem 3.2rem;border:none;border-radius:0.7rem;font-size:1.35rem;font-weight:700;cursor:pointer;">No</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(confirmModal);
+
+                    document.getElementById('btnConfirmarEstadoPedidaSi').onclick = async function() {
+                        try {
+                            const res = await fetch('/api/pedidos/marcar-pedida-pagada', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id_alquiler, hora_pedido, estado: nuevoEstado })
+                            });
+                            // Verifica que la respuesta sea JSON
+                            const contentType = res.headers.get('content-type');
+                            if (!contentType || !contentType.includes('application/json')) {
+                                const text = await res.text();
+                                showNotification('Error inesperado del servidor');
+                                if (confirmModal.parentNode) confirmModal.parentNode.removeChild(confirmModal);
+                                return;
+                            }
+                            const data = await res.json();
+                            if (data.success) {
+                                // --- ACTUALIZA EL ESTADO DEL BOTÓN EN EL DOM ---
+                                btn.setAttribute('data-estado', nuevoEstado);
+                                btn.textContent = nuevoEstado;
+                                mostrarMensajeExitoPedida();
+                                // Espera a que se refresque la tabla antes de cerrar el modal de confirmación
+                                await mostrarTotalesMesa(mesaId);
+                            } else {
+                                showNotification('Error al actualizar el estado');
+                                console.error(data.error);
+                            }
+                        } catch (err) {
+                            showNotification('Error al actualizar el estado');
+                            console.error(err);
+                        }
+                        // Cerrar el modal de confirmación
+                        if (confirmModal.parentNode) confirmModal.parentNode.removeChild(confirmModal);
+                    };
+                    document.getElementById('btnConfirmarEstadoPedidaNo').onclick = function() {
+                        // Solo cerrar el modal de confirmación
+                        if (confirmModal.parentNode) confirmModal.parentNode.removeChild(confirmModal);
+                    };
                 };
             });
 
         } catch (err) {
             showNotification('Error al cargar los totales de la mesa');
         }
+    }
+
+    // --- NUEVO: Función para mostrar mensaje elegante de éxito ---
+    function mostrarMensajeExitoPedida() {
+        // Elimina cualquier mensaje anterior
+        let msg = document.getElementById('msgEstadoPedida');
+        if (msg) msg.remove();
+
+        msg = document.createElement('div');
+        msg.id = 'msgEstadoPedida';
+        msg.style.position = 'fixed';
+        msg.style.top = '50%';
+        msg.style.left = '50%';
+        msg.style.transform = 'translate(-50%, -50%)';
+        msg.style.background = 'linear-gradient(90deg,#43e97b 60%,#38f9d7 100%)';
+        msg.style.color = '#232946';
+        msg.style.padding = '2.2rem 3.5rem';
+        msg.style.borderRadius = '1.5rem';
+        msg.style.boxShadow = '0 8px 32px rgba(30,180,120,0.18)';
+        msg.style.fontSize = '2.1rem';
+        msg.style.fontWeight = 'bold';
+        msg.style.zIndex = 9999;
+        msg.style.display = 'flex';
+        msg.style.alignItems = 'center';
+        msg.style.gap = '1.5rem';
+        msg.style.textAlign = 'center';
+        msg.innerHTML = `
+            <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="12" fill="#fff"/>
+                <path d="M7 13l3 3 7-7" stroke="#43e97b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Estado de pedida actualizado correctamente
+        `;
+        document.body.appendChild(msg);
+
+        setTimeout(() => {
+            msg.style.transition = 'opacity 0.5s';
+            msg.style.opacity = '0';
+            setTimeout(() => {
+                if (msg.parentNode) msg.parentNode.removeChild(msg);
+            }, 500);
+        }, 1800);
     }
 
     // Cargar mesas al iniciar

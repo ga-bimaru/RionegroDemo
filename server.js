@@ -876,6 +876,72 @@ app.post('/api/pedidas/eliminar-producto', async (req, res) => {
     }
 });
 
+// API para descontar producto de una pedida (restar cantidad y subtotal)
+app.post('/api/pedidas/descontar-producto', async (req, res) => {
+    try {
+        const { id_mesa, key_pedida, id_producto, cantidad } = req.body;
+        if (!id_mesa || !key_pedida || !id_producto || !cantidad) {
+            return res.status(400).json({ error: 'Datos incompletos para descontar producto de la pedida.' });
+        }
+
+        // Buscar el alquiler activo para la mesa
+        const [alquilerRows] = await pool.query(
+            'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
+            [id_mesa]
+        );
+        if (alquilerRows.length === 0) {
+            return res.status(400).json({ error: 'No hay alquiler activo para esta mesa' });
+        }
+        const id_alquiler = alquilerRows[0].id_alquiler;
+
+        // Buscar el pedido correspondiente
+        let whereHora = '';
+        let params = [id_alquiler, id_producto];
+        if (key_pedida.length === 16) { // 'YYYY-MM-DD HH:mm'
+            whereHora = 'LEFT(hora_pedido, 16) = ?';
+            params.push(key_pedida);
+        } else if (key_pedida.length === 19) { // 'YYYY-MM-DD HH:mm:ss'
+            whereHora = 'LEFT(hora_pedido, 19) = ?';
+            params.push(key_pedida);
+        } else {
+            whereHora = 'DATE(hora_pedido) = DATE(?)';
+            params.push(key_pedida);
+        }
+
+        const [pedidoRows] = await pool.query(
+            `SELECT id_pedido, cantidad, subtotal FROM pedido 
+             WHERE id_alquiler = ? AND id_producto = ? AND ${whereHora}
+             ORDER BY hora_pedido ASC LIMIT 1`,
+            params
+        );
+        if (pedidoRows.length === 0) {
+            return res.status(404).json({ error: 'Producto no encontrado en la pedida' });
+        }
+        const pedido = pedidoRows[0];
+
+        // Calcular el nuevo subtotal proporcional
+        const cantidadDescontar = Math.min(Number(cantidad), pedido.cantidad);
+        const precioUnitario = pedido.subtotal / pedido.cantidad;
+        const subtotalDescontar = precioUnitario * cantidadDescontar;
+
+        if (pedido.cantidad > cantidadDescontar) {
+            // Resta cantidad y subtotal
+            await pool.query(
+                'UPDATE pedido SET cantidad = cantidad - ?, subtotal = subtotal - ? WHERE id_pedido = ?',
+                [cantidadDescontar, subtotalDescontar, pedido.id_pedido]
+            );
+        } else {
+            // Si la cantidad a descontar es igual o mayor, elimina el pedido
+            await pool.query('DELETE FROM pedido WHERE id_pedido = ?', [pedido.id_pedido]);
+        }
+
+        res.json({ ok: true, message: 'Producto descontado correctamente.' });
+    } catch (err) {
+        console.error('Error en /api/pedidas/descontar-producto:', err);
+        res.status(500).json({ error: 'Error interno del servidor', detalle: err.message });
+    }
+});
+
 // Ejemplo de función (ajusta según tu base de datos)
 async function eliminarProductoDePedida(id_mesa, key_pedida, id_producto, cantidad) {
     // Implementa aquí la lógica real con tu base de datos
@@ -955,6 +1021,145 @@ app.post('/api/pedidos/marcar-pedida-pagada', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         console.error('[API][marcar-pedida-pagada] Error en la consulta:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- RUTAS DE ESTADÍSTICAS PARA DASHBOARD ---
+
+// Ventas del día
+app.get('/api/estadisticas/ventas-dia', async (req, res) => {
+    try {
+        // Simulación: suma de ventas del día actual
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        const fechaHoy = `${yyyy}-${mm}-${dd}`;
+        // Suma de subtotales de pedidos del día
+        const [rows] = await pool.query(
+            `SELECT SUM(subtotal) AS ventas FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaHoy]
+        );
+        res.json({ ventas: rows[0].ventas || 0 });
+    } catch (err) {
+        res.status(500).json({ ventas: 0, error: err.message });
+    }
+});
+
+// Ganancia neta diaria/semanal/mensual
+app.get('/api/estadisticas/ganancia-neta', async (req, res) => {
+    try {
+        const periodo = req.query.periodo || 'dia';
+        let fechaInicio = null;
+        const hoy = new Date();
+        if (periodo === 'dia') {
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+        } else if (periodo === 'semana') {
+            const diaSemana = hoy.getDay();
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - diaSemana);
+        } else if (periodo === 'mes') {
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        } else {
+            return res.status(400).json({ ganancia: 0, error: 'Periodo inválido' });
+        }
+        const yyyy = fechaInicio.getFullYear();
+        const mm = String(fechaInicio.getMonth() + 1).padStart(2, '0');
+        const dd = String(fechaInicio.getDate()).padStart(2, '0');
+        const fechaIniStr = `${yyyy}-${mm}-${dd}`;
+        // Suma de ventas y costos desde la fecha de inicio
+        // Suponiendo que tienes una columna "costos" en la tabla pedido (si no, pon 0)
+        const [rows] = await pool.query(
+            `SELECT SUM(subtotal) AS ventas, SUM(0) AS costos FROM pedido WHERE DATE(hora_pedido) >= ?`, [fechaIniStr]
+        );
+        const ventas = rows[0].ventas || 0;
+        const costos = rows[0].costos || 0;
+        res.json({ ganancia: ventas - costos });
+    } catch (err) {
+        res.status(500).json({ ganancia: 0, error: err.message });
+    }
+});
+
+// Ventas por mes (últimos 6 meses)
+app.get('/api/estadisticas/ventas-mes', async (req, res) => {
+    try {
+        // Suma de ventas agrupadas por mes (últimos 6 meses)
+        const [rows] = await pool.query(`
+            SELECT DATE_FORMAT(hora_pedido, '%Y-%m') AS mes, SUM(subtotal) AS ventas
+            FROM pedido
+            WHERE hora_pedido >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY mes
+            ORDER BY mes ASC
+        `);
+        // Formatea el mes a nombre legible
+        const mesesNombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const datos = rows.map(r => {
+            const [anio, mes] = r.mes.split('-');
+            return {
+                mes: `${mesesNombres[parseInt(mes,10)-1]} ${anio}`,
+                ventas: r.ventas || 0
+            };
+        });
+        res.json(datos);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Tendencias de consumo por hora y día de la semana
+app.get('/api/estadisticas/tendencias-hora-dia', async (req, res) => {
+    try {
+        // Crea una matriz de 16 horas (8am a 23pm) x 7 días (domingo a sábado)
+        const horas = Array.from({length: 16}, (_, i) => (8 + i).toString().padStart(2, '0') + ':00');
+        const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        // Inicializa la matriz
+        const tendencias = Array.from({length: 16}, () => Array(7).fill(0));
+        // Consulta todos los pedidos del último mes
+        const [rows] = await pool.query(`
+            SELECT hora_pedido FROM pedido
+            WHERE hora_pedido >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+        `);
+        rows.forEach(row => {
+            const fecha = new Date(row.hora_pedido);
+            const hora = fecha.getHours();
+            const dia = fecha.getDay();
+            if (hora >= 8 && hora <= 23) {
+                tendencias[hora - 8][dia]++;
+            }
+        });
+        res.json({ horas, dias, tendencias });
+    } catch (err) {
+        res.status(500).json({ horas: [], dias: [], tendencias: [], error: err.message });
+    }
+});
+
+// --- NUEVA RUTA: Ventas del día por mesa ---
+app.get('/api/estadisticas/ventas-dia-por-mesa', async (req, res) => {
+    try {
+        // Fecha de hoy en formato YYYY-MM-DD
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        const fechaHoy = `${yyyy}-${mm}-${dd}`;
+
+        // Consulta: suma de ventas por mesa en el día
+        const [rows] = await pool.query(`
+            SELECT m.numero_mesa, m.id_mesa, SUM(p.subtotal) AS total_ventas
+            FROM pedido p
+            JOIN alquiler a ON p.id_alquiler = a.id_alquiler
+            JOIN mesa m ON a.id_mesa = m.id_mesa
+            WHERE DATE(p.hora_pedido) = ?
+            GROUP BY m.id_mesa, m.numero_mesa
+            ORDER BY m.numero_mesa ASC
+        `, [fechaHoy]);
+
+        // Devuelve un array: [{ id_mesa, numero_mesa, total_ventas }]
+        res.json(rows.map(r => ({
+            id_mesa: r.id_mesa,
+            numero_mesa: r.numero_mesa,
+            total_ventas: Number(r.total_ventas) || 0
+        })));
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });

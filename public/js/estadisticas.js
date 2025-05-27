@@ -48,119 +48,165 @@ const tendencias = [
 
 // Utilidad para formatear moneda COP
 function formatoCOP(valor) {
-    return '$' + valor.toLocaleString('es-CO');
+    return '$' + (valor ? valor.toLocaleString('es-CO') : '0');
 }
 
-// 1. Ventas del día (última fecha)
-function mostrarVentasDelDia() {
-    const hoy = ventasPorDia[ventasPorDia.length - 1];
-    document.getElementById('ventas-dia').textContent = formatoCOP(hoy.ventas);
-}
-
-// 2. Ganancia neta diaria/semanal/mensual
-function calcularGanancia(periodo) {
-    let ventas = 0, costos = 0;
-    if (periodo === 'dia') {
-        const hoy = ventasPorDia[ventasPorDia.length - 1];
-        ventas = hoy.ventas;
-        costos = hoy.costos;
-    } else if (periodo === 'semana') {
-        const ultimos7 = ventasPorDia.slice(-7);
-        ventas = ultimos7.reduce((acc, d) => acc + d.ventas, 0);
-        costos = ultimos7.reduce((acc, d) => acc + d.costos, 0);
-    } else if (periodo === 'mes') {
-        ventas = ventasPorDia.reduce((acc, d) => acc + d.ventas, 0);
-        costos = ventasPorDia.reduce((acc, d) => acc + d.costos, 0);
+// 1. Ventas del día (desde backend)
+async function mostrarVentasDelDia() {
+    try {
+        const res = await fetch('/api/estadisticas/ventas-dia');
+        if (!res.ok) throw new Error('Error al obtener ventas del día');
+        const data = await res.json();
+        document.getElementById('ventas-dia').textContent = formatoCOP(data.ventas || 0);
+    } catch (err) {
+        document.getElementById('ventas-dia').textContent = 'Error';
     }
-    return ventas - costos;
 }
 
-function mostrarGananciaNeta(periodo) {
-    const ganancia = calcularGanancia(periodo);
-    document.getElementById('ganancia-neta').textContent = formatoCOP(ganancia);
+// 2. Ganancia neta diaria/semanal/mensual (desde backend)
+async function mostrarGananciaNeta(periodo) {
+    try {
+        const res = await fetch(`/api/estadisticas/ganancia-neta?periodo=${periodo}`);
+        if (!res.ok) throw new Error('Error al obtener ganancia neta');
+        const data = await res.json();
+        document.getElementById('ganancia-neta').textContent = formatoCOP(data.ganancia || 0);
+    } catch (err) {
+        document.getElementById('ganancia-neta').textContent = 'Error';
+    }
 }
 
-// 3. Comparativa de ventas por mes (gráfica de barras)
-function mostrarGraficaVentasMes() {
-    const ctx = document.getElementById('ventasMesChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ventasPorMes.map(v => v.mes),
-            datasets: [{
-                label: 'Ventas',
-                data: ventasPorMes.map(v => v.ventas),
-                backgroundColor: 'rgba(0,207,255,0.7)',
-                borderColor: 'rgba(0,123,255,1)',
-                borderWidth: 2,
-                borderRadius: 8,
-                maxBarThickness: 48,
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false },
-                title: { display: false }
+// 3. Comparativa de ventas por mes (gráfica de barras, desde backend)
+async function mostrarGraficaVentasMes() {
+    try {
+        const res = await fetch('/api/estadisticas/ventas-mes');
+        if (!res.ok) throw new Error('Error al obtener ventas por mes');
+        const data = await res.json(); // [{ mes: 'Enero', ventas: 4200000 }, ...]
+        const ctx = document.getElementById('ventasMesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(v => v.mes),
+                datasets: [{
+                    label: 'Ventas',
+                    data: data.map(v => v.ventas),
+                    backgroundColor: 'rgba(0,207,255,0.7)',
+                    borderColor: 'rgba(0,123,255,1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    maxBarThickness: 48,
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: '#fff',
-                        callback: function(value) { return formatoCOP(value); }
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#fff',
+                            callback: function(value) { return formatoCOP(value); }
+                        },
+                        grid: { color: 'rgba(0,207,255,0.08)' }
                     },
-                    grid: { color: 'rgba(0,207,255,0.08)' }
-                },
-                x: {
-                    ticks: { color: '#fff' },
-                    grid: { color: 'rgba(0,207,255,0.08)' }
+                    x: {
+                        ticks: { color: '#fff' },
+                        grid: { color: 'rgba(0,207,255,0.08)' }
+                    }
                 }
             }
-        }
-    });
+        });
+    } catch (err) {
+        document.getElementById('ventasMesChart').parentNode.innerHTML = '<p>Error al cargar la gráfica de ventas por mes.</p>';
+    }
 }
 
-// 4. Tendencias de consumo por hora y día (gráfica de calor)
-function mostrarGraficaTendencias() {
-    const ctx = document.getElementById('tendenciasChart').getContext('2d');
-    // Para simplificar, usamos una gráfica de líneas por día de la semana
-    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const horas = Array.from({length: 16}, (_, i) => (8 + i) + ':00');
-    const datasets = dias.map((dia, idx) => ({
-        label: dia,
-        data: tendencias.map(h => h[idx]),
-        fill: false,
-        borderColor: `hsl(${idx * 50}, 80%, 60%)`,
-        backgroundColor: `hsl(${idx * 50}, 80%, 60%)`,
-        tension: 0.3
-    }));
+// 4. Tendencias de consumo por hora y día (gráfica de líneas, desde backend)
+async function mostrarGraficaTendencias() {
+    try {
+        const res = await fetch('/api/estadisticas/tendencias-hora-dia');
+        if (!res.ok) throw new Error('Error al obtener tendencias');
+        const data = await res.json();
+        // data: { horas: ['08:00',...], dias: ['Dom',...], tendencias: [[2,3,...],[...],...] }
+        const ctx = document.getElementById('tendenciasChart').getContext('2d');
+        const dias = data.dias;
+        const horas = data.horas;
+        const tendencias = data.tendencias; // tendencias[hora][dia]
+        const datasets = dias.map((dia, idx) => ({
+            label: dia,
+            data: tendencias.map(h => h[idx]),
+            fill: false,
+            borderColor: `hsl(${idx * 50}, 80%, 60%)`,
+            backgroundColor: `hsl(${idx * 50}, 80%, 60%)`,
+            tension: 0.3
+        }));
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: horas,
-            datasets: datasets
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: true, labels: { color: '#fff' } },
-                title: { display: false }
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: horas,
+                datasets: datasets
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { color: '#fff' },
-                    grid: { color: 'rgba(0,207,255,0.08)' }
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true, labels: { color: '#fff' } },
+                    title: { display: false }
                 },
-                x: {
-                    ticks: { color: '#fff' },
-                    grid: { color: 'rgba(0,207,255,0.08)' }
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#fff' },
+                        grid: { color: 'rgba(0,207,255,0.08)' }
+                    },
+                    x: {
+                        ticks: { color: '#fff' },
+                        grid: { color: 'rgba(0,207,255,0.08)' }
+                    }
                 }
             }
+        });
+    } catch (err) {
+        document.getElementById('tendenciasChart').parentNode.innerHTML = '<p>Error al cargar la gráfica de tendencias.</p>';
+    }
+}
+
+// Mostrar ventas del día por mesa
+async function mostrarVentasPorMesaDia() {
+    try {
+        const res = await fetch('/api/estadisticas/ventas-dia-por-mesa');
+        if (!res.ok) throw new Error('Error al obtener ventas por mesa');
+        const data = await res.json(); // [{id_mesa, numero_mesa, total_ventas}]
+        const cont = document.getElementById('ventasPorMesaDia');
+        if (!cont) return;
+        if (!data.length) {
+            cont.innerHTML = '<em>No hay ventas registradas hoy.</em>';
+            return;
         }
-    });
+        cont.innerHTML = `
+            <table style="width:100%;max-width:500px;margin:auto;border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;padding:8px;">Mesa</th>
+                        <th style="text-align:right;padding:8px;">Total Vendido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(m =>
+                        `<tr>
+                            <td style="padding:8px;">Mesa ${m.numero_mesa}</td>
+                            <td style="padding:8px;text-align:right;">${formatoCOP(m.total_ventas)}</td>
+                        </tr>`
+                    ).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (err) {
+        const cont = document.getElementById('ventasPorMesaDia');
+        if (cont) cont.innerHTML = '<em>Error al cargar ventas por mesa.</em>';
+    }
 }
 
 // --- Interactividad para cambiar periodo de ganancia neta ---
@@ -169,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mostrarGananciaNeta('dia');
     mostrarGraficaVentasMes();
     mostrarGraficaTendencias();
+    mostrarVentasPorMesaDia(); // <-- Agrega esta línea
 
     // Cambiar periodo de ganancia neta
     document.querySelectorAll('.period-btn').forEach(btn => {
