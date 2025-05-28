@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Finanzas - Pool Rionegro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/finanzas.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="sidebar-estadisticas">
+        <div class="sidebar-user">
+            <!-- Icono de usuario SVG -->
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="19" cy="19" r="19" fill="#00cfff"/>
+                <path d="M19 19.5c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6 2.686 6 6 6zm0 2c-4.418 0-13 2.21-13 6.625V32h26v-3.875C32 23.71 23.418 21.5 19 21.5z" fill="#fff"/>
+            </svg>
+        </div>
+        <div class="sidebar-edit">
+            <!-- Icono de edición SVG como botón -->
+            <a href="supervisor-edicion.html" title="Edición de Pedidas" class="sidebar-edit-link">
+                <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+                    <rect width="24" height="24" rx="12" fill="#007bff"/>
+                    <path d="M7 17.25V19h1.75l7.06-7.06-1.75-1.75L7 17.25zm9.71-8.04a1.003 1.003 0 0 0 0-1.42l-1.5-1.5a1.003 1.003 0 0 0-1.42 0l-1.13 1.13 2.92 2.92 1.13-1.13z" fill="#fff"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+    <header>
+        <h1>Panel Financiero</h1>
+        <a href="index.html" class="btn-volver">Volver al Inicio</a>
+    </header>
+    <main>
+        <section class="filtros">
+            <label for="fechaFinanzas">Fecha:</label>
+            <input type="date" id="fechaFinanzas">
+        </section>
+        <section class="resumen-finanzas">
+            <div class="card">
+                <h2>Ventas del Día</h2>
+                <div id="ventasDia" class="valor">$0</div>
+            </div>
+            <div class="card">
+                <h2>Ganancia Neta</h2>
+                <div id="gananciaNeta" class="valor">$0</div>
+                <div class="periodos">
+                    <button data-period="dia" class="period-btn active">Día</button>
+                    <button data-period="semana" class="period-btn">Semana</button>
+                    <button data-period="mes" class="period-btn">Mes</button>
+                </div>
+            </div>
+        </section>
+        <section class="graficas">
+            <div class="grafica">
+                <h3>Ventas por Mes</h3>
+                <canvas id="graficaVentasMes"></canvas>
+            </div>
+            <div class="grafica">
+                <h3>Tendencias de Consumo</h3>
+                <canvas id="graficaTendencias"></canvas>
+                <div id="recomendacionTendencias" class="recomendacion-tendencias"></div>
+            </div>
+        </section>
+        <section class="detalle-mesas">
+            <h3>Ventas por Mesa (Día)</h3>
+            <div id="snackbar-scroll" class="snackbar-scroll">
+                Desliza horizontalmente para ver todas las mesas &rarr;
+            </div>
+            <div id="ventasPorMesa"></div>
+        </section>
+    </main>
+    <script src="js/finanzas.js"></script>
+</body>
+</html>

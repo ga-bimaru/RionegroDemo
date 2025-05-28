@@ -669,18 +669,25 @@ app.post('/api/pedidos', async (req, res) => {
         }
         const id_alquiler = alquilerRows[0].id_alquiler;
 
+        // Asegura el formato de hora_pedido: YYYY-MM-DD HH:mm:ss
+        let horaPedidoSQL = hora_pedido;
+        if (horaPedidoSQL.includes('T')) {
+            horaPedidoSQL = horaPedidoSQL.replace('T', ' ').substring(0, 19);
+        }
+
         // Insertar cada producto como pedido
         for (const prod of productos) {
             if (!prod.id_producto || !prod.cantidad || !prod.subtotal) {
                 console.error('[API][POST /api/pedidos] Producto inválido:', prod);
                 continue;
             }
+            // --- Asegúrate de que subtotal y hora_pedido se guardan correctamente ---
             await pool.query(
                 'INSERT INTO pedido (id_alquiler, id_producto, hora_pedido, cantidad, subtotal) VALUES (?, ?, ?, ?, ?)',
-                [id_alquiler, prod.id_producto, hora_pedido, prod.cantidad, prod.subtotal]
+                [id_alquiler, prod.id_producto, horaPedidoSQL, prod.cantidad, prod.subtotal]
             );
+            console.log(`[API][POST /api/pedidos] Pedido insertado: mesa ${id_mesa}, alquiler ${id_alquiler}, producto ${prod.id_producto}, cantidad ${prod.cantidad}, subtotal ${prod.subtotal}, hora_pedido ${horaPedidoSQL}`);
         }
-        console.log(`[API][POST /api/pedidos] Pedido registrado correctamente para mesa ${id_mesa}, alquiler ${id_alquiler}`);
         res.json({ success: true, message: 'Pedido registrado exitosamente.' });
     } catch (err) {
         console.error('[API][POST /api/pedidos] Error al registrar el pedido:', err);
@@ -1030,18 +1037,27 @@ app.post('/api/pedidos/marcar-pedida-pagada', async (req, res) => {
 // Ventas del día
 app.get('/api/estadisticas/ventas-dia', async (req, res) => {
     try {
-        // Simulación: suma de ventas del día actual
-        const hoy = new Date();
-        const yyyy = hoy.getFullYear();
-        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-        const dd = String(hoy.getDate()).padStart(2, '0');
-        const fechaHoy = `${yyyy}-${mm}-${dd}`;
-        // Suma de subtotales de pedidos del día
+        let fechaHoy = req.query.fecha;
+        if (!fechaHoy) {
+            const hoy = new Date();
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            fechaHoy = `${yyyy}-${mm}-${dd}`;
+        }
+        // SIN CONVERT_TZ si ya está en hora local
         const [rows] = await pool.query(
             `SELECT SUM(subtotal) AS ventas FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaHoy]
         );
+        console.log(`[API][ventas-dia] Fecha consultada: ${fechaHoy}`);
+        console.log(`[API][ventas-dia] Resultado SQL:`, rows);
+        if (!rows || !rows.length) {
+            console.error('[API][ventas-dia] No se obtuvo ningún resultado de la consulta SQL.');
+            return res.json({ ventas: 0 });
+        }
         res.json({ ventas: rows[0].ventas || 0 });
     } catch (err) {
+        console.error('[API][ventas-dia] Error en la consulta SQL:', err);
         res.status(500).json({ ventas: 0, error: err.message });
     }
 });
@@ -1135,13 +1151,14 @@ app.get('/api/estadisticas/tendencias-hora-dia', async (req, res) => {
 // --- NUEVA RUTA: Ventas del día por mesa ---
 app.get('/api/estadisticas/ventas-dia-por-mesa', async (req, res) => {
     try {
-        // Fecha de hoy en formato YYYY-MM-DD
-        const hoy = new Date();
-        const yyyy = hoy.getFullYear();
-        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-        const dd = String(hoy.getDate()).padStart(2, '0');
-        const fechaHoy = `${yyyy}-${mm}-${dd}`;
-
+        let fechaHoy = req.query.fecha;
+        if (!fechaHoy) {
+            const hoy = new Date();
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            fechaHoy = `${yyyy}-${mm}-${dd}`;
+        }
         // Consulta: suma de ventas por mesa en el día
         const [rows] = await pool.query(`
             SELECT m.numero_mesa, m.id_mesa, SUM(p.subtotal) AS total_ventas
@@ -1159,6 +1176,61 @@ app.get('/api/estadisticas/ventas-dia-por-mesa', async (req, res) => {
             numero_mesa: r.numero_mesa,
             total_ventas: Number(r.total_ventas) || 0
         })));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- ENDPOINT DE DEPURACIÓN: Ver todos los pedidos del día con detalle ---
+app.get('/api/estadisticas/debug-pedidos-dia', async (req, res) => {
+    try {
+        let fechaHoy = req.query.fecha;
+        if (!fechaHoy) {
+            const hoy = new Date();
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            fechaHoy = `${yyyy}-${mm}-${dd}`;
+        }
+        const [rows] = await pool.query(`
+            SELECT p.*, a.id_mesa, m.numero_mesa, pr.nombre AS nombre_producto
+            FROM pedido p
+            JOIN alquiler a ON p.id_alquiler = a.id_alquiler
+            JOIN mesa m ON a.id_mesa = m.id_mesa
+            JOIN producto pr ON p.id_producto = pr.id_producto
+            WHERE DATE(p.hora_pedido) = ?
+            ORDER BY p.hora_pedido ASC
+        `, [fechaHoy]);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Ruta para registrar un gasto
+app.post('/api/gastos', async (req, res) => {
+    const { fecha, descripcion, monto, categoria } = req.body;
+    if (!fecha || !monto) {
+        return res.status(400).json({ success: false, message: 'Fecha y monto son obligatorios.' });
+    }
+    try {
+        await pool.query(
+            'INSERT INTO gasto (fecha, descripcion, monto, categoria) VALUES (?, ?, ?, ?)',
+            [fecha, descripcion, monto, categoria]
+        );
+        res.json({ success: true, message: 'Gasto registrado correctamente.' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error al registrar el gasto.', detalle: err.message });
+    }
+});
+
+// Depuración: Ver todos los pedidos (sin filtro de fecha)
+app.get('/api/estadisticas/debug-todos-pedidos', async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT id_pedido, hora_pedido, subtotal FROM pedido ORDER BY hora_pedido DESC
+        `);
+        res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
