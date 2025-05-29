@@ -55,17 +55,18 @@
                 <h3>Ventas por Mes</h3>
                 <canvas id="graficaVentasMes"></canvas>
             </div>
-            <div class="grafica">
-                <h3>Tendencias de Consumo</h3>
-                <canvas id="graficaTendencias"></canvas>
-                <div id="recomendacionTendencias" class="recomendacion-tendencias"></div>
+        </section>
+        <!-- NUEVO: Sección individual para tendencias de consumo -->
+        <section class="detalle-mesas" style="margin-bottom:2.5rem;">
+            <h3 style="color:#00fff7;font-size:1.35rem;text-align:center;margin-bottom:1.2rem;">Tendencias de Consumo por Hora y Día</h3>
+            <div id="explicacionTendencias"></div>
+            <div style="overflow-x:auto; width:100%; background:#181c2f; border-radius:1.2rem; box-shadow:0 0 18px #00fff7; padding:1.5rem 0;">
+                <canvas id="graficaTendencias" style="min-width:800px;max-width:100%;display:block;margin:0 auto;"></canvas>
             </div>
+            <div id="recomendacionTendencias" class="recomendacion-tendencias"></div>
         </section>
         <section class="detalle-mesas">
-            <h3>Ventas por Mesa (Día)</h3>
-            <div id="snackbar-scroll" class="snackbar-scroll">
-                Desliza horizontalmente para ver todas las mesas &rarr;
-            </div>
+            <h3 id="tituloVentasPorMesa">Ventas por Mesa (Día)</h3>
             <div id="ventasPorMesa"></div>
         </section>
     </main>

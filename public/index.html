@@ -31,6 +31,10 @@
         <div class="modal-content">
             <span class="close-btn" id="closePedidoModal">&times;</span>
             <h2>Realizar Pedido</h2>
+            <!-- Botón para repetir la última pedida -->
+            <button type="button" id="btnRepetirUltimaPedida" style="margin-bottom:1rem;background:#007bff;color:#fff;padding:0.6rem 1.5rem;border-radius:0.7rem;border:none;font-size:1.1rem;cursor:pointer;">
+                Repetir última pedida
+            </button>
             <form id="pedidoForm">
                 <label for="categoria">Categoría:</label>
                 <select id="categoria" name="categoria"></select>
@@ -53,14 +57,14 @@
 
     <!-- Modal para visualizar detalles de mesa (asegúrate de tener este div en tu HTML) -->
     <div id="visualizarModal" class="modal hidden">
-        <div class="modal-content" style="max-width:700px;">
+        <div class="modal-content" style="max-width:900px; min-width:320px;">
             <span class="close-btn" id="closeVisualizarModal">&times;</span>
             <h2>Detalle de Mesa</h2>
             <!-- Snackbar para scroll horizontal -->
             <div id="snackbar-scroll" style="width:100%;margin-bottom:8px;">
             </div>
             <!-- Contenedor con scroll horizontal para la tabla de pedidas -->
-            <div id="visualizarDetalle" style="overflow-x:auto; max-width:100vw;">
+            <div id="visualizarDetalle" style="overflow-x:auto; max-width:100vw; padding-bottom: 1rem;">
                 <!-- ...el contenido de la tabla se genera dinámicamente por JS... -->
             </div>
         </div>
@@ -80,5 +84,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<style>
+/* --- NUEVO: Ajuste para tablas dentro del modal de detalles --- */
+#visualizarDetalle table {
+    min-width: 650px;
+    max-width: 100%;
+    width: max-content;
+    margin: 0 auto 1.2rem auto;
+    background: #fff;
+    border-radius: 1rem;
+    overflow: auto;
+    box-shadow: 0 2px 12px rgba(0,255,255,0.10);
+}
+#visualizarDetalle th, #visualizarDetalle td {
+    padding: 0.7rem 1.1rem;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+    font-size: 1.08rem;
+    white-space: nowrap;
+}
+#visualizarDetalle th {
+    background: #f5f7fa;
+    color: #00cfff;
+    font-weight: 700;
+    font-size: 1.13rem;
+}
+#visualizarDetalle tr:last-child td {
+    border-bottom: none;
+}
+@media (max-width: 900px) {
+    #visualizarModal .modal-content {
+        max-width: 99vw !important;
+        min-width: 0 !important;
+        padding: 0.5rem !important;
+    }
+    #visualizarDetalle table {
+        min-width: 480px;
+        font-size: 0.98rem;
+    }
+}
+</style>
 </body>
 </html>

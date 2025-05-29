@@ -1,5 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
 body {
-    background: #232946;
+    background: #181c2f;
     color: #fff;
     font-family: 'DM Sans', Arial, sans-serif;
     margin: 0;
@@ -62,42 +63,58 @@ main {
     flex-wrap: wrap;
 }
 .card {
-    background: #121629;
-    border-radius: 1.2rem;
+    background: #232946;
+    border-radius: 2rem;
     padding: 2rem 2.5rem;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    box-shadow: 0 0 18px #00fff7, 0 2px 8px rgba(0,255,255,0.10);
     min-width: 260px;
     flex: 1;
     text-align: center;
+    margin-bottom: 1.5rem;
+    border: 2.5px solid #00fff7;
 }
 .card h2 {
     margin: 0 0 1rem 0;
-    color: #00cfff;
-    font-size: 1.3rem;
+    color: #00fff7;
+    font-size: 1.7rem;
+    font-family: 'Orbitron', 'Comic Sans MS', Comic Sans, cursive, sans-serif;
+    text-shadow: 0 0 8px #00fff7;
 }
 .valor {
-    font-size: 2.2rem;
+    font-size: 2.7rem;
     font-weight: bold;
-    color: #43e97b;
-    margin-bottom: 1rem;
+    color: #00fff7;
+    margin-bottom: 1.2rem;
+    background: #232946;
+    border-radius: 1.2rem;
+    padding: 0.7rem 0;
+    box-shadow: 0 0 8px #00fff7;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
+    text-shadow: 0 0 8px #00fff7;
 }
 .periodos {
     margin-top: 1rem;
 }
 .period-btn {
     background: #232946;
-    color: #00cfff;
-    border: 1.5px solid #00cfff;
-    border-radius: 0.7rem;
-    padding: 0.4rem 1.2rem;
-    margin-right: 0.5rem;
-    font-size: 1rem;
+    color: #00fff7;
+    border: 2px solid #00fff7;
+    border-radius: 1.2rem;
+    padding: 0.6rem 1.5rem;
+    margin-right: 0.7rem;
+    font-size: 1.1rem;
+    font-weight: bold;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s, border 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 8px #00fff7;
+    font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
 }
 .period-btn.active, .period-btn:hover {
-    background: #00cfff;
+    background: #00fff7;
     color: #232946;
+    border: 2px solid #00fff7;
+    box-shadow: 0 0 18px #00fff7;
 }
 .graficas {
     display: flex;
@@ -106,86 +123,142 @@ main {
     margin-bottom: 2.5rem;
 }
 .grafica {
-    background: #121629;
-    border-radius: 1.2rem;
-    padding: 1.5rem;
+    background: #181c2f;
+    border-radius: 2rem;
+    padding: 2rem 1.5rem 2.5rem 1.5rem;
     flex: 1;
-    min-width: 320px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    max-width: 500px;
+    min-width: 260px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 0 24px #00fff7, 0 2px 18px rgba(0,255,255,0.10);
+    margin-bottom: 1.5rem;
+    text-align: center;
+    border: 2.5px solid #00fff7;
 }
 .grafica h3 {
-    color: #00cfff;
+    color: #00fff7;
     margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1.1rem;
+    margin-bottom: 1.2rem;
+    font-size: 2rem;
+    font-family: 'Orbitron', 'Comic Sans MS', Comic Sans, cursive, sans-serif;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px #00fff7;
 }
 .detalle-mesas {
     background: #121629;
     border-radius: 1.2rem;
     padding: 1.5rem;
     box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    margin-bottom: 2.5rem;
+    overflow-x: auto;
 }
 .detalle-mesas h3 {
     color: #00cfff;
     margin-top: 0;
     margin-bottom: 1rem;
     font-size: 1.1rem;
+    text-align: center;
 }
 #ventasPorMesa table {
     width: 100%;
     border-collapse: collapse;
-    background: #fff;
-    color: #232946;
-    border-radius: 0.7rem;
+    background: #181c2f;
+    color: #00fff7;
+    border-radius: 1.2rem;
     overflow: hidden;
     margin-bottom: 0;
+    box-shadow: 0 0 18px #00fff7, 0 2px 8px rgba(0,255,255,0.10);
+    border: 2.5px solid #00fff7;
+    font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
 }
 #ventasPorMesa th, #ventasPorMesa td {
-    padding: 0.7rem 1rem;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 0.9rem 1.3rem;
+    border-bottom: 1.5px solid #00fff7;
     text-align: left;
+    font-size: 1.13rem;
+    white-space: nowrap;
+    background: transparent;
 }
 #ventasPorMesa th {
-    background: #f5f7fa;
-    color: #007bff;
+    background: #232946;
+    color: #FFD600;
+    font-weight: 700;
+    font-size: 1.18rem;
+    text-shadow: 0 0 8px #FFD600;
+    border-bottom: 2.5px solid #00fff7;
+    letter-spacing: 1px;
+}
+#ventasPorMesa td {
+    color: #00fff7;
     font-weight: 600;
+    text-shadow: 0 0 6px #00fff7;
+    background: #181c2f;
+    transition: background 0.2s;
+}
+#ventasPorMesa tr:hover td {
+    background: #232946;
+    color: #FFD600;
+    text-shadow: 0 0 8px #FFD600;
 }
 #ventasPorMesa tr:last-child td {
     border-bottom: none;
 }
 .snackbar-scroll {
-    background: #222;
-    color: #fff;
-    padding: 8px 22px;
-    border-radius: 1.2rem;
-    display: block;
-    font-size: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    opacity: 0.92;
-    margin-bottom: 10px;
-    margin-top: 2px;
-    text-align: center;
-    width: fit-content;
-    max-width: 100%;
-    white-space: nowrap;
+    display: none;
 }
 .recomendacion-tendencias {
     margin-top: 1.2rem;
-    background: #eaffea;
-    color: #232946;
-    border-radius: 0.9rem;
-    padding: 1.1rem 1.5rem;
-    font-size: 1.08rem;
-    box-shadow: 0 2px 8px rgba(67,233,123,0.08);
-    font-weight: 500;
-    text-align: left;
+    background: #232946;
+    color: #fff;
+    border-radius: 1.5rem;
+    padding: 1.5rem 2rem;
+    font-size: 1.25rem;
+    box-shadow: 0 0 18px #00fff7, 0 2px 8px rgba(0,255,255,0.08);
+    font-weight: 600;
+    text-align: center;
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
+    border: 2.5px solid #00fff7;
+    text-shadow: 0 0 8px #00fff7;
+}
+#explicacionTendencias {
+    margin-bottom: 1.2rem;
+}
+#graficaTendencias {
+    min-width: 800px;
+    max-width: 100%;
+    display: block;
+    margin: 0 auto;
+}
+#graficaVentasMes {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+    height: 320px !important;
+    display: block;
+    margin: 0 auto;
 }
 @media (max-width: 900px) {
     .resumen-finanzas, .graficas {
         flex-direction: column;
         gap: 1.2rem;
+    }
+    .grafica h3 {
+        font-size: 1.3rem;
+    }
+    .valor {
+        font-size: 2rem;
+    }
+    .detalle-mesas {
+        padding: 0.7rem;
+    }
+    #graficaTendencias {
+        min-width: 480px;
+    }
+    #ventasPorMesa th, #ventasPorMesa td {
+        font-size: 1rem;
+        padding: 0.6rem 0.7rem;
     }
 }

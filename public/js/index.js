@@ -63,6 +63,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             productosContainer.innerHTML = '';
             productosContainer.style.display = 'none';
         }
+        const btnRepetirUltimaPedida = document.getElementById('btnRepetirUltimaPedida');
+        if (btnRepetirUltimaPedida) btnRepetirUltimaPedida.disabled = false;
     };
 
     // Función para cerrar el modal
@@ -1597,6 +1599,8 @@ window.showNotification = function(message) {
 // Guarda el estado de tiempo iniciado y pedidas por mesa
 const estadoMesa = {}; // { [mesaId]: { tiempoIniciado: bool, tienePedidas: bool } }
 
+
+
 // Llama a esta función cada vez que cambie el estado de la mesa
 function actualizarBotonVerTotales(mesaId) {
     const btn = document.querySelector(`.ver-totales-btn[data-mesa="${mesaId}"]`);
@@ -1662,6 +1666,86 @@ document.addEventListener('DOMContentLoaded', function() {
     // ...existing code...
 });
 
-// Al final del archivo o en el <head> de tu HTML, asegúrate de incluir:
-/// <script src="js/estado-pedida.js"></script>
-/// después de index.js
+
+// --- NUEVO: Función para repetir la última pedida ---
+async function repetirUltimaPedida(mesaId) {
+    try {
+        const res = await fetch(`/api/mesas/${mesaId}/detalle`);
+        if (!res.ok) throw new Error('No se pudo obtener la última pedida');
+        const data = await res.json();
+        if (!Array.isArray(data.pedidos) || data.pedidos.length === 0) {
+            showNotification('No hay pedidas anteriores en esta mesa');
+            return;
+        }
+        // Agrupa por hora_pedido
+        const agrupados = {};
+        data.pedidos.forEach(p => {
+            let key = '';
+            if (p.hora_pedido) {
+                const d = new Date(p.hora_pedido);
+                key = d.getFullYear() + '-' +
+                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(d.getDate()).padStart(2, '0') + ' ' +
+                    String(d.getHours()).padStart(2, '0') + ':' +
+                    String(d.getMinutes()).padStart(2, '0');
+            }
+            if (!agrupados[key]) agrupados[key] = [];
+            agrupados[key].push(p);
+        });
+        // Ordena y toma la última pedida
+        const pedidosAgrupados = Object.entries(agrupados)
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([hora, productos]) => ({ hora, productos }));
+        const ultimaPedida = pedidosAgrupados[pedidosAgrupados.length - 1];
+        if (!ultimaPedida || !ultimaPedida.productos.length) {
+            showNotification('No hay pedidas anteriores en esta mesa');
+            return;
+        }
+        // Limpia selección actual
+        productosSeleccionados = [];
+        // Por cada producto de la última pedida, agrega a productosSeleccionados
+        ultimaPedida.productos.forEach(p => {
+            productosSeleccionados.push({
+                id_producto: String(p.id_producto),
+                nombre: p.nombre_producto,
+                precio: parseFloat(p.precio),
+                cantidad: p.cantidad
+            });
+        });
+        // Selecciona la categoría de la primera producto (si existe)
+        if (ultimaPedida.productos[0]?.categoria) {
+            categoriaSelect.value = ultimaPedida.productos[0].categoria;
+            cargarProductosPorCategoria(ultimaPedida.productos[0].categoria);
+        } else {
+            actualizarResumenYTotal();
+        }
+        // Después de renderizar productos, actualiza los inputs de cantidad
+        setTimeout(() => {
+            productosSeleccionados.forEach(sel => {
+                const card = productosContainer.querySelector(`.producto-card[data-id="${sel.id_producto}"]`);
+                if (card) {
+                    const input = card.querySelector('.cantidad-input');
+                    if (input) input.value = sel.cantidad;
+                    card.classList.add('seleccionado');
+                }
+            });
+            actualizarResumenYTotal();
+        }, 100);
+        showNotification('Última pedida cargada');
+    } catch (err) {
+        showNotification('No se pudo repetir la última pedida');
+    }
+}
+
+// --- NUEVO: Evento para el botón "Repetir última pedida" ---
+const btnRepetirUltimaPedida = document.getElementById('btnRepetirUltimaPedida');
+if (btnRepetirUltimaPedida) {
+    btnRepetirUltimaPedida.onclick = function() {
+        const mesaId = pedidoModal.dataset.mesaId;
+        if (!mesaId) {
+            showNotification('No hay mesa seleccionada');
+            return;
+        }
+        repetirUltimaPedida(mesaId);
+    };
+}

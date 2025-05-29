@@ -1181,6 +1181,67 @@ app.get('/api/estadisticas/ventas-dia-por-mesa', async (req, res) => {
     }
 });
 
+// --- NUEVO: Ventas por semana por mesa ---
+app.get('/api/estadisticas/ventas-semana-por-mesa', async (req, res) => {
+    try {
+        // Calcular el inicio de la semana actual (domingo)
+        const hoy = new Date();
+        const diaSemana = hoy.getDay();
+        const fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - diaSemana);
+        const yyyy = fechaInicio.getFullYear();
+        const mm = String(fechaInicio.getMonth() + 1).padStart(2, '0');
+        const dd = String(fechaInicio.getDate()).padStart(2, '0');
+        const fechaIniStr = `${yyyy}-${mm}-${dd}`;
+        // Consulta: suma de ventas por mesa en la semana
+        const [rows] = await pool.query(`
+            SELECT m.numero_mesa, m.id_mesa, SUM(p.subtotal) AS total_ventas
+            FROM pedido p
+            JOIN alquiler a ON p.id_alquiler = a.id_alquiler
+            JOIN mesa m ON a.id_mesa = m.id_mesa
+            WHERE DATE(p.hora_pedido) >= ?
+            GROUP BY m.id_mesa, m.numero_mesa
+            ORDER BY m.numero_mesa ASC
+        `, [fechaIniStr]);
+        res.json(rows.map(r => ({
+            id_mesa: r.id_mesa,
+            numero_mesa: r.numero_mesa,
+            total_ventas: Number(r.total_ventas) || 0
+        })));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- NUEVO: Ventas por mes por mesa ---
+app.get('/api/estadisticas/ventas-mes-por-mesa', async (req, res) => {
+    try {
+        // Calcular el inicio del mes actual
+        const hoy = new Date();
+        const fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        const yyyy = fechaInicio.getFullYear();
+        const mm = String(fechaInicio.getMonth() + 1).padStart(2, '0');
+        const dd = String(fechaInicio.getDate()).padStart(2, '0');
+        const fechaIniStr = `${yyyy}-${mm}-${dd}`;
+        // Consulta: suma de ventas por mesa en el mes
+        const [rows] = await pool.query(`
+            SELECT m.numero_mesa, m.id_mesa, SUM(p.subtotal) AS total_ventas
+            FROM pedido p
+            JOIN alquiler a ON p.id_alquiler = a.id_alquiler
+            JOIN mesa m ON a.id_mesa = m.id_mesa
+            WHERE DATE(p.hora_pedido) >= ?
+            GROUP BY m.id_mesa, m.numero_mesa
+            ORDER BY m.numero_mesa ASC
+        `, [fechaIniStr]);
+        res.json(rows.map(r => ({
+            id_mesa: r.id_mesa,
+            numero_mesa: r.numero_mesa,
+            total_ventas: Number(r.total_ventas) || 0
+        })));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- ENDPOINT DE DEPURACIÓN: Ver todos los pedidos del día con detalle ---
 app.get('/api/estadisticas/debug-pedidos-dia', async (req, res) => {
     try {
