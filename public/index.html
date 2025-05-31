@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gestión de Mesas de Pool</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/infocards.css">
@@ -11,6 +11,119 @@
     <style>
         .hidden {
             display: none;
+        }
+        /* --- RESPONSIVE HEADER --- */
+        @media (max-width: 700px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 0.7rem 0.5rem;
+            }
+            header h1 {
+                font-size: 1.3rem;
+                margin-bottom: 0.7rem;
+            }
+            header .admin-btn {
+                font-size: 0.98rem;
+                padding: 0.5rem 1.2rem;
+            }
+        }
+        /* --- RESPONSIVE INFOCARDS --- */
+        @media (max-width: 900px) {
+            .info-cards {
+                gap: 1rem 1rem !important;
+                padding: 1rem 0.2rem 1rem 0.2rem !important;
+            }
+            .info-card {
+                min-width: 160px !important;
+                max-width: 320px !important;
+                width: 100% !important;
+                font-size: 0.97rem !important;
+                padding: 0.7rem 0.2rem 1rem 0.2rem !important;
+            }
+            .mesa-image {
+                max-width: 140px !important;
+                max-height: 60px !important;
+            }
+        }
+        @media (max-width: 600px) {
+            .info-cards {
+                flex-direction: column !important;
+                gap: 0.5rem 0.5rem !important;
+                align-items: center !important;
+                padding: 0.5rem 0.1rem 0.5rem 0.1rem !important;
+            }
+            .info-card {
+                min-width: 90vw !important;
+                max-width: 98vw !important;
+                width: 98vw !important;
+                font-size: 0.93rem !important;
+                padding: 0.5rem 0.1rem 0.7rem 0.1rem !important;
+                gap: 0.15rem !important;
+                margin: 0 auto !important;
+            }
+            .mesa-image-container {
+                min-height: 40px !important;
+                max-height: 60px !important;
+            }
+            .mesa-image {
+                max-width: 98vw !important;
+                max-height: 40px !important;
+            }
+            .mesa-details h3 {
+                font-size: 0.93rem !important;
+            }
+            .modal-content {
+                min-width: 0 !important;
+                max-width: 98vw !important;
+                padding: 1.2rem 0.5rem 1rem 0.5rem !important;
+            }
+        }
+        /* --- RESPONSIVE MODAL --- */
+        @media (max-width: 600px) {
+            .modal-content {
+                min-width: 0 !important;
+                max-width: 98vw !important;
+                padding: 1.2rem 0.5rem 1rem 0.5rem !important;
+            }
+            #visualizarDetalle table {
+                min-width: 320px !important;
+                font-size: 0.93rem !important;
+            }
+        }
+        /* --- RESPONSIVE FORMULARIOS --- */
+        @media (max-width: 600px) {
+            #pedidoForm,
+            #addProductForm,
+            #editProductForm {
+                max-width: 98vw !important;
+                padding: 0 !important;
+            }
+            .form-buttons-row {
+                flex-direction: column !important;
+                gap: 0.7rem !important;
+            }
+        }
+        /* --- RESPONSIVE PRODUCTOS EN PEDIDO --- */
+        @media (max-width: 600px) {
+            .productos-cards {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+            }
+            .producto-card {
+                min-width: 90vw !important;
+                max-width: 98vw !important;
+            }
+        }
+        /* --- SCROLL RESPONSIVE PARA TABLAS --- */
+        #visualizarDetalle {
+            overflow-x: auto;
+            max-width: 100vw;
+        }
+        /* --- GENERAL: EVITA OVERFLOW --- */
+        html, body {
+            width: 100vw;
+            overflow-x: hidden;
         }
     </style>
 </head>

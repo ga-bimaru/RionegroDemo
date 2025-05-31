@@ -750,7 +750,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             mesaCard.className = 'info-card';
             mesaCard.innerHTML = `
                 <div class="mesa-image-container">
-                    <img src="/images/mesapoll.jpeg" alt="Mesa ${mesa.numero_mesa}" class="mesa-image">
+                    <img src="/images/mesadepoll.jpg" alt="Mesa ${mesa.numero_mesa}" class="mesa-image">
                 </div>
                 <div class="mesa-details">
                     <h3>Mesa ${mesa.numero_mesa}</h3>
