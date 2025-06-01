@@ -1,0 +1,198 @@
+/* Modal de pedido */
+#pedidoModal.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(20, 20, 30, 0.92);
+    z-index: 3000;
+}
+#pedidoModal .modal-content {
+    background: #fff;
+    border-radius: 2rem;
+    box-shadow: 0 12px 36px rgba(0,123,255,0.13), 0 4px 16px rgba(44,62,80,0.10);
+    color: #232946;
+    border: 2.5px solid #e0e7ef;
+    font-size: 1.15rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.01em;
+    padding: 2.5rem 4.5rem 2.5rem 4.5rem;
+    max-width: 1200px;
+    min-width: 400px;
+    margin: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalPop 0.25s cubic-bezier(.4,1.6,.6,1) 1;
+}
+
+/* Mejora visual para las tarjetas de productos dentro del modal de pedido */
+#pedidoModal .productos-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 1.5rem;
+    justify-content: flex-start;
+    align-items: stretch;
+    background: #f8fafc;
+    border-radius: 1.2rem;
+    padding: 1.5rem 0.5rem;
+    max-height: 420px;
+    overflow-y: auto;
+    margin-bottom: 1.2rem;
+}
+
+#pedidoModal .producto-card {
+    background: linear-gradient(135deg, #fafdff 70%, #eaf4ff 100%);
+    border: 2.5px solid #e0e7ef;
+    border-radius: 1.3rem;
+    box-shadow: 0 4px 16px rgba(0,123,255,0.10);
+    padding: 1.2rem 1.1rem 1.5rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 170px;
+    min-width: 140px;
+    max-width: 180px;
+    margin-bottom: 0.5rem;
+    transition: border 0.2s, box-shadow 0.2s, background 0.2s, transform 0.12s;
+    position: relative;
+    cursor: pointer;
+    overflow: visible;
+}
+#pedidoModal .producto-card.seleccionado {
+    border: 2.5px solid #00cfff;
+    background: linear-gradient(135deg, #e0f7fa 60%, #b2ebf2 100%);
+    box-shadow: 0 8px 32px rgba(0,207,255,0.13);
+    transform: translateY(-2px) scale(1.03);
+}
+
+#pedidoModal .producto-img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 1rem;
+    margin-bottom: 0.7rem;
+    background: #fff;
+    border: 1.5px solid #e0e7ef;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.09);
+}
+
+#pedidoModal .producto-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.18rem;
+    margin-bottom: 0.5rem;
+}
+
+#pedidoModal .producto-nombre {
+    font-size: 1.13rem;
+    font-weight: 700;
+    color: #232946;
+    text-align: center;
+    margin-bottom: 0.1rem;
+    letter-spacing: 0.01em;
+}
+
+#pedidoModal .producto-precio {
+    font-size: 1.08rem;
+    color: #00cfff;
+    font-weight: 700;
+    margin-top: 0.1rem;
+}
+
+#pedidoModal .cantidad-container {
+    margin-top: 0.7rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.35rem;
+}
+#pedidoModal .cantidad-btn {
+    background: #e0e7ef;
+    color: #232946;
+    border: none;
+    border-radius: 0.7rem;
+    font-size: 1.25rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+#pedidoModal .cantidad-btn:hover {
+    background: #00cfff;
+    color: #fff;
+}
+#pedidoModal .cantidad-input {
+    width: 54px;
+    min-width: 32px;
+    max-width: 70px;
+    text-align: center;
+    font-size: 1.08rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 0.7rem;
+    padding: 0.18rem 0.3rem;
+    margin: 0 0.1rem;
+    background: #fff;
+}
+
+/* Responsive para el modal de pedido y productos */
+@media (max-width: 1300px) {
+    #pedidoModal .modal-content {
+        max-width: 99vw;
+        padding: 1.2rem 0.5rem 1.2rem 0.5rem;
+    }
+    #pedidoModal .productos-cards {
+        gap: 1rem 1rem;
+        padding: 1rem 0.2rem;
+    }
+    #pedidoModal .producto-card {
+        width: 38vw;
+        min-width: 120px;
+        max-width: 180px;
+        font-size: 0.97rem;
+        padding: 0.7rem 0.2rem 1rem 0.2rem;
+    }
+    #pedidoModal .producto-img {
+        width: 54px;
+        height: 54px;
+    }
+}
+
+@media (max-width: 700px) {
+    #pedidoModal .modal-content {
+        max-width: 99vw;
+        min-width: 0;
+        padding: 0.7rem 0.1rem 0.7rem 0.1rem;
+    }
+    #pedidoModal .productos-cards {
+        gap: 0.7rem 0.7rem;
+        padding: 0.7rem 0.1rem;
+    }
+    #pedidoModal .producto-card {
+        width: 90vw;
+        min-width: 90vw;
+        max-width: 98vw;
+        font-size: 0.93rem;
+        padding: 0.5rem 0.1rem 0.7rem 0.1rem;
+        margin: 0 auto 0.5rem auto;
+    }
+    #pedidoModal .producto-img {
+        width: 44px;
+        height: 44px;
+    }
+    #pedidoModal .producto-nombre {
+        font-size: 0.97rem;
+    }
+}
+
+/* ...puedes agregar más detalles visuales si lo deseas... */

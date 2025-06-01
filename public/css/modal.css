@@ -11,7 +11,7 @@
     align-items: center;
     z-index: 2000;
     transition: background 0.3s;
-    overflow-y: auto;
+    overflow-y: auto; /* Ya está, asegura que el fondo permita scroll si el modal es muy alto */
 }
 
 .modal-content {
@@ -22,6 +22,8 @@
     max-width: 100vw;
     min-width: 0;
     min-height: 480px;
+    max-height: 90vh; /* Limita la altura máxima del contenido del modal */
+    overflow-y: auto; /* Permite hacer scroll dentro del modal con el mouse */
     box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.10);
     border: 2.5px solid #e0e7ef;
     position: relative;
@@ -505,5 +507,199 @@ h2 {
     #formTransferirTiempo .cancelar-btn {
         padding: 0.6rem 1.2rem;
         font-size: 1rem;
+    }
+}
+
+/* --- FACTURA DETALLADA Y ESTRUCTURADA --- */
+#modalFacturaDetener .modal-content,
+#modalFacturaDetenerContent {
+    background: #fff;
+    border-radius: 1.7rem;
+    box-shadow: 0 12px 36px rgba(0,123,255,0.13), 0 4px 16px rgba(44,62,80,0.10);
+    color: #232946;
+    border: 2.5px solid #e0e7ef;
+    font-size: 1.13rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.01em;
+    padding: 2.5rem 2.5rem 2.5rem 2.5rem;
+    max-width: 540px;
+    min-width: 320px;
+    margin: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    animation: modalPop 0.25s cubic-bezier(.4,1.6,.6,1) 1;
+    border-top: 8px solid #00cfff;
+}
+
+/* Logo de bola de pool en la parte superior - mejor centrado y tamaño fijo */
+#modalFacturaDetener .factura-logo,
+#modalFacturaDetenerContent .factura-logo {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 1.2rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Ajusta la ruta según la ubicación real de tu imagen */
+    background: none;
+}
+#modalFacturaDetener .factura-logo img,
+#modalFacturaDetenerContent .factura-logo img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    background: #fff;
+    border: 2px solid #e0e7ef;
+}
+
+/* Encabezado de la factura */
+#modalFacturaDetener .factura-header,
+#modalFacturaDetenerContent .factura-header {
+    text-align: center;
+    margin-bottom: 1.2rem;
+}
+#modalFacturaDetener .factura-header h2,
+#modalFacturaDetenerContent .factura-header h2 {
+    color: #007bff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0.2rem 0 0.5rem 0;
+    letter-spacing: 0.03em;
+}
+#modalFacturaDetener .factura-header .factura-info,
+#modalFacturaDetenerContent .factura-header .factura-info {
+    font-size: 1.08rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+/* Tabla de detalles */
+#modalFacturaDetener .factura-table,
+#modalFacturaDetenerContent .factura-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.2rem;
+    background: #fafdff;
+    border-radius: 1.1rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.07);
+    font-size: 1.08rem;
+    border: 1.5px solid #e0e7ef;
+}
+#modalFacturaDetener .factura-table th,
+#modalFacturaDetenerContent .factura-table th {
+    background: #eaf4ff;
+    color: #007bff;
+    font-weight: 700;
+    padding: 0.7rem 1.1rem;
+    border-bottom: 2px solid #e0e7ef;
+    text-align: center;
+}
+#modalFacturaDetener .factura-table td,
+#modalFacturaDetenerContent .factura-table td {
+    padding: 0.7rem 1.1rem;
+    border-bottom: 1px solid #e0e7ef;
+    text-align: center;
+}
+#modalFacturaDetener .factura-table tr:last-child td,
+#modalFacturaDetenerContent .factura-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Totales y resumen */
+#modalFacturaDetener .factura-totales,
+#modalFacturaDetenerContent .factura-totales {
+    margin-top: 1.2rem;
+    font-size: 1.18rem;
+    font-weight: 600;
+    text-align: right;
+}
+#modalFacturaDetener .factura-totales .total-label,
+#modalFacturaDetenerContent .factura-totales .total-label {
+    color: #232946;
+    margin-right: 1.2rem;
+}
+#modalFacturaDetener .factura-totales .total-value,
+#modalFacturaDetenerContent .factura-totales .total-value {
+    color: #28a745;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Subtotales */
+#modalFacturaDetener .factura-subtotal,
+#modalFacturaDetenerContent .factura-subtotal {
+    font-size: 1.08rem;
+    color: #555;
+    text-align: right;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Botón cerrar y confirmar */
+#modalFacturaDetener .factura-btns,
+#modalFacturaDetenerContent .factura-btns {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: flex-end;
+    margin-top: 1.7rem;
+}
+#modalFacturaDetener .factura-btns button,
+#modalFacturaDetenerContent .factura-btns button {
+    padding: 0.8rem 2.2rem;
+    border-radius: 1.1rem;
+    font-size: 1.13rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+}
+#modalFacturaDetener .factura-btns .confirmar,
+#modalFacturaDetenerContent .factura-btns .confirmar {
+    background: linear-gradient(90deg, #28a745 60%, #43e97b 100%);
+    color: #fff;
+}
+#modalFacturaDetener .factura-btns .cerrar,
+#modalFacturaDetenerContent .factura-btns .cerrar {
+    background: #e74c3c;
+    color: #fff;
+}
+#modalFacturaDetener .factura-btns .confirmar:hover,
+#modalFacturaDetenerContent .factura-btns .confirmar:hover {
+    background: linear-gradient(90deg, #218838 60%, #38d67a 100%);
+}
+#modalFacturaDetener .factura-btns .cerrar:hover,
+#modalFacturaDetenerContent .factura-btns .cerrar:hover {
+    background: #c0392b;
+}
+
+/* Responsive para factura */
+@media (max-width: 700px) {
+    #modalFacturaDetener .modal-content,
+    #modalFacturaDetenerContent {
+        padding: 1.2rem 0.2rem 1.2rem 0.2rem;
+        max-width: 99vw;
+        min-width: 0;
+    }
+    #modalFacturaDetener .factura-table,
+    #modalFacturaDetenerContent .factura-table {
+        font-size: 0.97rem;
+    }
+    #modalFacturaDetener .factura-header h2,
+    #modalFacturaDetenerContent .factura-header h2 {
+        font-size: 1.3rem;
+    }
+    #modalFacturaDetener .factura-logo,
+    #modalFacturaDetenerContent .factura-logo {
+        width: 54px;
+        height: 54px;
+        margin-bottom: 0.7rem;
     }
 }

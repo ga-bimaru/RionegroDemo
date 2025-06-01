@@ -1020,8 +1020,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Reemplaza mostrarFacturaAlDetener para mostrar tiempo, productos, valores y total, y agrega botón cerrar
     function mostrarFacturaAlDetener(mesaId, totalTiempo, callback) {
-        // Evita duplicados
-        if (document.getElementById('modalFacturaDetener')) return;
+        // Elimina cualquier modal de factura anterior
+        const modalExistente = document.getElementById('modalFacturaDetener');
+        if (modalExistente) {
+            modalExistente.remove();
+        }
 
         fetch(`/api/mesas/${mesaId}/detalle`)
             .then(async res => {
@@ -1185,6 +1188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // --- Modal HTML ---
                 const modal = document.createElement('div');
                 modal.id = 'modalFacturaDetener';
+                modal.className = 'modal';
                 modal.style.position = 'fixed';
                 modal.style.top = 0;
                 modal.style.left = 0;
@@ -1197,22 +1201,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 modal.style.zIndex = 4000;
 
                 modal.innerHTML = `
-                    <div style="
-                        background: #fff;
-                        border-radius: 1.2rem;
-                        padding: 2.2rem 2.5rem 2.5rem 2.5rem;
-                        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        min-width: 340px;
-                        max-width: 98vw;
-                        position: relative;
-                    ">
-                        <button id="btnCerrarFactura" style="position:absolute;top:18px;right:24px;font-size:2rem;color:#e74c3c;background:none;border:none;cursor:pointer;">&times;</button>
-                        <h2 style="margin-bottom:1.2rem; color:#007bff;">Factura de Mesa</h2>
+                    <div class="modal-content">
+                        <div class="factura-logo"></div>
+                        <div class="factura-header">
+                            <h2>Factura de Mesa</h2>
+                            <div class="factura-info">Mesa: ${data.numero_mesa || ''} &nbsp; | &nbsp; Fecha: ${new Date().toLocaleDateString('es-CO')}</div>
+                        </div>
                         ${htmlPagadas}
-                        <div style="font-size:1.13rem;margin-bottom:1.2rem;width:100%;">
+                        <div class="factura-subtotal">
                             <table style="width:100%;margin-bottom:1.2rem;">
                                 <tbody>
                                     <tr>
@@ -1226,7 +1222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 </tbody>
                             </table>
                             <strong style="color:#232323;">Productos consumidos (sin pedidas ya pagadas):</strong>
-                            <table style="width:100%;margin-bottom:1.2rem;">
+                            <table class="factura-table">
                                 <thead>
                                     <tr>
                                         <th style="text-align:center;">N° Pedida</th>
@@ -1247,26 +1243,41 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     </tr>
                                 </tfoot>
                             </table>
-                            <div style="font-size:1.25rem;font-weight:700;margin-top:1.2rem;text-align:right;">
-                                <span style="color:#232946;">Total a pagar:</span>
-                                <span style="color:#28a745;font-size:1.7rem;">$${totalFactura.toLocaleString('es-CO')}</span>
-                            </div>
                         </div>
-                        <div style="display:flex;gap:2rem;margin-top:1.5rem;">
-                            <button id="btnConfirmarFactura" style="padding:0.7rem 2.2rem;background:#28a745;color:#fff;border:none;border-radius:0.7rem;font-size:1.15rem;font-weight:600;cursor:pointer;">Confirmar y finalizar</button>
+                        <div class="factura-totales">
+                            <span class="total-label">Total a pagar:</span>
+                            <span class="total-value">$${totalFactura.toLocaleString('es-CO')}</span>
+                        </div>
+                        <div class="factura-btns">
+                            <button class="cerrar">Cerrar</button>
+                            <button class="confirmar">Confirmar y finalizar</button>
                         </div>
                     </div>
                 `;
 
                 document.body.appendChild(modal);
 
-                document.getElementById('btnConfirmarFactura').onclick = () => {
-                    document.body.removeChild(modal);
+                // Mostrar el modal correctamente
+                setTimeout(() => {
+                    modal.classList.remove('hidden');
+                    modal.style.display = 'flex';
+                }, 10);
+
+                // Botón cerrar
+                modal.querySelector('.cerrar').onclick = () => {
+                    modal.remove();
+                };
+                // Botón confirmar
+                modal.querySelector('.confirmar').onclick = () => {
+                    modal.remove();
                     if (typeof callback === 'function') callback();
                 };
-                document.getElementById('btnCerrarFactura').onclick = () => {
-                    document.body.removeChild(modal);
-                };
+                // Cerrar al hacer clic fuera del contenido
+                modal.addEventListener('mousedown', function(e) {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
             });
     }
 
@@ -1677,22 +1688,19 @@ async function repetirUltimaPedida(mesaId) {
             showNotification('No hay pedidas anteriores en esta mesa');
             return;
         }
-        // Agrupa por hora_pedido
+        // Agrupa por hora_pedido EXACTA (los productos con la misma hora_pedido son una pedida)
         const agrupados = {};
         data.pedidos.forEach(p => {
             let key = '';
             if (p.hora_pedido) {
-                const d = new Date(p.hora_pedido);
-                key = d.getFullYear() + '-' +
-                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
-                    String(d.getDate()).padStart(2, '0') + ' ' +
-                    String(d.getHours()).padStart(2, '0') + ':' +
-                    String(d.getMinutes()).padStart(2, '0');
+                // Normaliza a formato 'YYYY-MM-DD HH:mm:ss'
+                key = p.hora_pedido.replace('T', ' ').substring(0, 19);
             }
+            if (!key) return;
             if (!agrupados[key]) agrupados[key] = [];
             agrupados[key].push(p);
         });
-        // Ordena y toma la última pedida
+        // Ordena por fecha/hora y toma la última pedida
         const pedidosAgrupados = Object.entries(agrupados)
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([hora, productos]) => ({ hora, productos }));
@@ -1707,32 +1715,33 @@ async function repetirUltimaPedida(mesaId) {
         ultimaPedida.productos.forEach(p => {
             productosSeleccionados.push({
                 id_producto: String(p.id_producto),
-                nombre: p.nombre_producto,
-                precio: parseFloat(p.precio),
-                cantidad: p.cantidad
+                nombre: p.nombre_producto || p.nombre,
+                precio: parseFloat(p.precio || (p.subtotal && p.cantidad ? p.subtotal / p.cantidad : 0)),
+                cantidad: p.cantidad,
+                categoria: p.categoria || null
             });
         });
         // Selecciona la categoría de la primera producto (si existe)
         if (ultimaPedida.productos[0]?.categoria) {
             categoriaSelect.value = ultimaPedida.productos[0].categoria;
             cargarProductosPorCategoria(ultimaPedida.productos[0].categoria);
+            setTimeout(() => {
+                productosSeleccionados.forEach(sel => {
+                    const card = productosContainer.querySelector(`.producto-card[data-id="${sel.id_producto}"]`);
+                    if (card) {
+                        const input = card.querySelector('.cantidad-input');
+                        if (input) input.value = sel.cantidad;
+                        card.classList.add('seleccionado');
+                    }
+                });
+                actualizarResumenYTotal();
+            }, 200);
         } else {
             actualizarResumenYTotal();
         }
-        // Después de renderizar productos, actualiza los inputs de cantidad
-        setTimeout(() => {
-            productosSeleccionados.forEach(sel => {
-                const card = productosContainer.querySelector(`.producto-card[data-id="${sel.id_producto}"]`);
-                if (card) {
-                    const input = card.querySelector('.cantidad-input');
-                    if (input) input.value = sel.cantidad;
-                    card.classList.add('seleccionado');
-                }
-            });
-            actualizarResumenYTotal();
-        }, 100);
         showNotification('Última pedida cargada');
     } catch (err) {
+        console.error('Error en repetirUltimaPedida:', err, mesaId);
         showNotification('No se pudo repetir la última pedida');
     }
 }

@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gestión de Mesas de Pool</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/infocards.css">
-     <link rel="stylesheet" href="css/visualizarMesa.css">
-    <link rel="stylesheet" href="css/modal.css"><!-- Nuevo: estilos exclusivos del modal -->
+    <link rel="stylesheet" href="css/infocards-mesas.css">
+    <link rel="stylesheet" href="css/modal-pedido.css">
+    <link rel="stylesheet" href="css/modal-visualizar.css">
+    <link rel="stylesheet" href="css/modal-factura.css">
+    <link rel="stylesheet" href="css/modal-editar-producto.css">
     <style>
         .hidden {
             display: none;
@@ -144,10 +146,6 @@
         <div class="modal-content">
             <span class="close-btn" id="closePedidoModal">&times;</span>
             <h2>Realizar Pedido</h2>
-            <!-- Botón para repetir la última pedida -->
-            <button type="button" id="btnRepetirUltimaPedida" style="margin-bottom:1rem;background:#007bff;color:#fff;padding:0.6rem 1.5rem;border-radius:0.7rem;border:none;font-size:1.1rem;cursor:pointer;">
-                Repetir última pedida
-            </button>
             <form id="pedidoForm">
                 <label for="categoria">Categoría:</label>
                 <select id="categoria" name="categoria"></select>
@@ -160,7 +158,10 @@
 
                 <p><strong>Total:</strong> $<span id="totalPedido">0.00</span></p>
 
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; flex-wrap: wrap;">
+                    <button type="button" id="btnRepetirUltimaPedida" style="background:#007bff;color:#fff;padding:0.6rem 1.5rem;border-radius:0.7rem;border:none;font-size:1.1rem;cursor:pointer;">
+                        Repetir última pedida
+                    </button>
                     <button type="button" id="cancelarPedidoBtn" class="cancel-btn" style="background:#e74c3c;color:#fff;">Cancelar</button>
                     <button type="submit" class="confirm-btn">Confirmar Pedido</button>
                 </div>
@@ -168,17 +169,44 @@
         </div>
     </div>
 
-    <!-- Modal para visualizar detalles de mesa (asegúrate de tener este div en tu HTML) -->
+    <!-- Modal para visualizar detalles de mesa -->
     <div id="visualizarModal" class="modal hidden">
         <div class="modal-content" style="max-width:900px; min-width:320px;">
             <span class="close-btn" id="closeVisualizarModal">&times;</span>
             <h2>Detalle de Mesa</h2>
             <!-- Snackbar para scroll horizontal -->
-            <div id="snackbar-scroll" style="width:100%;margin-bottom:8px;">
-            </div>
-            <!-- Contenedor con scroll horizontal para la tabla de pedidas -->
+            <div id="snackbar-scroll" style="width:100%;margin-bottom:8px;"></div>
             <div id="visualizarDetalle" style="overflow-x:auto; max-width:100vw; padding-bottom: 1rem;">
                 <!-- ...el contenido de la tabla se genera dinámicamente por JS... -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de factura detallada con icono de bola de pool -->
+    <div id="modalFacturaDetener" class="modal hidden" style="display:none;">
+        <div class="modal-content">
+            <div class="factura-logo">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="32" cy="32" r="30" fill="#232946" stroke="#00cfff" stroke-width="4"/>
+                    <circle cx="32" cy="32" r="18" fill="#fff" stroke="#e0e7ef" stroke-width="2"/>
+                    <text x="32" y="44" text-anchor="middle" font-size="26" font-family="Arial, sans-serif" fill="#232946" font-weight="bold" dominant-baseline="middle">8</text>
+                </svg>
+            </div>
+            <div class="factura-header">
+                <h2>Factura de Mesa</h2>
+                <div class="factura-info"><!-- Aquí puedes poner fecha, mesa, etc. dinámicamente --></div>
+            </div>
+            <table class="factura-table">
+                <!-- Aquí se llenan los detalles de la factura dinámicamente -->
+            </table>
+            <div class="factura-subtotal"><!-- Subtotales dinámicos --></div>
+            <div class="factura-totales">
+                <span class="total-label">Total a pagar:</span>
+                <span class="total-value"><!-- Total dinámico --></span>
+            </div>
+            <div class="factura-btns">
+                <button class="cerrar">Cerrar</button>
+                <button class="confirmar">Confirmar y finalizar</button>
             </div>
         </div>
     </div>

@@ -392,7 +392,8 @@ app.get('/api/mesas/:id_mesa/detalle', async (req, res) => {
         if (id_alquiler) {
             debug.info(`GET /api/mesas/${id_mesa}/detalle - Consultando pedidos para alquiler ${id_alquiler}`);
             const [pedidosRows] = await pool.query(
-                `SELECT p.id_alquiler, p.cantidad, p.subtotal, p.hora_pedido, p.estado, pr.nombre AS nombre_producto
+                `SELECT p.id_alquiler, p.cantidad, p.subtotal, p.hora_pedido, p.estado, 
+                        pr.nombre AS nombre_producto, pr.categoria, pr.precio, pr.id_producto
                  FROM pedido p
                  JOIN producto pr ON p.id_producto = pr.id_producto
                  WHERE p.id_alquiler = ?

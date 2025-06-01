@@ -1,0 +1,52 @@
+/* Modal de visualizar detalles */
+#visualizarModal.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(20, 20, 30, 0.92);
+    z-index: 3000;
+}
+#visualizarModal .modal-content {
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,123,255,0.10), 0 1.5px 6px rgba(0,0,0,0.10);
+    color: #232946;
+    border: 2px solid #e0e7ef;
+    font-size: 1.15rem;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.01em;
+    padding: 2rem;
+    max-width: 900px;
+    min-width: 320px;
+    margin: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+#visualizarModal .close-btn {
+    color: #fff;
+    background: #e74c3c;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    border: none;
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    cursor: pointer;
+}
+#visualizarModal .close-btn:hover {
+    background: #c0392b;
+    color: #fff;
+}
+/* ...puedes agregar aquí más estilos específicos del modal de visualizar si lo necesitas... */
