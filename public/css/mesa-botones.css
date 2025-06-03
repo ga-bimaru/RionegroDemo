@@ -1,0 +1,160 @@
+/* Contenedor general de botones de la mesa */
+.mesa-botones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    margin-top: 0.7rem;
+}
+
+/* Botón Detener centrado arriba */
+.grupo-detener {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.1rem;
+}
+.grupo-detener .detener-btn {
+    min-width: 125px;
+    font-size: 1.07rem;
+    padding: 0.82rem 0;
+    font-weight: 700;
+    background: linear-gradient(90deg,#e74c3c 60%,#ffb199 100%);
+    color: #fff;
+    border-radius: 1.1rem;
+    border: none;
+    box-shadow: 0 2px 8px rgba(231,76,60,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.grupo-detener .detener-btn:hover {
+    background: linear-gradient(90deg,#c0392b 60%,#ffb199 100%);
+}
+
+/* Pedida y Visualizar juntos, mismo tamaño */
+.grupo-pedida-visualizar {
+    display: flex;
+    flex-direction: row;
+    gap: 0.4rem;
+    width: 100%;
+    justify-content: center;
+}
+.grupo-pedida-visualizar .pedida-btn,
+.grupo-pedida-visualizar .visualizar-btn {
+    min-width: 105px;
+    font-size: 1.07rem;
+    padding: 0.82rem 0;
+    font-weight: 700;
+    border-radius: 1.1rem;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    background: linear-gradient(90deg,#007bff 60%,#00c6ff 100%);
+    color: #fff;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.grupo-pedida-visualizar .visualizar-btn {
+    background: linear-gradient(90deg,#43e97b 60%,#38f9d7 100%);
+    color: #232946;
+}
+.grupo-pedida-visualizar .pedida-btn:hover {
+    background: linear-gradient(90deg,#0056b3 60%,#00aaff 100%);
+}
+.grupo-pedida-visualizar .visualizar-btn:hover {
+    background: linear-gradient(90deg,#38f9d7 60%,#43e97b 100%);
+}
+
+/* Pasar tiempo a otra mesa debajo */
+.grupo-pasar-tiempo {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 0.1rem;
+}
+.grupo-pasar-tiempo .pasar-tiempo-btn {
+    min-width: 130px;
+    font-size: 1.07rem;
+    padding: 0.82rem 0;
+    font-weight: 700;
+    border-radius: 1.1rem;
+    border: none;
+    background: linear-gradient(90deg,#ff9800 60%,#ffd54f 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(255,152,0,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.grupo-pasar-tiempo .pasar-tiempo-btn:hover {
+    background: linear-gradient(90deg,#ff9800 60%,#ffb300 100%);
+}
+
+/* Ver Totales debajo */
+.grupo-ver-totales {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 0.1rem;
+}
+.grupo-ver-totales .ver-totales-btn {
+    min-width: 130px;
+    font-size: 1.07rem;
+    padding: 0.82rem 0;
+    font-weight: 700;
+    border-radius: 1.1rem;
+    border: none;
+    background: linear-gradient(90deg,#43e97b 60%,#38f9d7 100%);
+    color: #232946;
+    box-shadow: 0 2px 8px rgba(67,233,123,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.grupo-ver-totales .ver-totales-btn:hover {
+    background: linear-gradient(90deg,#38f9d7 60%,#43e97b 100%);
+}
+
+/* Iniciar (solo visible si la mesa está disponible) */
+.grupo-iniciar {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 0.2rem;
+}
+.grupo-iniciar .start-btn {
+    min-width: 125px;
+    font-size: 1.07rem;
+    padding: 0.82rem 0;
+    font-weight: 700;
+    border-radius: 1.1rem;
+    border: none;
+    background: linear-gradient(90deg,#007bff 60%,#00c6ff 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.grupo-iniciar .start-btn:hover {
+    background: linear-gradient(90deg,#0056b3 60%,#00aaff 100%);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .mesa-botones .grupo-detener,
+    .mesa-botones .grupo-pedida-visualizar,
+    .mesa-botones .grupo-pasar-tiempo,
+    .mesa-botones .grupo-ver-totales,
+    .mesa-botones .grupo-iniciar {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .grupo-pedida-visualizar {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .grupo-pedida-visualizar .pedida-btn,
+    .grupo-pedida-visualizar .visualizar-btn,
+    .grupo-detener .detener-btn,
+    .grupo-pasar-tiempo .pasar-tiempo-btn,
+    .grupo-ver-totales .ver-totales-btn,
+    .grupo-iniciar .start-btn {
+        min-width: 90px;
+        width: 100%;
+        font-size: 0.98rem;
+        padding: 0.62rem 0;
+    }
+}

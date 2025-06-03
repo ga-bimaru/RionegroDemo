@@ -63,8 +63,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             productosContainer.innerHTML = '';
             productosContainer.style.display = 'none';
         }
-        const btnRepetirUltimaPedida = document.getElementById('btnRepetirUltimaPedida');
-        if (btnRepetirUltimaPedida) btnRepetirUltimaPedida.disabled = false;
     };
 
     // Función para cerrar el modal
@@ -754,13 +752,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 <div class="mesa-details">
                     <h3>Mesa ${mesa.numero_mesa}</h3>
-                    <div class="contador">
-                        <button class="start-btn${mesa.estado === 'Ocupada' ? ' hidden' : ''}" data-mesa="${mesa.id_mesa}">Iniciar</button>
-                        <button class="detener-btn${mesa.estado === 'Ocupada' ? '' : ' hidden'}" data-mesa="${mesa.id_mesa}">Detener</button>
-                        <button class="pedida-btn${mesa.estado === 'Ocupada' ? '' : ' hidden'}" data-mesa="${mesa.id_mesa}">Pedida</button>
-                        <button class="visualizar-btn${mesa.estado === 'Ocupada' ? '' : ' hidden'}" data-mesa="${mesa.id_mesa}">Visualizar</button>
-                        <button class="pasar-tiempo-btn${mesa.estado === 'Ocupada' ? '' : ' hidden'}" data-mesa="${mesa.id_mesa}" style="background:linear-gradient(90deg,#ff9800 60%,#ffd54f 100%);color:#fff;">Pasar tiempo a otra mesa</button>
-                        <button class="ver-totales-btn" data-mesa="${mesa.id_mesa}" style="background:linear-gradient(90deg,#43e97b 60%,#38f9d7 100%);color:#232946;${mostrarVerTotales ? 'display:inline-block;' : 'display:none;'}">Ver Totales</button>
+                    <div class="mesa-botones">
+                        <div class="grupo-detener">
+                            <button class="detener-btn${mesa.estado === 'Ocupada' ? '' : ' hidden'}" data-mesa="${mesa.id_mesa}">Detener</button>
+                        </div>
+                        <div class="grupo-pedida-visualizar">
+                            <button class="pedida-btn${mesa.estado === 'Ocupada' ? '' : ' hidden'}" data-mesa="${mesa.id_mesa}">Pedida</button>
+                            <button class="visualizar-btn${mesa.estado === 'Ocupada' ? '' : ' hidden'}" data-mesa="${mesa.id_mesa}">Visualizar</button>
+                        </div>
+                        <div class="grupo-pasar-tiempo">
+                            <button class="pasar-tiempo-btn${mesa.estado === 'Ocupada' ? '' : ' hidden'}" data-mesa="${mesa.id_mesa}">Pasar tiempo a otra mesa</button>
+                        </div>
+                        <div class="grupo-ver-totales">
+                            <button class="ver-totales-btn" data-mesa="${mesa.id_mesa}" style="${mostrarVerTotales ? 'display:inline-block;' : 'display:none;'}">Ver Totales</button>
+                        </div>
+                        <div class="grupo-iniciar">
+                            <button class="start-btn${mesa.estado === 'Ocupada' ? ' hidden' : ''}" data-mesa="${mesa.id_mesa}">Iniciar</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1676,85 +1684,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ...existing code...
 });
-
-
-// --- NUEVO: Función para repetir la última pedida ---
-async function repetirUltimaPedida(mesaId) {
-    try {
-        const res = await fetch(`/api/mesas/${mesaId}/detalle`);
-        if (!res.ok) throw new Error('No se pudo obtener la última pedida');
-        const data = await res.json();
-        if (!Array.isArray(data.pedidos) || data.pedidos.length === 0) {
-            showNotification('No hay pedidas anteriores en esta mesa');
-            return;
-        }
-        // Agrupa por hora_pedido EXACTA (los productos con la misma hora_pedido son una pedida)
-        const agrupados = {};
-        data.pedidos.forEach(p => {
-            let key = '';
-            if (p.hora_pedido) {
-                // Normaliza a formato 'YYYY-MM-DD HH:mm:ss'
-                key = p.hora_pedido.replace('T', ' ').substring(0, 19);
-            }
-            if (!key) return;
-            if (!agrupados[key]) agrupados[key] = [];
-            agrupados[key].push(p);
-        });
-        // Ordena por fecha/hora y toma la última pedida
-        const pedidosAgrupados = Object.entries(agrupados)
-            .sort((a, b) => a[0].localeCompare(b[0]))
-            .map(([hora, productos]) => ({ hora, productos }));
-        const ultimaPedida = pedidosAgrupados[pedidosAgrupados.length - 1];
-        if (!ultimaPedida || !ultimaPedida.productos.length) {
-            showNotification('No hay pedidas anteriores en esta mesa');
-            return;
-        }
-        // Limpia selección actual
-        productosSeleccionados = [];
-        // Por cada producto de la última pedida, agrega a productosSeleccionados
-        ultimaPedida.productos.forEach(p => {
-            productosSeleccionados.push({
-                id_producto: String(p.id_producto),
-                nombre: p.nombre_producto || p.nombre,
-                precio: parseFloat(p.precio || (p.subtotal && p.cantidad ? p.subtotal / p.cantidad : 0)),
-                cantidad: p.cantidad,
-                categoria: p.categoria || null
-            });
-        });
-        // Selecciona la categoría de la primera producto (si existe)
-        if (ultimaPedida.productos[0]?.categoria) {
-            categoriaSelect.value = ultimaPedida.productos[0].categoria;
-            cargarProductosPorCategoria(ultimaPedida.productos[0].categoria);
-            setTimeout(() => {
-                productosSeleccionados.forEach(sel => {
-                    const card = productosContainer.querySelector(`.producto-card[data-id="${sel.id_producto}"]`);
-                    if (card) {
-                        const input = card.querySelector('.cantidad-input');
-                        if (input) input.value = sel.cantidad;
-                        card.classList.add('seleccionado');
-                    }
-                });
-                actualizarResumenYTotal();
-            }, 200);
-        } else {
-            actualizarResumenYTotal();
-        }
-        showNotification('Última pedida cargada');
-    } catch (err) {
-        console.error('Error en repetirUltimaPedida:', err, mesaId);
-        showNotification('No se pudo repetir la última pedida');
-    }
-}
-
-// --- NUEVO: Evento para el botón "Repetir última pedida" ---
-const btnRepetirUltimaPedida = document.getElementById('btnRepetirUltimaPedida');
-if (btnRepetirUltimaPedida) {
-    btnRepetirUltimaPedida.onclick = function() {
-        const mesaId = pedidoModal.dataset.mesaId;
-        if (!mesaId) {
-            showNotification('No hay mesa seleccionada');
-            return;
-        }
-        repetirUltimaPedida(mesaId);
-    };
-}

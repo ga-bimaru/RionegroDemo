@@ -10,7 +10,8 @@
     background: rgba(30,30,40,0.92);
     z-index: 4000;
 }
-#modalFacturaDetener .modal-content {
+#modalFacturaDetener .modal-content,
+#modalFacturaDetenerContent {
     background: #fff;
     border-radius: 1.7rem;
     box-shadow: 0 12px 36px rgba(0,123,255,0.13), 0 4px 16px rgba(44,62,80,0.10);
@@ -19,41 +20,36 @@
     font-size: 1.13rem;
     font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
     letter-spacing: 0.01em;
-    padding: 2.5rem 3.5rem 2.5rem 3.5rem;
-    max-width: 900px;
-    min-width: 340px;
+    padding: 2.5rem 2.5rem 2.5rem 2.5rem;
+    max-width: 540px;
+    min-width: 320px;
     margin: auto;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    animation: modalPop 0.25s cubic-bezier(.4,1.6,.6,1) 1;
     border-top: 8px solid #00cfff;
+    overflow-x: auto;
 }
-#modalFacturaDetener .factura-logo {
-    width: 70px;
-    height: 70px;
-    margin: 0 auto 1.2rem auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
-    border: 2px solid #e0e7ef;
-    overflow: hidden;
-}
-#modalFacturaDetener .factura-logo svg {
-    width: 54px !important;
-    height: 54px !important;
-    min-width: 40px;
-    min-height: 40px;
-    max-width: 100%;
-    max-height: 100%;
+/* Snackbar para scroll horizontal */
+#modalFacturaDetener .snackbar-scroll,
+#modalFacturaDetenerContent .snackbar-scroll {
+    background: #232946;
+    color: #00cfff;
+    padding: 8px 22px;
+    border-radius: 1.2rem;
     display: block;
-    margin: auto;
-    background: none !important;
-    box-sizing: content-box;
-    pointer-events: none;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(0,207,255,0.08);
+    opacity: 0.92;
+    margin-bottom: 10px;
+    margin-top: 2px;
+    text-align: center;
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
+    cursor: pointer;
 }
 #modalFacturaDetener .factura-btns {
     display: flex;
@@ -74,4 +70,21 @@
     box-shadow: 0 2px 8px rgba(0,123,255,0.10);
     text-align: center;
 }
-/* ...puedes agregar aquí más estilos específicos del modal de factura si lo necesitas... */
+
+/* Responsive para factura */
+@media (max-width: 700px) {
+    #modalFacturaDetener .modal-content,
+    #modalFacturaDetenerContent {
+        padding: 1.2rem 0.2rem 1.2rem 0.2rem;
+        max-width: 99vw;
+        min-width: 0;
+    }
+    #modalFacturaDetener .factura-table,
+    #modalFacturaDetenerContent .factura-table {
+        font-size: 0.97rem;
+    }
+    #modalFacturaDetener .factura-header h2,
+    #modalFacturaDetenerContent .factura-header h2 {
+        font-size: 1.3rem;
+    }
+}

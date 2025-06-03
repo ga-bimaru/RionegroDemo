@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="css/modal-visualizar.css">
     <link rel="stylesheet" href="css/modal-factura.css">
     <link rel="stylesheet" href="css/modal-editar-producto.css">
+    <link rel="stylesheet" href="css/mesa-botones.css"><!-- NUEVO: estilos de botones de mesa -->
+    <link rel="stylesheet" href="css/modal-ver-totales.css"><!-- NUEVO: estilos modal ver totales -->
     <style>
         .hidden {
             display: none;
@@ -159,9 +161,6 @@
                 <p><strong>Total:</strong> $<span id="totalPedido">0.00</span></p>
 
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; flex-wrap: wrap;">
-                    <button type="button" id="btnRepetirUltimaPedida" style="background:#007bff;color:#fff;padding:0.6rem 1.5rem;border-radius:0.7rem;border:none;font-size:1.1rem;cursor:pointer;">
-                        Repetir última pedida
-                    </button>
                     <button type="button" id="cancelarPedidoBtn" class="cancel-btn" style="background:#e74c3c;color:#fff;">Cancelar</button>
                     <button type="submit" class="confirm-btn">Confirmar Pedido</button>
                 </div>
