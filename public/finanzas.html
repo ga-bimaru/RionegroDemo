@@ -98,49 +98,37 @@
     <aside class="sidebar" id="sidebarNav">
         <div class="sidebar-header" style="justify-content: center;">
             <span class="sidebar-logo">📊</span>
+            <span style="color:#00cfff; font-weight:600; font-size:1.15rem; margin-left:0.7rem; letter-spacing:1px;">Menú</span>
         </div>
         <div style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem;">
             <div style="width: 60px; height: 4px; background: #00cfff; border-radius: 2px; opacity: 0.7;"></div>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 0.7rem; align-items: center; padding: 1rem 0;">
+        <!-- Snackbar lateral fijo y visible al hacer scroll -->
+        <div id="sidebarSnackbar" style="position: sticky; top: 0.7rem; z-index: 2; margin: 1rem auto 0px; max-width: 200px; background: rgba(24,28,47,0.65); color: rgb(0, 207, 255); border-radius: 1rem; box-shadow: rgba(0, 207, 255, 0.18) 0px 2px 12px; padding: 1rem 1.2rem; font-size: 1.05rem; text-align: center; display: none; backdrop-filter: blur(4px);">
+            <span id="sidebarSnackbarIcon" style="font-size:1.3rem; margin-right:0.5rem;">💡</span>
+            <span id="sidebarSnackbarMsg">Selecciona una opción del menú lateral.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.7rem; align-items: center; padding: 1rem 0; overflow-y: auto; max-height: calc(100vh - 170px);">
             <a href="supervisor-edicion.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
                 <span style="font-size:1.3rem;">✏️</span> Editar Pedidas
             </a>
-            <a href="supervisor.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
-                <span style="font-size:1.3rem;">👤</span> Supervisor
+            <a href="finanzas.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">💸</span> Finanzas
             </a>
-            <a href="#" class="btn-volver sidebar-btn active" style="min-width: 180px; max-width: 200px; justify-content: center;">
-                <span style="font-size:1.3rem;">💸</span> Resumen
-            </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
-                <span style="font-size:1.3rem;">⏱</span> Tiempo
-            </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+            <a href="top-productos.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
                 <span style="font-size:1.3rem;">🍺</span> Bebidas
             </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
-                <span style="font-size:1.3rem;">📦</span> Productos
-            </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
                 <span style="font-size:1.3rem;">📅</span> Días
             </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
-                <span style="font-size:1.3rem;">👥</span> Clientes
-            </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
                 <span style="font-size:1.3rem;">🧾</span> Pedidos
             </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
                 <span style="font-size:1.3rem;">🕙</span> Horas Pico
             </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
-                <span style="font-size:1.3rem;">📆</span> Apertura
-            </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
                 <span style="font-size:1.3rem;">🪑</span> Mesas
-            </a>
-            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
-                <span style="font-size:1.3rem;">📦</span> Stock
             </a>
         </div>
     </aside>
@@ -194,26 +182,47 @@
         const menuBtn = document.getElementById('menuBtn');
         const sidebarNav = document.getElementById('sidebarNav');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebarSnackbar = document.getElementById('sidebarSnackbar');
+        const sidebarSnackbarIcon = document.getElementById('sidebarSnackbarIcon');
+        const sidebarSnackbarMsg = document.getElementById('sidebarSnackbarMsg');
+        // Busca el botón de cerrar solo si existe
         const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
-        menuBtn.addEventListener('click', () => {
-            sidebarNav.classList.add('open');
-            sidebarOverlay.style.display = 'block';
-        });
-        sidebarOverlay.addEventListener('click', () => {
-            sidebarNav.classList.remove('open');
-            sidebarOverlay.style.display = 'none';
-        });
-        sidebarCloseBtn.addEventListener('click', () => {
-            sidebarNav.classList.remove('open');
-            sidebarOverlay.style.display = 'none';
-        });
-        // Cierra la barra lateral al hacer clic en un enlace
-        sidebarNav.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
+        if (menuBtn && sidebarNav && sidebarOverlay) {
+            menuBtn.addEventListener('click', () => {
+                sidebarNav.classList.add('open');
+                sidebarOverlay.style.display = 'block';
+                // Mostrar snackbar al abrir menú
+                if (sidebarSnackbar) {
+                    sidebarSnackbar.style.display = 'block';
+                    sidebarSnackbarIcon.textContent = '💡';
+                    sidebarSnackbarMsg.textContent = 'Selecciona una opción del menú lateral.';
+                    setTimeout(() => { sidebarSnackbar.style.display = 'none'; }, 2500);
+                }
+            });
+            sidebarOverlay.addEventListener('click', () => {
                 sidebarNav.classList.remove('open');
                 sidebarOverlay.style.display = 'none';
             });
-        });
+            if (sidebarCloseBtn) {
+                sidebarCloseBtn.addEventListener('click', () => {
+                    sidebarNav.classList.remove('open');
+                    sidebarOverlay.style.display = 'none';
+                });
+            }
+            // Cierra la barra lateral al hacer clic en un enlace y muestra snackbar
+            sidebarNav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    sidebarNav.classList.remove('open');
+                    sidebarOverlay.style.display = 'none';
+                    if (sidebarSnackbar) {
+                        sidebarSnackbar.style.display = 'block';
+                        sidebarSnackbarIcon.textContent = '✅';
+                        sidebarSnackbarMsg.textContent = 'Navegando...';
+                        setTimeout(() => { sidebarSnackbar.style.display = 'none'; }, 1500);
+                    }
+                });
+            });
+        }
     </script>
     <script src="js/finanzas.js"></script>
 </body>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Días con Más Ventas - Pool Rionegro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/finanzas.css">
+    <link rel="stylesheet" href="css/dias.css">
+    <style>
+        .dias-panel {
+            max-width: 950px;
+            margin: 4.5rem auto 3.5rem auto;
+            background: #232946;
+            border-radius: 1.5rem;
+            box-shadow: 0 0 18px #00cfff, 0 2px 8px rgba(0,207,255,0.10);
+            padding: 2.5rem 2rem 3.5rem 2rem;
+            color: #fff;
+            text-align: center;
+        }
+        .dias-panel h2 {
+            color: #00cfff;
+            font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+        #calendarioVentas {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin: 2rem 0 1.5rem 0;
+        }
+        .dia-calendario {
+            padding: 1rem 0.2rem;
+            border-radius: 0.7rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: #181c2f;
+            color: #00cfff;
+            box-shadow: 0 0 8px #00cfff22;
+            transition: background 0.2s, color 0.2s;
+            border: 2px solid transparent;
+        }
+        .dia-calendario.alta {
+            background: #FFD600;
+            color: #232946;
+            border-color: #FFD600;
+            box-shadow: 0 0 12px #FFD60099;
+        }
+        .dia-calendario.baja {
+            background: #ff4e4e;
+            color: #fff;
+            border-color: #ff4e4e;
+            box-shadow: 0 0 12px #ff4e4e99;
+        }
+        .dia-calendario.normal {
+            background: #00cfff;
+            color: #232946;
+            border-color: #00cfff;
+        }
+        .dia-calendario.sin {
+            background: #232946;
+            color: #888;
+            border-color: #232946;
+        }
+        .leyenda {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            font-size: 1.05rem;
+        }
+        .leyenda span {
+            display: inline-block;
+            width: 1.2em;
+            height: 1.2em;
+            border-radius: 0.4em;
+            margin-right: 0.4em;
+            vertical-align: middle;
+        }
+        .leyenda-alta { background: #FFD600; }
+        .leyenda-baja { background: #ff4e4e; }
+        .leyenda-normal { background: #00cfff; }
+        .leyenda-sin { background: #232946; border: 1px solid #888; }
+        .consejo {
+            background: #181c2f;
+            color: #FFD600;
+            border-radius: 1.2rem;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.2rem;
+            font-size: 1.13rem;
+            box-shadow: 0 0 8px #FFD600;
+            text-align: left;
+        }
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .dias-panel {
+                max-width: 99vw;
+                padding: 1.2rem 0.3rem 2.5rem 0.3rem;
+            }
+            #calendarioVentas {
+                font-size: 0.98rem;
+            }
+        }
+        @media (max-width: 700px) {
+            .dias-panel {
+                max-width: 99vw;
+                padding: 0.7rem 0.1rem 1.2rem 0.1rem;
+            }
+            #calendarioVentas {
+                font-size: 0.93rem;
+            }
+        }
+        /* --- INICIO: Estilos para el botón de menú --- */
+        .menu-btn {
+            font-size: 1.3rem;
+            padding: 0.7rem 1.2rem;
+            margin-right: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 700px) {
+            .menu-btn {
+                font-size: 1.1rem;
+                padding: 0.6rem 1rem;
+                margin-right: 0.5rem;
+            }
+        }
+        /* --- FIN: Estilos para el botón de menú --- */
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebarNav">
+        <div class="sidebar-header" style="justify-content: center;">
+            <span class="sidebar-logo">📅</span>
+            <span style="color:#00cfff; font-weight:600; font-size:1.15rem; margin-left:0.7rem; letter-spacing:1px;">Menú</span>
+        </div>
+        <div style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem;">
+            <div style="width: 60px; height: 4px; background: #00cfff; border-radius: 2px; opacity: 0.7;"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.7rem; align-items: center; padding: 1rem 0; overflow-y: auto; max-height: calc(100vh - 170px);">
+            <a href="supervisor-edicion.html" class="btn-volver sidebar-btn"><span style="font-size:1.3rem;">✏️</span> Editar Pedidas</a>
+            <a href="finanzas.html" class="btn-volver sidebar-btn"><span style="font-size:1.3rem;">💸</span> Finanzas</a>
+            <a href="top-productos.html" class="btn-volver sidebar-btn"><span style="font-size:1.3rem;">🍺</span> Top Productos</a>
+            <a href="dias.html" class="btn-volver sidebar-btn active" style="display:none;"><span style="font-size:1.3rem;">📅</span> Días</a>
+            <a href="#" class="btn-volver sidebar-btn" style="display:none;"><span style="font-size:1.3rem;">🧾</span> Pedidos</a>
+            <a href="#" class="btn-volver sidebar-btn" style="display:none;"><span style="font-size:1.3rem;">🕙</span> Horas Pico</a>
+            <a href="#" class="btn-volver sidebar-btn" style="display:none;"><span style="font-size:1.3rem;">🪑</span> Mesas</a>
+        </div>
+    </aside>
+    <header>
+        <button class="menu-btn btn-volver" id="menuBtn" title="Abrir menú" aria-label="Abrir menú">☰</button>
+        <h1>Días con Más Ventas</h1>
+        <a href="index.html" class="btn-volver">Volver al Inicio</a>
+    </header>
+    <main>
+        <div class="dias-panel">
+            <h2>Calendario de Ventas del Mes</h2>
+            <div id="calendarioVentas"></div>
+            <div id="asesoramientoComercial" class="consejo"></div>
+            <div class="leyenda">
+                <span class="leyenda-alta"></span> Alta demanda
+                <span class="leyenda-baja"></span> Baja demanda
+                <span class="leyenda-normal"></span> Normal
+                <span class="leyenda-sin"></span> Sin ventas
+            </div>
+        </div>
+    </main>
+    <script src="js/dias.js"></script>
+</body>
+</html>

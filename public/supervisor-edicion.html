@@ -6,7 +6,55 @@
     <title>Edición de Pedidas - Supervisor</title>
     <link rel="stylesheet" href="css/tabla-supervisor.css">
     <link rel="stylesheet" href="css/supervisor-edicion.css">
+    <link rel="stylesheet" href="css/finanzas.css">
     <style>
+        /* Puedes reutilizar los estilos de la barra lateral y el botón hamburguesa */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(24,28,47,0.7);
+            z-index: 2000;
+            display: none;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 240px;
+            height: 100%;
+            background: #232946;
+            box-shadow: 2px 0 16px #00cfff33;
+            z-index: 2100;
+            transform: translateX(-100%);
+            transition: transform 0.25s;
+            display: flex;
+            flex-direction: column;
+            padding-top: 2.5rem;
+        }
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            background: #181c2f;
+            border-bottom: 1px solid #00cfff33;
+        }
+        .sidebar-logo {
+            font-size: 1.5rem;
+            color: #00cfff;
+        }
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #00cfff;
+            cursor: pointer;
+            margin-right: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
         .edit-table-actions button {
             margin: 0 0.2rem;
             padding: 0.4rem 1rem;
@@ -34,11 +82,50 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebarNav">
+        <div class="sidebar-header" style="justify-content: center;">
+            <span class="sidebar-logo">📊</span>
+            <span style="color:#00cfff; font-weight:600; font-size:1.15rem; margin-left:0.7rem; letter-spacing:1px;">Menú</span>
+        </div>
+        <div style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem;">
+            <div style="width: 60px; height: 4px; background: #00cfff; border-radius: 2px; opacity: 0.7;"></div>
+        </div>
+        <!-- Snackbar lateral fijo y visible al hacer scroll -->
+        <div id="sidebarSnackbar" style="position: sticky; top: 0.7rem; z-index: 2; margin: 1rem auto 0px; max-width: 200px; background: rgb(24, 28, 47); color: rgb(0, 207, 255); border-radius: 1rem; box-shadow: rgba(0, 207, 255, 0.2) 0px 2px 12px; padding: 1rem 1.2rem; font-size: 1.05rem; text-align: center; display: none;">
+            <span id="sidebarSnackbarIcon" style="font-size:1.3rem; margin-right:0.5rem;">💡</span>
+            <span id="sidebarSnackbarMsg">Selecciona una opción del menú lateral.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.7rem; align-items: center; padding: 1rem 0; overflow-y: auto; max-height: calc(100vh - 170px);">
+            <a href="supervisor-edicion.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">✏️</span> Editar Pedidas
+            </a>
+            <a href="finanzas.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">💸</span> Finanzas
+            </a>
+            <a href="top-productos.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">🍺</span> Bebidas
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">📅</span> Días
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">🧾</span> Pedidos
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">🕙</span> Horas Pico
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">🪑</span> Mesas
+            </a>
+        </div>
+    </aside>
+    <header>
+        <button class="menu-btn" id="menuBtn" title="Abrir menú" aria-label="Abrir menú">&#9776;</button>
+        <h1>Edición de Pedidas</h1>
+        <a href="index.html" class="btn-volver">Volver al Inicio</a>
+    </header>
     <div class="main-estadisticas-content">
-        <header>
-            <h1>Edición de Pedidas</h1>
-            <a href="estadisticas.html" class="admin-btn">Volver a Estadísticas</a>
-        </header>
         <main>
             <section>
                 <h2 class="titulo-edicion-mesas">Selecciona una mesa para editar sus pedidas</h2>
@@ -92,5 +179,31 @@
             </form>
         </div>
     </div>
+    <script>
+        // Sidebar toggle
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebarNav = document.getElementById('sidebarNav');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        // Inicialmente oculta la barra lateral
+        sidebarNav.classList.remove('open');
+        sidebarOverlay.style.display = 'none';
+        // Abrir barra lateral
+        menuBtn.addEventListener('click', () => {
+            sidebarNav.classList.add('open');
+            sidebarOverlay.style.display = 'block';
+        });
+        // Cerrar barra lateral al hacer clic fuera
+        sidebarOverlay.addEventListener('click', () => {
+            sidebarNav.classList.remove('open');
+            sidebarOverlay.style.display = 'none';
+        });
+        // Cerrar barra lateral al hacer clic en un enlace
+        sidebarNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                sidebarNav.classList.remove('open');
+                sidebarOverlay.style.display = 'none';
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,72 @@
+.dias-panel {
+    max-width: 950px;
+    margin: 4.5rem auto 3.5rem auto;
+    background: #232946;
+    border-radius: 1.5rem;
+    box-shadow: 0 0 18px #00cfff, 0 2px 8px rgba(0,207,255,0.10);
+    padding: 2.5rem 2rem 3.5rem 2rem;
+    color: #fff;
+    text-align: center;
+}
+#calendarioVentas {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin: 2rem 0 1.5rem 0;
+}
+.dia-calendario {
+    padding: 1rem 0.2rem;
+    border-radius: 0.7rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: #181c2f;
+    color: #00cfff;
+    box-shadow: 0 0 8px #00cfff22;
+    transition: background 0.2s, color 0.2s;
+    border: 2px solid transparent;
+}
+.dia-calendario.alta {
+    background: #FFD600;
+    color: #232946;
+    border-color: #FFD600;
+    box-shadow: 0 0 12px #FFD60099;
+}
+.dia-calendario.baja {
+    background: #ff4e4e;
+    color: #fff;
+    border-color: #ff4e4e;
+    box-shadow: 0 0 12px #ff4e4e99;
+}
+.dia-calendario.normal {
+    background: #00cfff;
+    color: #232946;
+    border-color: #00cfff;
+}
+.dia-calendario.sin {
+    background: #232946;
+    color: #888;
+    border-color: #232946;
+}
+.leyenda {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    font-size: 1.05rem;
+}
+.leyenda span {
+    display: inline-block;
+    width: 1.2em;
+    height: 1.2em;
+    border-radius: 0.4em;
+    margin-right: 0.4em;
+    vertical-align: middle;
+}
+.leyenda-alta { background: #FFD600; }
+.leyenda-baja { background: #ff4e4e; }
+.leyenda-normal { background: #00cfff; }
+.leyenda-sin { background: #232946; border: 1px solid #888; }
+@media (max-width: 700px) {
+    .dias-panel { padding: 1rem 0.2rem 2rem 0.2rem; }
+    #calendarioVentas { font-size: 0.93rem; }
+}

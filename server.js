@@ -3,9 +3,18 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const pool = require('./conexion'); // Importar el pool de conexión a la base de datos
 const session = require('express-session');
+const mysql = require('mysql2/promise');
 
 const app = express();
 const port = 3000;
+
+// Configuración de conexión (ajusta según tu entorno)
+const db = mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: '', // tu contraseña
+    database: 'negocio_pool'
+});
 
 // Middleware
 app.use(bodyParser.json());
@@ -1295,5 +1304,299 @@ app.get('/api/estadisticas/debug-todos-pedidos', async (req, res) => {
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// NUEVO: Variación de ventas de hoy vs ayer
+app.get('/api/estadisticas/variacion-ventas-dia', async (req, res) => {
+    try {
+        // Fecha de hoy y ayer
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        const fechaHoy = `${yyyy}-${mm}-${dd}`;
+        const ayerDate = new Date(hoy);
+        ayerDate.setDate(hoy.getDate() - 1);
+        const yyyyA = ayerDate.getFullYear();
+        const mmA = String(ayerDate.getMonth() + 1).padStart(2, '0');
+        const ddA = String(ayerDate.getDate()).padStart(2, '0');
+        const fechaAyer = `${yyyyA}-${mmA}-${ddA}`;
+
+        // Consulta ventas de hoy y ayer
+        const [[{ ventasHoy }]] = await pool.query(
+            `SELECT SUM(subtotal) AS ventasHoy FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaHoy]
+        );
+        const [[{ ventasAyer }]] = await pool.query(
+            `SELECT SUM(subtotal) AS ventasAyer FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaAyer]
+        );
+
+        let variacion = 0;
+        if (ventasAyer > 0) {
+            variacion = ((ventasHoy - ventasAyer) / ventasAyer) * 100;
+        }
+        res.json({
+            ventasHoy: ventasHoy || 0,
+            ventasAyer: ventasAyer || 0,
+            variacion: variacion
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// NUEVO: Variación de ventas por periodo (día, semana, mes)
+app.get('/api/estadisticas/variacion-ventas', async (req, res) => {
+    try {
+        const periodo = req.query.periodo || 'dia';
+        const hoy = new Date();
+        let fechaActualIni, fechaAnteriorIni, fechaAnteriorFin;
+
+        if (periodo === 'dia') {
+            // Hoy y ayer
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            fechaActualIni = `${yyyy}-${mm}-${dd}`;
+            const ayer = new Date(hoy);
+            ayer.setDate(hoy.getDate() - 1);
+            const yyyyA = ayer.getFullYear();
+            const mmA = String(ayer.getMonth() + 1).padStart(2, '0');
+            const ddA = String(ayer.getDate()).padStart(2, '0');
+            fechaAnteriorIni = `${yyyyA}-${mmA}-${ddA}`;
+            fechaAnteriorFin = fechaAnteriorIni;
+        } else if (periodo === 'semana') {
+            // Semana actual (desde domingo) y semana anterior
+            const diaSemana = hoy.getDay();
+            const actualIni = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - diaSemana);
+            const anteriorIni = new Date(actualIni);
+            anteriorIni.setDate(actualIni.getDate() - 7);
+            const anteriorFin = new Date(actualIni);
+            anteriorFin.setDate(anteriorIni.getDate() + 6);
+
+            const yyyy = actualIni.getFullYear();
+            const mm = String(actualIni.getMonth() + 1).padStart(2, '0');
+            const dd = String(actualIni.getDate()).padStart(2, '0');
+            fechaActualIni = `${yyyy}-${mm}-${dd}`;
+
+            const yyyyA = anteriorIni.getFullYear();
+            const mmA = String(anteriorIni.getMonth() + 1).padStart(2, '0');
+            const ddA = String(anteriorIni.getDate()).padStart(2, '0');
+            fechaAnteriorIni = `${yyyyA}-${mmA}-${ddA}`;
+
+            const yyyyAF = anteriorFin.getFullYear();
+            const mmAF = String(anteriorFin.getMonth() + 1).padStart(2, '0');
+            const ddAF = String(anteriorFin.getDate()).padStart(2, '0');
+            fechaAnteriorFin = `${yyyyAF}-${mmAF}-${ddAF}`;
+        } else if (periodo === 'mes') {
+            // Mes actual y mes anterior
+            const actualIni = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            const anteriorIni = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+            const anteriorFin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+
+            const yyyy = actualIni.getFullYear();
+            const mm = String(actualIni.getMonth() + 1).padStart(2, '0');
+            const dd = String(actualIni.getDate()).padStart(2, '0');
+            fechaActualIni = `${yyyy}-${mm}-${dd}`;
+
+            const yyyyA = anteriorIni.getFullYear();
+            const mmA = String(anteriorIni.getMonth() + 1).padStart(2, '0');
+            const ddA = String(anteriorIni.getDate()).padStart(2, '0');
+            fechaAnteriorIni = `${yyyyA}-${mmA}-${ddA}`;
+
+            const yyyyAF = anteriorFin.getFullYear();
+            const mmAF = String(anteriorFin.getMonth() + 1).padStart(2, '0');
+            const ddAF = String(anteriorFin.getDate()).padStart(2, '0');
+            fechaAnteriorFin = `${yyyyAF}-${mmAF}-${ddAF}`;
+        } else {
+            return res.status(400).json({ error: 'Periodo inválido' });
+        }
+
+        let ventasActual = 0, ventasAnterior = 0;
+        if (periodo === 'dia') {
+            const [[{ ventasHoy }]] = await pool.query(
+                `SELECT SUM(subtotal) AS ventasHoy FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaActualIni]
+            );
+            const [[{ ventasAyer }]] = await pool.query(
+                `SELECT SUM(subtotal) AS ventasAyer FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaAnteriorIni]
+            );
+            ventasActual = ventasHoy || 0;
+            ventasAnterior = ventasAyer || 0;
+        } else {
+            // Para semana y mes: BETWEEN fechaIni AND fechaFin
+            const [[{ ventasActualSum }]] = await pool.query(
+                `SELECT SUM(subtotal) AS ventasActualSum FROM pedido WHERE DATE(hora_pedido) >= ?`, [fechaActualIni]
+            );
+            const [[{ ventasAnteriorSum }]] = await pool.query(
+                `SELECT SUM(subtotal) AS ventasAnteriorSum FROM pedido WHERE DATE(hora_pedido) BETWEEN ? AND ?`, [fechaAnteriorIni, fechaAnteriorFin]
+            );
+            ventasActual = ventasActualSum || 0;
+            ventasAnterior = ventasAnteriorSum || 0;
+        }
+
+        let variacion = 0;
+        if (ventasAnterior > 0) {
+            variacion = ((ventasActual - ventasAnterior) / ventasAnterior) * 100;
+        }
+        res.json({
+            ventasActual,
+            ventasAnterior,
+            variacion
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: Productos/bebidas más vendidos por periodo y consejos financieros
+app.get('/api/estadisticas/top-productos', async (req, res) => {
+    try {
+        const periodo = req.query.periodo || 'mes';
+        const hoy = new Date();
+        let fechaIni, fechaFin;
+
+        if (periodo === 'dia') {
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            fechaIni = `${yyyy}-${mm}-${dd}`;
+            fechaFin = fechaIni;
+        } else if (periodo === 'semana') {
+            const diaSemana = hoy.getDay();
+            const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - diaSemana);
+            const yyyy = inicio.getFullYear();
+            const mm = String(inicio.getMonth() + 1).padStart(2, '0');
+            const dd = String(inicio.getDate()).padStart(2, '0');
+            fechaIni = `${yyyy}-${mm}-${dd}`;
+            fechaFin = null;
+        } else { // mes
+            const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            const yyyy = inicio.getFullYear();
+            const mm = String(inicio.getMonth() + 1).padStart(2, '0');
+            const dd = String(inicio.getDate()).padStart(2, '0');
+            fechaIni = `${yyyy}-${mm}-${dd}`;
+            fechaFin = null;
+        }
+
+        let where = '';
+        let params = [];
+        if (periodo === 'dia') {
+            where = 'DATE(p.hora_pedido) = ?';
+            params = [fechaIni];
+        } else if (periodo === 'semana' || periodo === 'mes') {
+            where = 'DATE(p.hora_pedido) >= ?';
+            params = [fechaIni];
+        }
+
+        // --- CORRECCIÓN: Asegura que los pedidos realmente existen para el periodo ---
+        // DEBUG: Muestra los parámetros y consulta
+        // console.log('Consulta top productos:', { where, params });
+
+        // Top 5 productos/bebidas más vendidos por cantidad
+        const [rows] = await pool.query(`
+            SELECT pr.nombre, pr.categoria, SUM(p.cantidad) AS total_cantidad, SUM(p.subtotal) AS total_ventas
+            FROM pedido p
+            JOIN producto pr ON p.id_producto = pr.id_producto
+            WHERE ${where}
+            GROUP BY pr.id_producto
+            HAVING total_cantidad > 0
+            ORDER BY total_cantidad DESC, total_ventas DESC
+            LIMIT 5
+        `, params);
+
+        // Si no hay resultados, verifica si hay pedidos para ese día/periodo
+        if (!rows || rows.length === 0) {
+            // DEBUG extra: ¿hay pedidos para ese periodo?
+            const [debugPedidos] = await pool.query(
+                `SELECT COUNT(*) AS total FROM pedido WHERE ${where}`, params
+            );
+            // console.log('Pedidos encontrados para periodo:', debugPedidos[0].total);
+            return res.json({ top: [] });
+        }
+
+        // Consejos financieros básicos según el producto/categoria
+        function consejoFinanciero(producto) {
+            if (!producto) return '';
+            if (producto.categoria && producto.categoria.toLowerCase().includes('cerveza')) {
+                return '💡 Si la cerveza es tu producto estrella, considera combos o promociones en horas valle.';
+            }
+            if (producto.categoria && producto.categoria.toLowerCase().includes('gaseosa')) {
+                return '💡 Las gaseosas suelen tener buen margen. ¿Puedes negociar mejor precio con el proveedor?';
+            }
+            if (producto.categoria && producto.categoria.toLowerCase().includes('cigarrillo')) {
+                return '💡 Los cigarrillos atraen clientes, pero revisa el margen y la rotación de inventario.';
+            }
+            if (producto.categoria && producto.categoria.toLowerCase().includes('paqueteria')) {
+                return '💡 Los snacks pueden ser impulso. Ubícalos cerca de la barra o caja para aumentar ventas.';
+            }
+            return '💡 Analiza si puedes aumentar el margen o rotación de este producto.';
+        }
+
+        const top = rows.map(p => ({
+            nombre: p.nombre,
+            categoria: p.categoria,
+            total_cantidad: Number(p.total_cantidad) || 0,
+            total_ventas: Number(p.total_ventas) || 0,
+            consejo: consejoFinanciero(p)
+        }));
+
+        res.json({ top });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Nueva API: Días con más ventas del mes
+app.get('/api/dias-mas-ventas', async (req, res) => {
+    try {
+        // Obtener ventas por día del mes actual
+        const [rows] = await pool.query(`
+            SELECT 
+                DAY(hora_pedido) AS dia,
+                SUM(subtotal - descuento) AS total
+            FROM pedido
+            WHERE MONTH(hora_pedido) = MONTH(CURDATE())
+              AND YEAR(hora_pedido) = YEAR(CURDATE())
+            GROUP BY dia
+        `);
+
+        // Armar array de días del mes
+        const hoy = new Date();
+        const anio = hoy.getFullYear();
+        const mes = hoy.getMonth();
+        const diasMes = new Date(anio, mes + 1, 0).getDate();
+        let resumen = Array.from({ length: diasMes }, (_, i) => ({
+            dia: i + 1,
+            total: 0
+        }));
+
+        rows.forEach(r => {
+            resumen[r.dia - 1].total = Number(r.total);
+        });
+
+        // Calcular promedio y niveles
+        const totales = resumen.map(r => r.total).filter(t => t > 0);
+        const avg = totales.length ? totales.reduce((a, b) => a + b, 0) / totales.length : 0;
+        const max = Math.max(...totales, 0);
+
+        resumen = resumen.map(r => {
+            let nivel = 'normal';
+            if (r.total >= avg * 1.3) nivel = 'alta';
+            else if (r.total <= avg * 0.7 && r.total > 0) nivel = 'baja';
+            else if (r.total === 0) nivel = 'sin';
+            return { ...r, nivel };
+        });
+
+        // Asesoramiento simple
+        let consejo = '';
+        if (max > avg * 1.5) {
+            consejo = '¡Tienes días con altísima demanda! Aprovecha para hacer promociones esos días y fidelizar clientes. Los días bajos pueden ser ideales para ofertas especiales o eventos que atraigan público.';
+        } else {
+            consejo = 'Tus ventas son bastante regulares. Analiza qué puedes hacer para potenciar los días bajos y mantener la constancia.';
+        }
+
+        res.json({ resumen, consejo });
+    } catch (err) {
+        res.status(500).json({ error: 'Error al consultar los días con más ventas.' });
     }
 });

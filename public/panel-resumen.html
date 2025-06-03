@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resumen - Pool Rionegro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/finanzas.css">
+    <style>
+        .mensaje-panel {
+            max-width: 600px;
+            margin: 3rem auto;
+            background: #232946;
+            border-radius: 1.5rem;
+            box-shadow: 0 0 18px #00cfff, 0 2px 8px rgba(0,207,255,0.10);
+            padding: 2.5rem 2rem;
+            color: #fff;
+            text-align: center;
+        }
+        .mensaje-panel .icono {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .mensaje-panel .mensaje {
+            font-size: 1.3rem;
+            margin-bottom: 1.2rem;
+            color: #00cfff;
+        }
+        .mensaje-panel .tip {
+            font-size: 1.1rem;
+            color: #FFD600;
+        }
+        .periodos {
+            margin: 2rem 0 0 0;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .period-btn {
+            background: #232946;
+            color: #00cfff;
+            border: 2px solid #00cfff;
+            border-radius: 1.2rem;
+            padding: 0.6rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 8px #00cfff;
+            font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
+        }
+        .period-btn.active, .period-btn:hover {
+            background: #00cfff;
+            color: #232946;
+            border: 2px solid #00cfff;
+            box-shadow: 0 0 18px #00cfff;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebarNav">
+        <div class="sidebar-header" style="justify-content: center;">
+            <span class="sidebar-logo">📊</span>
+            <span style="color:#00cfff; font-weight:600; font-size:1.15rem; margin-left:0.7rem; letter-spacing:1px;">Menú</span>
+        </div>
+        <div style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem;">
+            <div style="width: 60px; height: 4px; background: #00cfff; border-radius: 2px; opacity: 0.7;"></div>
+        </div>
+        <!-- Snackbar lateral fijo y visible al hacer scroll -->
+        <div id="sidebarSnackbar" style="position: sticky; top: 0.7rem; z-index: 2; margin: 1rem auto 0px; max-width: 200px; background: rgb(24, 28, 47); color: rgb(0, 207, 255); border-radius: 1rem; box-shadow: rgba(0, 207, 255, 0.2) 0px 2px 12px; padding: 1rem 1.2rem; font-size: 1.05rem; text-align: center; display: none;">
+            <span id="sidebarSnackbarIcon" style="font-size:1.3rem; margin-right:0.5rem;">💡</span>
+            <span id="sidebarSnackbarMsg">Selecciona una opción del menú lateral.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.7rem; align-items: center; padding: 1rem 0; overflow-y: auto; max-height: calc(100vh - 170px);">
+            <a href="supervisor-edicion.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">✏️</span> Editar Pedidas
+            </a>
+            <a href="finanzas.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">💸</span> Finanzas
+            </a>
+            <a href="panel-resumen.html" class="btn-volver sidebar-btn active" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">⏱</span> Tiempo
+            </a>
+            <a href="top-productos.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">🍺</span> Bebidas
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">📅</span> Días
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">🧾</span> Pedidos
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">🕙</span> Horas Pico
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">🪑</span> Mesas
+            </a>
+        </div>
+    </aside>
+    <header>
+        <button class="menu-btn" id="menuBtn" title="Abrir menú" aria-label="Abrir menú">☰</button>
+        <h1>Resumen</h1>
+        <a href="index.html" class="btn-volver">Volver al Inicio</a>
+    </header>
+    <main>
+        <div id="mensajePanel" class="mensaje-panel">
+            <span class="icono" id="iconoPanel">💸</span>
+            <div class="mensaje" id="mensajeTexto">Este mes ganaste 12% menos que el anterior.</div>
+            <div class="tip" id="mensajeTip">💡 ¿Hubo menos horas de juego?</div>
+            <div class="periodos">
+                <button class="period-btn active" data-period="dia">Día</button>
+                <button class="period-btn" data-period="semana">Semana</button>
+                <button class="period-btn" data-period="mes">Mes</button>
+            </div>
+        </div>
+    </main>
+    <script src="js/panel-resumen.js"></script>
+</body>
+</html>

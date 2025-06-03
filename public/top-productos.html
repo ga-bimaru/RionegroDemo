@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Top Productos/Bebidas - Pool Rionegro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/finanzas.css">
+    <style>
+        .top-productos-panel {
+            max-width: 950px;
+            margin: 4.5rem auto 3.5rem auto;
+            background: #232946;
+            border-radius: 1.5rem;
+            box-shadow: 0 0 18px #00cfff, 0 2px 8px rgba(0,207,255,0.10);
+            padding: 2.5rem 2rem 3.5rem 2rem;
+            color: #fff;
+            text-align: center;
+        }
+        .top-productos-panel h2 {
+            color: #00cfff;
+            font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+        .tabla-scroll-x {
+            overflow-x: auto;
+            width: 100%;
+            margin-bottom: 2.5rem;
+            min-height: 120px;
+        }
+        .top-productos-table {
+            min-width: 700px;
+            max-width: 100%;
+            width: max-content;
+            margin: 0 auto 2rem auto;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #181c2f;
+            border-radius: 1.2rem;
+            overflow: hidden;
+            box-shadow: 0 0 18px #00cfff, 0 2px 8px rgba(0,207,255,0.10);
+            font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
+        }
+        .top-productos-table th, .top-productos-table td {
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1.5px solid #00cfff;
+            text-align: left;
+            font-size: 1.15rem;
+            white-space: nowrap;
+        }
+        .top-productos-table th {
+            background: #232946;
+            color: #FFD600;
+            font-weight: 700;
+            font-size: 1.22rem;
+            text-shadow: 0 0 8px #FFD600;
+            border-bottom: 2.5px solid #00cfff;
+            letter-spacing: 1px;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .top-productos-table td {
+            color: #00cfff;
+            font-weight: 600;
+            text-shadow: 0 0 6px #00cfff;
+            background: #181c2f;
+            border-right: 1px solid #232946;
+            transition: background 0.2s;
+        }
+        .top-productos-table tr:last-child td {
+            border-bottom: none;
+        }
+        .top-productos-table tr:hover td {
+            background: #232946;
+            color: #FFD600;
+            text-shadow: 0 0 8px #FFD600;
+        }
+        .top-productos-table td:first-child {
+            border-left: 4px solid #00cfff;
+        }
+        .top-productos-table td:last-child {
+            border-right: 4px solid #00cfff;
+        }
+        .top-productos-table th:first-child {
+            border-left: 4px solid #00cfff;
+        }
+        .top-productos-table th:last-child {
+            border-right: 4px solid #00cfff;
+        }
+        .consejo {
+            background: #181c2f;
+            color: #FFD600;
+            border-radius: 1.2rem;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.2rem;
+            font-size: 1.13rem;
+            box-shadow: 0 0 8px #FFD600;
+            text-align: left;
+        }
+        .periodos {
+            margin: 2rem 0 2rem 0;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .top-productos-panel {
+                max-width: 99vw;
+                padding: 1.2rem 0.3rem 2.5rem 0.3rem;
+            }
+            .top-productos-table {
+                min-width: 480px;
+                font-size: 0.98rem;
+            }
+        }
+        @media (max-width: 700px) {
+            .top-productos-panel {
+                max-width: 99vw;
+                padding: 0.7rem 0.1rem 1.2rem 0.1rem;
+            }
+            .top-productos-table {
+                min-width: 320px;
+                font-size: 0.93rem;
+            }
+            .top-productos-table th, .top-productos-table td {
+                padding: 0.7rem 0.7rem;
+            }
+        }
+        /* Zebra striping for better readability */
+        .top-productos-table tbody tr:nth-child(even) td {
+            background: #232946;
+        }
+        /* Mejorar visualización en scroll horizontal */
+        .tabla-scroll-x::-webkit-scrollbar {
+            height: 10px;
+            background: #232946;
+        }
+        .tabla-scroll-x::-webkit-scrollbar-thumb {
+            background: #00cfff;
+            border-radius: 8px;
+        }
+        /* --- INICIO: Estilos para el botón de menú --- */
+        .menu-btn {
+            /* Solo ajusta el tamaño del icono, el resto lo hereda de .btn-volver */
+            font-size: 1.3rem;
+            padding: 0.7rem 1.2rem;
+            margin-right: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            /* No pongas background, color, border, border-radius, box-shadow, etc. aquí */
+        }
+        .menu-btn:hover, .menu-btn:focus {
+            background: #00cfff;
+            color: #232946;
+            outline: none;
+        }
+        @media (max-width: 700px) {
+            .menu-btn {
+                font-size: 1.1rem;
+                padding: 0.6rem 1rem;
+                margin-right: 0.5rem;
+            }
+        }
+        /* --- FIN: Estilos para el botón de menú --- */
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebarNav">
+        <div class="sidebar-header" style="justify-content: center;">
+            <span class="sidebar-logo">📊</span>
+            <span style="color:#00cfff; font-weight:600; font-size:1.15rem; margin-left:0.7rem; letter-spacing:1px;">Menú</span>
+        </div>
+        <div style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem;">
+            <div style="width: 60px; height: 4px; background: #00cfff; border-radius: 2px; opacity: 0.7;"></div>
+        </div>
+        <div id="sidebarSnackbar" style="position: sticky; top: 0.7rem; z-index: 2; margin: 1rem auto 0px; max-width: 200px; background: rgb(24, 28, 47); color: rgb(0, 207, 255); border-radius: 1rem; box-shadow: rgba(0, 207, 255, 0.2) 0px 2px 12px; padding: 1rem 1.2rem; font-size: 1.05rem; text-align: center; display: none;">
+            <span id="sidebarSnackbarIcon" style="font-size:1.3rem; margin-right:0.5rem;">💡</span>
+            <span id="sidebarSnackbarMsg">Selecciona una opción del menú lateral.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.7rem; align-items: center; padding: 1rem 0; overflow-y: auto; max-height: calc(100vh - 170px);">
+            <a href="supervisor-edicion.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">✏️</span> Editar Pedidas
+            </a>
+            <a href="finanzas.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">💸</span> Finanzas
+            </a>
+            <a href="top-productos.html" class="btn-volver sidebar-btn active" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">🍺</span> Top Productos
+            </a>
+            <a href="dias.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">📅</span> Días
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">🧾</span> Pedidos
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">🕙</span> Horas Pico
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center; display:none;">
+                <span style="font-size:1.3rem;">🪑</span> Mesas
+            </a>
+        </div>
+    </aside>
+    <header>
+        <button class="menu-btn btn-volver" id="menuBtn" title="Abrir menú" aria-label="Abrir menú">☰</button>
+        <h1>Top Productos/Bebidas</h1>
+        <a href="index.html" class="btn-volver">Volver al Inicio</a>
+    </header>
+    <main>
+        <div class="top-productos-panel">
+            <h2>Top Productos/Bebidas Más Vendidos</h2>
+            <div class="periodos">
+                <button class="period-btn active" data-period="mes">Mes</button>
+                <button class="period-btn" data-period="semana">Semana</button>
+                <button class="period-btn" data-period="dia">Día</button>
+            </div>
+            <div id="topProductosTabla" class="tabla-scroll-x"></div>
+            <div id="consejosFinancieros"></div>
+        </div>
+    </main>
+    <script src="js/top-productos.js"></script>
+    <script>
+    // Sidebar toggle para mostrar/ocultar la barra lateral correctamente
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebarNav = document.getElementById('sidebarNav');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        if (menuBtn && sidebarNav && sidebarOverlay) {
+            menuBtn.addEventListener('click', () => {
+                sidebarNav.classList.add('open');
+                sidebarOverlay.style.display = 'block';
+            });
+            sidebarOverlay.addEventListener('click', () => {
+                sidebarNav.classList.remove('open');
+                sidebarOverlay.style.display = 'none';
+            });
+            // Cierra la barra lateral al hacer clic en un enlace
+            sidebarNav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    sidebarNav.classList.remove('open');
+                    sidebarOverlay.style.display = 'none';
+                });
+            });
+        }
+    });
+    </script>
+</body>
+</html>
