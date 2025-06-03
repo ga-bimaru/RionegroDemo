@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- NUEVO: Mostrar totales de pedidas ---
-    async function mostrarTotalesMesa(mesaId) {
+    window.mostrarTotalesMesa = async function(mesaId) {
         try {
             // Pide los detalles al backend
             const res = await fetch(`/api/mesas/${mesaId}/detalle`);
@@ -1441,7 +1441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            // Evento para alternar estado de la pedida con confirmación
+            // Evento para alternar estado de la pedida with confirmación
             detalle.querySelectorAll('.btn-pagar-pedida').forEach(btn => {
                 btn.onclick = async function() {
                     const id_alquiler = btn.getAttribute('data-idalquiler');
@@ -1508,7 +1508,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 btn.textContent = nuevoEstado;
                                 mostrarMensajeExitoPedida();
                                 // Espera a que se refresque la tabla antes de cerrar el modal de confirmación
-                                await mostrarTotalesMesa(mesaId);
+                                await window.mostrarTotalesMesa(mesaId);
                             } else {
                                 showNotification('Error al actualizar el estado');
                                 console.error(data.error);

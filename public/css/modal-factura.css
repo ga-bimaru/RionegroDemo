@@ -31,44 +31,52 @@
     animation: modalPop 0.25s cubic-bezier(.4,1.6,.6,1) 1;
     border-top: 8px solid #00cfff;
     overflow-x: auto;
+    /* Scroll vertical elegante para TODO el modal de factura */
+    overflow-y: auto;
+    max-height: 90vh;
+    scrollbar-width: thin;
+    scrollbar-color: #00cfff #e0e7ef;
 }
-/* Snackbar para scroll horizontal */
+
+/* Scrollbar vertical personalizado SOLO para el modal de factura */
+#modalFacturaDetener .modal-content::-webkit-scrollbar,
+#modalFacturaDetenerContent::-webkit-scrollbar {
+    width: 12px;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+#modalFacturaDetener .modal-content::-webkit-scrollbar-thumb,
+#modalFacturaDetenerContent::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00cfff 0%, #007bff 100%);
+    border-radius: 12px;
+    min-height: 40px;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    border: 3px solid #f8fafc;
+}
+#modalFacturaDetener .modal-content::-webkit-scrollbar-thumb:hover,
+#modalFacturaDetenerContent::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #007bff 0%, #00cfff 100%);
+}
+
+/* Elimina el snackbar-scroll horizontal */
 #modalFacturaDetener .snackbar-scroll,
 #modalFacturaDetenerContent .snackbar-scroll {
-    background: #232946;
-    color: #00cfff;
-    padding: 8px 22px;
-    border-radius: 1.2rem;
+    display: none !important;
+}
+
+/* Indicador visual de scroll vertical para todo el modal */
+#modalFacturaDetener .modal-content::after,
+#modalFacturaDetenerContent::after {
+    content: '';
     display: block;
-    font-size: 1rem;
-    box-shadow: 0 2px 8px rgba(0,207,255,0.08);
-    opacity: 0.92;
-    margin-bottom: 10px;
-    margin-top: 2px;
-    text-align: center;
-    width: fit-content;
-    max-width: 100%;
-    white-space: nowrap;
-    cursor: pointer;
-}
-#modalFacturaDetener .factura-btns {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1.5rem;
-    margin-top: 1.7rem;
-}
-#modalFacturaDetener .factura-btns button {
-    min-width: 170px;
-    padding: 0.8rem 2.2rem;
-    border-radius: 1.1rem;
-    font-size: 1.13rem;
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s, box-shadow 0.2s;
-    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
-    text-align: center;
+    width: 100%;
+    height: 18px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #fff 100%);
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 2;
 }
 
 /* Responsive para factura */

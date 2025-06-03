@@ -16,13 +16,13 @@
 
 .modal-content {
     background: #fff;
-    padding: 2.5rem 0;
+    padding: 2.5rem 2vw;
     border-radius: 2rem;
-    width: 100vw;
-    max-width: 100vw;
+    width: 98vw;
+    max-width: 98vw;
     min-width: 0;
-    min-height: 480px;
-    max-height: 90vh; /* Limita la altura máxima del contenido del modal */
+    min-height: 80vh;
+    max-height: 98vh; /* Limita la altura máxima del contenido del modal */
     overflow-y: auto; /* Permite hacer scroll dentro del modal con el mouse */
     box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.10);
     border: 2.5px solid #e0e7ef;
@@ -47,7 +47,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.2rem;
-    width: 96vw;
+    width: 98vw;
     max-width: 1800px;
     margin: 0 auto;
     padding: 0 2vw;
@@ -325,6 +325,12 @@ h2 {
     white-space: nowrap;
 }
 
+/* Elimina el snackbar-scroll horizontal de los productos y de cualquier otro lugar */
+#visualizarDetalle .snackbar-scroll,
+.snackbar-scroll {
+    display: none !important;
+}
+
 /* Ajuste para scroll horizontal en tablas grandes */
 #visualizarDetalle > div[style*="overflow-x:auto"] {
     background: transparent;
@@ -531,6 +537,11 @@ h2 {
     align-items: stretch;
     animation: modalPop 0.25s cubic-bezier(.4,1.6,.6,1) 1;
     border-top: 8px solid #00cfff;
+    overflow-y: auto;
+    max-height: 90vh;
+    /* Añade sombra y fondo sutil para la barra de scroll */
+    scrollbar-width: thin;
+    scrollbar-color: #00cfff #e0e7ef;
 }
 
 /* Logo de bola de pool en la parte superior - mejor centrado y tamaño fijo */
@@ -702,4 +713,55 @@ h2 {
         height: 54px;
         margin-bottom: 0.7rem;
     }
+}
+
+/* Elimina el snackbar horizontal y agrega barra de scroll vertical elegante para la factura */
+#modalFacturaDetener .modal-content,
+#modalFacturaDetenerContent {
+    overflow-y: auto;
+    max-height: 90vh;
+    /* Añade sombra y fondo sutil para la barra de scroll */
+    scrollbar-width: thin;
+    scrollbar-color: #00cfff #e0e7ef;
+}
+
+/* Scrollbar vertical personalizado SOLO para la factura */
+#modalFacturaDetener .modal-content::-webkit-scrollbar,
+#modalFacturaDetenerContent::-webkit-scrollbar {
+    width: 12px;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+#modalFacturaDetener .modal-content::-webkit-scrollbar-thumb,
+#modalFacturaDetenerContent::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00cfff 0%, #007bff 100%);
+    border-radius: 12px;
+    min-height: 40px;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.10);
+    border: 3px solid #f8fafc;
+}
+#modalFacturaDetener .modal-content::-webkit-scrollbar-thumb:hover,
+#modalFacturaDetenerContent::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #007bff 0%, #00cfff 100%);
+}
+
+/* Elimina el snackbar-scroll horizontal */
+#modalFacturaDetener .snackbar-scroll,
+#modalFacturaDetenerContent .snackbar-scroll {
+    display: none !important;
+}
+
+/* Opcional: indicador visual de que se puede hacer scroll vertical */
+#modalFacturaDetener .modal-content::after,
+#modalFacturaDetenerContent::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 18px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #fff 100%);
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 2;
 }

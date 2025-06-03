@@ -109,6 +109,33 @@ header .admin-btn:hover {
     z-index: 1;
 }
 
+/* Solo para productos (no mesas ni tarjetas grandes) */
+.info-card:not(.large):not(.add-product-card):not(.add-mesa-card) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    min-width: 240px;
+    max-width: 260px;
+    width: 100%;
+    margin: 0;
+    background: var(--card-bg, #fff);
+    border-radius: var(--border-radius, 1.2rem);
+    box-shadow: var(--card-shadow, 0 8px 32px rgba(44,62,80,0.08), 0 1.5px 6px rgba(0,0,0,0.07));
+    color: var(--text-main, #232946);
+    border: 1.5px solid #e0e7ef;
+    position: relative;
+    transition: box-shadow var(--transition, 0.2s), border var(--transition, 0.2s), background var(--transition, 0.2s);
+    margin-bottom: 0.5rem;
+}
+
+.info-card:not(.large):not(.add-product-card):not(.add-mesa-card):hover {
+    box-shadow: 0 16px 32px rgba(0,123,255,0.10), 0 2px 8px rgba(0,123,255,0.10);
+    border-color: var(--accent, #00cfff);
+    background: #f8fafc;
+}
+
 /* Tarjeta de búsqueda más larga y predominante */
 .info-card.large {
     flex: 3 1 600px;

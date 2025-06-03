@@ -5,28 +5,147 @@
     <title>Finanzas - Pool Rionegro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/finanzas.css">
+    <style>
+        /* Barra lateral y botón de menú */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(24,28,47,0.7);
+            z-index: 2000;
+            display: none;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 240px;
+            height: 100%;
+            background: #232946;
+            box-shadow: 2px 0 16px #00cfff33;
+            z-index: 2100;
+            transform: translateX(-100%);
+            transition: transform 0.25s;
+            display: flex;
+            flex-direction: column;
+            padding-top: 2.5rem;
+        }
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: #181c2f;
+            border-bottom: 1px solid #00cfff33;
+        }
+        .sidebar-logo {
+            font-size: 1.5rem;
+            color: #00cfff;
+        }
+        .sidebar-title {
+            font-weight: 600;
+            color: #00cfff;
+            font-size: 1.2rem;
+        }
+        .sidebar-close-btn {
+            background: none;
+            border: none;
+            color: #00cfff;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        .sidebar-nav {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-nav li {
+            margin: 0;
+        }
+        .sidebar-nav a {
+            display: block;
+            padding: 1rem 2rem;
+            color: #00cfff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: background 0.2s, color 0.2s;
+        }
+        .sidebar-nav a:hover, .sidebar-nav .active {
+            background: #00cfff;
+            color: #232946;
+        }
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #00cfff;
+            cursor: pointer;
+            margin-right: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="sidebar-estadisticas">
-        <div class="sidebar-user">
-            <!-- Icono de usuario SVG -->
-            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="19" cy="19" r="19" fill="#00cfff"/>
-                <path d="M19 19.5c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6 2.686 6 6 6zm0 2c-4.418 0-13 2.21-13 6.625V32h26v-3.875C32 23.71 23.418 21.5 19 21.5z" fill="#fff"/>
-            </svg>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebarNav">
+        <div class="sidebar-header" style="justify-content: center;">
+            <span class="sidebar-logo">📊</span>
         </div>
-        <div class="sidebar-edit">
-            <!-- Icono de edición SVG como botón -->
-            <a href="supervisor-edicion.html" title="Edición de Pedidas" class="sidebar-edit-link">
-                <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
-                    <rect width="24" height="24" rx="12" fill="#007bff"/>
-                    <path d="M7 17.25V19h1.75l7.06-7.06-1.75-1.75L7 17.25zm9.71-8.04a1.003 1.003 0 0 0 0-1.42l-1.5-1.5a1.003 1.003 0 0 0-1.42 0l-1.13 1.13 2.92 2.92 1.13-1.13z" fill="#fff"/>
-                </svg>
+        <div style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem;">
+            <div style="width: 60px; height: 4px; background: #00cfff; border-radius: 2px; opacity: 0.7;"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.7rem; align-items: center; padding: 1rem 0;">
+            <a href="supervisor-edicion.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">✏️</span> Editar Pedidas
+            </a>
+            <a href="supervisor.html" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">👤</span> Supervisor
+            </a>
+            <a href="#" class="btn-volver sidebar-btn active" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">💸</span> Resumen
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">⏱</span> Tiempo
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">🍺</span> Bebidas
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">📦</span> Productos
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">📅</span> Días
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">👥</span> Clientes
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">🧾</span> Pedidos
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">🕙</span> Horas Pico
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">📆</span> Apertura
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">🪑</span> Mesas
+            </a>
+            <a href="#" class="btn-volver sidebar-btn" style="min-width: 180px; max-width: 200px; justify-content: center;">
+                <span style="font-size:1.3rem;">📦</span> Stock
             </a>
         </div>
-    </div>
+    </aside>
     <header>
+        <button class="menu-btn" id="menuBtn" title="Abrir menú" aria-label="Abrir menú">&#9776;</button>
         <h1>Panel Financiero</h1>
         <a href="index.html" class="btn-volver">Volver al Inicio</a>
     </header>
@@ -70,6 +189,32 @@
             <div id="ventasPorMesa"></div>
         </section>
     </main>
+    <script>
+        // Sidebar toggle
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebarNav = document.getElementById('sidebarNav');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+        menuBtn.addEventListener('click', () => {
+            sidebarNav.classList.add('open');
+            sidebarOverlay.style.display = 'block';
+        });
+        sidebarOverlay.addEventListener('click', () => {
+            sidebarNav.classList.remove('open');
+            sidebarOverlay.style.display = 'none';
+        });
+        sidebarCloseBtn.addEventListener('click', () => {
+            sidebarNav.classList.remove('open');
+            sidebarOverlay.style.display = 'none';
+        });
+        // Cierra la barra lateral al hacer clic en un enlace
+        sidebarNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                sidebarNav.classList.remove('open');
+                sidebarOverlay.style.display = 'none';
+            });
+        });
+    </script>
     <script src="js/finanzas.js"></script>
 </body>
 </html>
