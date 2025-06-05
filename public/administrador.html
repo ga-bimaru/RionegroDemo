@@ -194,7 +194,7 @@
                 </select>
 
                 <label for="editProductPrice">Precio:</label>
-                <input type="number" id="editProductPrice" name="precio" step="0.01" required>
+                <input type="number" id="editProductPrice" name="precio" step="0.01" required min="300">
 
                 <label for="editProductImage">Imagen (URL):</label>
                 <input type="text" id="editProductImage" name="imagen">
@@ -222,6 +222,7 @@
 
                 <label for="productCategory">Categoría:</label>
                 <select id="productCategory" name="categoria" required>
+                    <option value="">Selecciona una categoría</option>
                     <option value="cervezas">Cervezas</option>
                     <option value="cigarrillos">Cigarrillos</option>
                     <option value="gaseosas">Gaseosas</option>
@@ -229,10 +230,10 @@
                 </select>
 
                 <label for="productPrice">Precio:</label>
-                <input type="number" id="productPrice" name="precio" step="0.01" required>
+                <input type="number" id="productPrice" name="precio" step="0.01" required min="300">
 
                 <label for="productImage">Imagen (URL):</label>
-                <input type="text" id="productImage" name="imagen">
+                <input type="text" id="productImage" name="imagen" required>
 
                 <div class="form-buttons-row">
                     <button type="submit">Guardar Producto</button>

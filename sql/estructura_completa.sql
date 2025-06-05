@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS mesa;
 DROP TABLE IF EXISTS usuario;
 DROP TABLE IF EXISTS gasto;
 
+
 -- Tabla Usuarios
 CREATE TABLE IF NOT EXISTS usuario (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
@@ -16,7 +17,8 @@ CREATE TABLE IF NOT EXISTS usuario (
     correo VARCHAR(50) UNIQUE,
     telefono VARCHAR(20),
     password VARCHAR(255),
-    rol ENUM('Administrador', 'Empleado')
+    rol ENUM('Administrador', 'Empleado'),
+    documento VARCHAR(20) UNIQUE -- ← agregado campo documento único
 );
 
 -- Tabla Mesas
@@ -50,8 +52,8 @@ CREATE TABLE IF NOT EXISTS producto (
     nombre VARCHAR(50) NOT NULL,
     precio DECIMAL(10, 2) NOT NULL,
     stock INT,
-    categoria VARCHAR(50) DEFAULT NULL,
-    imagen VARCHAR(255) DEFAULT NULL,
+    categoria VARCHAR(50) NOT NULL,
+    imagen VARCHAR(255) NOT NULL,
     costo_unitario DECIMAL(10,2) DEFAULT 0,
     INDEX (categoria)
 );
@@ -80,9 +82,9 @@ CREATE TABLE IF NOT EXISTS gasto (
     categoria VARCHAR(50)
 );
 
--- Usuario por defecto
-INSERT INTO usuario (nombre, correo, telefono, password, rol)
-VALUES ('Administrador', 'admin@demo.com', '3000000000', 'admin123', 'Administrador')
+-- Usuario por defecto (con documento)
+INSERT INTO usuario (nombre, correo, telefono, password, rol, documento)
+VALUES ('Administrador', 'admin@demo.com', '3000000000', 'admin123', 'Administrador', '1098623821')
 ON DUPLICATE KEY UPDATE nombre=VALUES(nombre);
 
 -- Triggers para actualizar automáticamente el estado de la mesa cuando cambia un alquiler
@@ -104,5 +106,3 @@ BEGIN
     END IF;
 END//
 DELIMITER ;
-
--- Fin del script limpio y funcional

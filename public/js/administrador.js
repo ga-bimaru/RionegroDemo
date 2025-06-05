@@ -14,26 +14,56 @@ closeModalBtn.addEventListener('click', () => {
     addProductModal.style.display = 'none';
 });
 
+// Función para capitalizar la primera letra de cada palabra
+function capitalizarPalabras(str) {
+    return str.replace(/\b\w/g, l => l.toUpperCase()).replace(/\s+/g, ' ');
+}
+
 // Manejar el envío del formulario
 addProductForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Obtener los datos del formulario
-    const productData = {
-        nombre: document.getElementById('productName').value.trim(),
-        categoria: document.getElementById('productCategory').value.trim(),
-        precio: parseFloat(document.getElementById('productPrice').value.trim()),
-        imagen: document.getElementById('productImage').value.trim(),
-    };
+    // Capitaliza el nombre antes de enviar
+    let nombre = document.getElementById('productName').value.trim();
+    nombre = capitalizarPalabras(nombre);
 
-    // Validar los datos
-    if (!productData.nombre || !productData.categoria || isNaN(productData.precio)) {
-        showNotification('Por favor, completa todos los campos correctamente.');
+    const categoriaSelect = document.getElementById('productCategory');
+    let categoria = categoriaSelect.options[categoriaSelect.selectedIndex].value;
+    let precio = document.getElementById('productPrice').value.trim();
+    let imagen = document.getElementById('productImage').value.trim();
+
+    // Si la categoría es vacía, fuerza la primera opción válida
+    if (!categoria || categoria === "") {
+        for (let i = 0; i < categoriaSelect.options.length; i++) {
+            if (categoriaSelect.options[i].value) {
+                categoria = categoriaSelect.options[i].value;
+                break;
+            }
+        }
+    }
+    // Si la imagen está vacía, pon una imagen por defecto
+    if (!imagen) {
+        imagen = 'images/default-product.jpg';
+    }
+
+    // Validación de precio mínimo
+    const precioNum = parseFloat(precio);
+    if (!nombre || !categoria || !imagen || isNaN(precioNum) || precioNum < 300) {
+        showNotification('Por favor, completa todos los campos correctamente y asegúrate que el precio sea mayor o igual a 300.');
         return;
     }
 
+    // Log para depuración
+    console.log('[FRONT][addProductForm] Enviando:', { nombre, categoria, precio, imagen });
+
+    const productData = {
+        nombre,
+        categoria,
+        precio,
+        imagen
+    };
+
     try {
-        // Enviar los datos al servidor
         const response = await fetch('/api/productos', {
             method: 'POST',
             headers: {
@@ -45,17 +75,12 @@ addProductForm.addEventListener('submit', async (e) => {
         if (response.ok) {
             const result = await response.json();
             if (result.success) {
-                // Mostrar la notificación
                 showNotification('Producto agregado exitosamente');
-
-                // Cerrar el modal y limpiar el formulario
                 addProductModal.style.display = 'none';
                 addProductForm.reset();
-
-                // Recargar la página después de 2 segundos
                 setTimeout(() => {
                     location.reload();
-                }, 2000); // Esperar 2 segundos para que se vea la notificación
+                }, 2000);
             } else {
                 showNotification(result.message || 'Error al agregar el producto');
             }
@@ -194,13 +219,18 @@ document.addEventListener('DOMContentLoaded', function() {
         editProductForm.onsubmit = async function(e) {
             e.preventDefault();
             const id = document.getElementById('editProductId').value;
-            const nombre = document.getElementById('editProductName').value.trim();
-            const categoria = document.getElementById('editProductCategory').value.trim();
-            const precio = parseFloat(document.getElementById('editProductPrice').value.trim());
-            const imagen = document.getElementById('editProductImage').value.trim();
+            // Capitaliza el nombre antes de enviar
+            let nombre = document.getElementById('editProductName').value.trim();
+            nombre = capitalizarPalabras(nombre);
 
-            if (!nombre || !categoria || isNaN(precio)) {
-                alert('Por favor, completa todos los campos correctamente.');
+            const categoria = document.getElementById('editProductCategory').value.trim();
+            const precioStr = document.getElementById('editProductPrice').value.trim();
+            const imagen = document.getElementById('editProductImage').value.trim();
+            const precio = parseFloat(precioStr);
+
+            // Validación de precio mínimo
+            if (!nombre || !categoria || isNaN(precio) || precio < 300) {
+                alert('Por favor, completa todos los campos correctamente y asegúrate que el precio sea mayor o igual a 300.');
                 return;
             }
 

@@ -40,23 +40,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Ruta para agregar productos
 app.post('/api/productos', async (req, res) => {
-    const { nombre, precio, categoria, imagen } = req.body; // stock eliminado
+    const { nombre, precio, categoria, imagen } = req.body;
 
-    if (!nombre || !precio) {
-        return res.status(400).json({ success: false, message: 'Nombre y precio son obligatorios.' });
+    // Log para depuración
+    console.log('[API][POST /api/productos] Recibido:', req.body);
+
+    if (!nombre || !precio || !categoria || !imagen) {
+        return res.status(400).json({ success: false, message: 'Todos los campos son obligatorios.' });
     }
 
     try {
-        // Ajusta los campos según tu tabla producto
-        // stock eliminado del INSERT
+        // Fuerza los campos en el insert
         const [results] = await pool.query(
-            'INSERT INTO producto (nombre, precio) VALUES (?, ?)',
-            [nombre, precio]
+            'INSERT INTO producto (nombre, precio, categoria, imagen) VALUES (?, ?, ?, ?)',
+            [nombre, precio, categoria, imagen]
         );
         res.json({ success: true, message: 'Producto agregado exitosamente.' });
     } catch (err) {
         console.error('Error al agregar el producto:', err);
-        res.status(500).json({ success: false, message: 'Error al agregar el producto.' });
+        res.status(500).json({ success: false, message: 'Error al agregar el producto.', detalle: err.sqlMessage });
     }
 });
 
@@ -1482,23 +1484,20 @@ app.get('/api/estadisticas/top-productos', async (req, res) => {
 
         let where = '';
         let params = [];
+        // CORRECCIÓN: la tabla es pedido, no p.hora_pedido
         if (periodo === 'dia') {
-            where = 'DATE(p.hora_pedido) = ?';
+            where = 'DATE(pedido.hora_pedido) = ?';
             params = [fechaIni];
         } else if (periodo === 'semana' || periodo === 'mes') {
-            where = 'DATE(p.hora_pedido) >= ?';
+            where = 'DATE(pedido.hora_pedido) >= ?';
             params = [fechaIni];
         }
 
-        // --- CORRECCIÓN: Asegura que los pedidos realmente existen para el periodo ---
-        // DEBUG: Muestra los parámetros y consulta
-        // console.log('Consulta top productos:', { where, params });
-
         // Top 5 productos/bebidas más vendidos por cantidad
         const [rows] = await pool.query(`
-            SELECT pr.nombre, pr.categoria, SUM(p.cantidad) AS total_cantidad, SUM(p.subtotal) AS total_ventas
-            FROM pedido p
-            JOIN producto pr ON p.id_producto = pr.id_producto
+            SELECT pr.nombre, pr.categoria, SUM(pedido.cantidad) AS total_cantidad, SUM(pedido.subtotal) AS total_ventas
+            FROM pedido
+            JOIN producto pr ON pedido.id_producto = pr.id_producto
             WHERE ${where}
             GROUP BY pr.id_producto
             HAVING total_cantidad > 0
@@ -1506,17 +1505,10 @@ app.get('/api/estadisticas/top-productos', async (req, res) => {
             LIMIT 5
         `, params);
 
-        // Si no hay resultados, verifica si hay pedidos para ese día/periodo
         if (!rows || rows.length === 0) {
-            // DEBUG extra: ¿hay pedidos para ese periodo?
-            const [debugPedidos] = await pool.query(
-                `SELECT COUNT(*) AS total FROM pedido WHERE ${where}`, params
-            );
-            // console.log('Pedidos encontrados para periodo:', debugPedidos[0].total);
             return res.json({ top: [] });
         }
 
-        // Consejos financieros básicos según el producto/categoria
         function consejoFinanciero(producto) {
             if (!producto) return '';
             if (producto.categoria && producto.categoria.toLowerCase().includes('cerveza')) {
@@ -1540,10 +1532,6 @@ app.get('/api/estadisticas/top-productos', async (req, res) => {
             total_cantidad: Number(p.total_cantidad) || 0,
             total_ventas: Number(p.total_ventas) || 0,
             consejo: consejoFinanciero(p)
-       
-       
-       
-       
         }));
 
         res.json({ top });
@@ -1556,6 +1544,9 @@ app.get('/api/estadisticas/top-productos', async (req, res) => {
 app.get('/api/dias-mas-ventas', async (req, res) => {
     try {
         // Obtener ventas por día del mes actual
+       
+       
+
         const [rows] = await pool.query(`
             SELECT 
                 DAY(hora_pedido) AS dia,
@@ -1645,6 +1636,51 @@ app.post('/api/login', async (req, res) => {
         res.json({ ok: true, usuario: { id: usuario.id_usuario, nombre: usuario.nombre, rol: usuario.rol } });
     } catch (err) {
         res.json({ ok: false, error: 'Error en el servidor.' });
+    }
+});
+
+// Ruta para login rápido de administrador por clave (solo clave, sin usuario)
+app.post('/api/admin-login', async (req, res) => {
+    const { clave } = req.body;
+    if (!clave) {
+        return res.json({ ok: false, error: 'Clave requerida.' });
+    }
+    try {
+        // Busca un usuario con rol Administrador y compara la clave
+        const [rows] = await pool.query('SELECT * FROM usuario WHERE rol = "Administrador"');
+        if (!rows.length) {
+            return res.json({ ok: false, error: 'No hay usuario administrador registrado.' });
+        }
+        for (const usuario of rows) {
+            const bcrypt = require('bcryptjs');
+            // Permite tanto bcrypt como texto plano para pruebas
+            const match = await bcrypt.compare(clave, usuario.password) || clave === usuario.password;
+            if (match) {
+                return res.json({ ok: true });
+            }
+        }
+        return res.json({ ok: false, error: 'Clave incorrecta.' });
+    } catch (err) {
+        res.json({ ok: false, error: 'Error en el servidor.' });
+    }
+});
+
+// --- API para validar documento de supervisor (consulta en BD, rol=Empleado o Administrador) ---
+app.post('/api/validar-supervisor', async (req, res) => {
+    const { documento } = req.body;
+    if (!documento) {
+        return res.json({ autorizado: false });
+    }
+    try {
+        // Permitir acceso si el usuario es Administrador o Empleado
+        const [rows] = await pool.query(
+            'SELECT * FROM usuario WHERE documento = ? AND (rol = "Administrador" OR rol = "Empleado") LIMIT 1',
+            [documento]
+        );
+        const autorizado = rows.length > 0;
+        res.json({ autorizado });
+    } catch (err) {
+        res.json({ autorizado: false });
     }
 });
 

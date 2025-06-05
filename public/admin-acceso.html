@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso Administrador</title>
+    <link rel="stylesheet" href="css/supervisor-acceso.css">
+</head>
+<body>
+    <div class="modal-acceso">
+        <div class="modal-acceso-content">
+            <h2>Acceso Administrador</h2>
+            <form id="formAdmin" autocomplete="off">
+                <label for="claveAdmin">Clave de Administrador:</label>
+                <input type="password" id="claveAdmin" maxlength="30" required autocomplete="off" autofocus class="input-admin">
+                <div class="modal-acceso-buttons">
+                    <button type="submit" class="btn-acceso">Ingresar</button>
+                    <button type="button" id="btnCancelar" class="btn-cancelar">Cancelar</button>
+                </div>
+                <div id="mensajeError" class="mensaje-error"></div>
+            </form>
+        </div>
+    </div>
+    <script src="js/admin-acceso.js"></script>
+</body>
+</html>

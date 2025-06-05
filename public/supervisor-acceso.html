@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso Supervisor</title>
+    <link rel="stylesheet" href="css/supervisor-acceso.css">
+</head>
+<body>
+    <div class="modal-acceso">
+        <div class="modal-acceso-content">
+            <h2>Acceso Supervisor</h2>
+            <form id="formSupervisor" autocomplete="off">
+                <label for="docSupervisor">Documento de Supervisor:</label>
+                <input type="text" id="docSupervisor" inputmode="numeric" pattern="[0-9]*" maxlength="10" required autocomplete="off" autofocus>
+                <div class="modal-acceso-buttons">
+                    <button type="submit" class="btn-acceso">Ingresar</button>
+                    <button type="button" id="btnCancelar" class="btn-cancelar">Cancelar</button>
+                </div>
+                <div id="mensajeError" class="mensaje-error"></div>
+            </form>
+        </div>
+    </div>
+    <script src="js/supervisor-acceso.js"></script>
+</body>
+</html>

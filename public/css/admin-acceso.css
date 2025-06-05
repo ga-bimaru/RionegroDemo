@@ -1,0 +1,65 @@
+.modal-acceso {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-acceso-content {
+    background: #fff;
+    padding: 2rem 2.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+    min-width: 320px;
+    max-width: 90vw;
+    text-align: center;
+}
+.modal-acceso-content h2 {
+    margin-bottom: 1.2rem;
+    color: #232946;
+}
+.modal-acceso-content label {
+    display: block;
+    margin-bottom: 0.7rem;
+    font-weight: 500;
+}
+.modal-acceso-content input[type="password"] {
+    width: 90%;
+    padding: 0.6rem;
+    margin-bottom: 1.2rem;
+    border: 1px solid #bfc9d1;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+.modal-acceso-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.7rem;
+}
+.btn-acceso {
+    background: #00cfff;
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.4rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+.btn-cancelar {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.4rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+.mensaje-error {
+    color: #e74c3c;
+    font-size: 0.98rem;
+    margin-top: 0.5rem;
+    min-height: 1.2em;
+}
