@@ -1,0 +1,130 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'DM Sans', Arial, sans-serif;
+    min-height: 100vh;
+    min-width: 100vw;
+    overflow: hidden;
+}
+
+.login-bg {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #232946 60%, #00cfff 100%);
+    z-index: 0;
+}
+
+.login-bg::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url('../images/imagen login.png') no-repeat center center;
+    background-size: cover;
+    opacity: 0.22;
+    z-index: 1;
+}
+
+.login-container {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.login-card {
+    background: rgba(35, 41, 70, 0.97);
+    border-radius: 1.5rem;
+    box-shadow: 0 0 32px #00cfff55, 0 2px 12px rgba(0,207,255,0.10);
+    padding: 2.5rem 2.2rem 2.2rem 2.2rem;
+    min-width: 320px;
+    max-width: 350px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login-logo img {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 1.2rem;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 0 18px #00cfff88;
+    background: #fff;
+}
+
+.login-card h2 {
+    color: #00cfff;
+    font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
+    font-size: 1.5rem;
+    margin-bottom: 1.7rem;
+    letter-spacing: 1px;
+}
+
+#formRegistro {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+#formRegistro input[type="text"],
+#formRegistro input[type="email"],
+#formRegistro input[type="password"] {
+    padding: 0.9rem 1.1rem;
+    border-radius: 0.9rem;
+    border: 1.5px solid #00cfff;
+    background: #181c2f;
+    color: #fff;
+    font-size: 1.08rem;
+    outline: none;
+    transition: border 0.2s;
+}
+
+#formRegistro input:focus {
+    border: 2px solid #FFD600;
+}
+
+#formRegistro button {
+    background: linear-gradient(90deg, #00cfff 60%, #FFD600 100%);
+    color: #232946;
+    font-weight: bold;
+    font-size: 1.13rem;
+    border: none;
+    border-radius: 0.9rem;
+    padding: 0.9rem 0;
+    margin-top: 0.7rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #00cfff33;
+    transition: background 0.2s, color 0.2s;
+}
+
+#formRegistro button:hover {
+    background: linear-gradient(90deg, #FFD600 60%, #00cfff 100%);
+    color: #232946;
+}
+
+#mensaje {
+    color: #ff4e4e;
+    background: #232946;
+    border-radius: 0.7rem;
+    padding: 0.6rem 1rem;
+    margin-top: 0.7rem;
+    font-size: 1.05rem;
+    text-align: center;
+    display: none;
+}
+
+@media (max-width: 500px) {
+    .login-card {
+        min-width: 90vw;
+        max-width: 98vw;
+        padding: 1.2rem 0.5rem 1.2rem 0.5rem;
+    }
+}

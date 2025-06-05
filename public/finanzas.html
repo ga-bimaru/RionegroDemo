@@ -223,6 +223,18 @@
                 });
             });
         }
+        // Limitar el selector de fecha para no permitir días futuros
+        document.addEventListener('DOMContentLoaded', function() {
+            var fechaInput = document.getElementById('fechaFinanzas');
+            if (fechaInput) {
+                var hoy = new Date();
+                var yyyy = hoy.getFullYear();
+                var mm = String(hoy.getMonth() + 1).padStart(2, '0');
+                var dd = String(hoy.getDate()).padStart(2, '0');
+                var maxFecha = yyyy + '-' + mm + '-' + dd;
+                fechaInput.setAttribute('max', maxFecha);
+            }
+        });
     </script>
     <script src="js/finanzas.js"></script>
 </body>

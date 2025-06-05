@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión - Pool Rionegro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="login-bg"></div>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <!-- <img src="images/imagen login.png" alt="Logo Pool Rionegro"> -->
+            </div>
+            <h2>Iniciar Sesión</h2>
+            <form id="loginForm" autocomplete="off">
+                <input type="text" id="usuario" name="usuario" placeholder="Usuario" required autofocus>
+                <input type="password" id="contrasena" name="contrasena" placeholder="Contraseña" required>
+                <button type="submit">Entrar</button>
+                <div id="loginError" class="login-error"></div>
+                <!-- Enlace a registro -->
+                <div style="margin-top: 1rem; text-align: center;">
+                    <a href="registro.html" style="color: #007bff; text-decoration: underline;">¿No tienes cuenta? Regístrate aquí</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="js/login.js"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@ const path = require('path');
 const pool = require('./conexion'); // Importar el pool de conexión a la base de datos
 const session = require('express-session');
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const port = 3000;
@@ -19,6 +20,7 @@ const db = mysql.createPool({
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
 
 // Configuración de sesiones
 app.use(session({
@@ -28,13 +30,13 @@ app.use(session({
     cookie: { secure: false } // Usa `true` si estás usando HTTPS
 }));
 
-// Servir archivos estáticos desde la carpeta "public"
-app.use(express.static(path.join(__dirname, 'public')));
-
 // Ruta principal
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// Servir archivos estáticos desde la carpeta "public"
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Ruta para agregar productos
 app.post('/api/productos', async (req, res) => {
@@ -1538,6 +1540,10 @@ app.get('/api/estadisticas/top-productos', async (req, res) => {
             total_cantidad: Number(p.total_cantidad) || 0,
             total_ventas: Number(p.total_ventas) || 0,
             consejo: consejoFinanciero(p)
+       
+       
+       
+       
         }));
 
         res.json({ top });
@@ -1600,3 +1606,46 @@ app.get('/api/dias-mas-ventas', async (req, res) => {
         res.status(500).json({ error: 'Error al consultar los días con más ventas.' });
     }
 });
+
+// API de registro
+app.post('/api/registro', async (req, res) => {
+    const { nombre, correo, telefono, password } = req.body;
+    if (!nombre || !correo || !telefono || !password) {
+        return res.json({ ok: false, error: 'Todos los campos son obligatorios.' });
+    }
+    try {
+        const hash = await bcrypt.hash(password, 10);
+        await pool.query(
+            'INSERT INTO usuario (nombre, correo, telefono, password, rol) VALUES (?, ?, ?, ?, ?)',
+            [nombre, correo, telefono, hash, 'Empleado']
+        );
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('[REGISTRO][ERROR]', err); // <-- Agrega este log para ver el error real
+        if (err.code === 'ER_DUP_ENTRY') {
+            res.json({ ok: false, error: 'El correo ya está registrado.' });
+        } else {
+            res.json({ ok: false, error: 'Error en el servidor.' });
+        }
+    }
+});
+
+// API de login
+app.post('/api/login', async (req, res) => {
+    const { correo, password } = req.body;
+    if (!correo || !password) {
+        return res.json({ ok: false, error: 'Correo y contraseña requeridos.' });
+    }
+    try {
+        const [rows] = await pool.query('SELECT * FROM usuario WHERE correo = ?', [correo]);
+        if (!rows.length) return res.json({ ok: false, error: 'Usuario no encontrado.' });
+        const usuario = rows[0];
+        const match = await bcrypt.compare(password, usuario.password);
+        if (!match) return res.json({ ok: false, error: 'Contraseña incorrecta.' });
+        res.json({ ok: true, usuario: { id: usuario.id_usuario, nombre: usuario.nombre, rol: usuario.rol } });
+    } catch (err) {
+        res.json({ ok: false, error: 'Error en el servidor.' });
+    }
+});
+
+module.exports = app;

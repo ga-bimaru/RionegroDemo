@@ -128,14 +128,20 @@
     <div class="main-estadisticas-content">
         <main>
             <section>
-                <h2 class="titulo-edicion-mesas">Selecciona una mesa para editar sus pedidas</h2>
-                <div style="display:flex;flex-direction:row;align-items:center;gap:1.2rem;margin-bottom:1.5rem;">
-                    <label for="selectMesaEdit" style="font-weight:600;color:#007bff;font-size:1.13rem;">Mesa:</label>
-                    <select id="selectMesaEdit" style="padding:0.7rem 1.2rem;font-size:1.1rem;border-radius:0.7rem;min-width:180px;max-width:320px;">
-                        <!-- Opciones generadas dinámicamente -->
-                    </select>
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                    <h2 class="titulo-edicion-mesas" style="text-align:center; width:100%;">Selecciona una mesa para editar sus pedidas</h2>
+                    <div id="mesaSelectorRow" style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:1.2rem;margin-bottom:1.5rem;">
+                        <label for="selectMesaEdit" style="font-weight:600;color:#007bff;font-size:1.13rem;">Mesa:</label>
+                        <select id="selectMesaEdit" style="padding:0.7rem 1.2rem;font-size:1.1rem;border-radius:0.7rem;min-width:180px;max-width:320px;">
+                            <!-- Opciones generadas dinámicamente -->
+                        </select>
+                    </div>
                 </div>
-                <div id="editPedidosContainer"></div>
+                <div id="editPedidosContainer">
+                    <div id="noPedidasMsg" style="text-align:center; color:#007bff; background:transparent; font-size:1.13rem; margin:2.5rem 0; border-radius:1rem; padding:1.2rem 1.5rem;">
+                        <strong>No hay pedidas por modificar actualmente. Verifica que se haya realizado una pedida en alguna mesa.</strong>
+                    </div>
+                </div>
             </section>
         </main>
     </div>

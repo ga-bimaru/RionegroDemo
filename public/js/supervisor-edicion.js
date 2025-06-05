@@ -3,6 +3,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const selectMesa = document.getElementById('selectMesaEdit');
     const container = document.getElementById('editPedidosContainer');
+    const noPedidasMsg = document.getElementById('noPedidasMsg');
+    const mesaSelectorRow = document.getElementById('mesaSelectorRow');
 
     // Cargar mesas con pedidas
     let mesas = [];
@@ -23,8 +25,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         selectMesa.innerHTML = '<option value="">Seleccione una mesa</option>' +
             mesasConPedidos.map(m => `<option value="${m.id_mesa}">Mesa ${m.numero_mesa}</option>`).join('');
+
+        // Mostrar u ocultar el mensaje y el selector según si hay pedidas en alguna mesa
+        if (mesasConPedidos.length === 0) {
+            if (noPedidasMsg) noPedidasMsg.style.display = 'block';
+            if (mesaSelectorRow) mesaSelectorRow.style.display = 'none';
+        } else {
+            if (noPedidasMsg) noPedidasMsg.style.display = 'none';
+            if (mesaSelectorRow) mesaSelectorRow.style.display = 'flex';
+        }
     } catch {
         selectMesa.innerHTML = '<option value="">Error al cargar mesas</option>';
+        if (noPedidasMsg) noPedidasMsg.style.display = 'block';
+        if (mesaSelectorRow) mesaSelectorRow.style.display = 'none';
     }
 
     selectMesa.addEventListener('change', async function() {
@@ -46,8 +59,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const res = await fetch('/api/productos');
             productosDisponibles = await res.json();
+            // Asigna a window para acceso global en calcularSubtotalProducto
+            window.productosDisponibles = productosDisponibles;
         } catch {
             productosDisponibles = [];
+            window.productosDisponibles = [];
         }
     }
 
@@ -512,7 +528,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Estado de pagadas
             const pagadas = JSON.parse(localStorage.getItem('pagadasPorMesa') || '{}')[mesaId] || [];
 
-            let html = `
+            let html = '';
+            if (pedidosAgrupados.length === 0) {
+                html = `<div style="text-align:center; color:#888; font-size:1.13rem; margin:2.5rem 0;">
+                    <strong>No se ha realizado ninguna pedida para esta mesa.</strong>
+                </div>`;
+                container.innerHTML = html;
+                return;
+            }
+
+            html += `
                 <table>
                     <thead>
                         <tr>
@@ -569,10 +594,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </tbody>
                 </table>
             `;
-
-            if (pedidosAgrupados.length === 0) {
-                html += `<em>No hay pedidos registrados para esta mesa.</em>`;
-            }
 
             container.innerHTML = html;
 
@@ -665,14 +686,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Implementa esta función para obtener el subtotal según el producto y cantidad
     function calcularSubtotalProducto(id_producto, cantidad) {
         // Busca el producto en tu catálogo global (deberías tenerlo cargado en memoria)
-        // Si no está en memoria, haz fetch sincrónico (solo para este cálculo)
         let producto = null;
+        // Usa window.productosDisponibles para asegurar acceso global
         if (window.productosDisponibles && Array.isArray(window.productosDisponibles)) {
             producto = window.productosDisponibles.find(p => String(p.id_producto) === String(id_producto));
         }
         if (!producto) {
             // Si no está en memoria, intenta obtenerlo del backend (sincrónico)
-            // Nota: Esto es solo para asegurar el cálculo, pero lo ideal es tener el catálogo cargado
             const req = new XMLHttpRequest();
             req.open('GET', '/api/productos', false); // síncrono
             req.send(null);
