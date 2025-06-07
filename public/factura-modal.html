@@ -1,0 +1,223 @@
+<div class="factura-modal" id="facturaModal">
+    <div class="factura-modal-content">
+        <h2>Factura</h2>
+        <div class="factura-detalle">
+            <table class="factura-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody id="facturaItems">
+                    <!-- Aquí se insertan los productos dinámicamente -->
+                </tbody>
+            </table>
+            <div class="factura-total" id="facturaTotal">
+                Total: $0.00
+            </div>
+        </div>
+        <div class="factura-modal-buttons">
+            <button class="btn-factura" id="btnImprimirFactura">Imprimir</button>
+            <button class="btn-cerrar-factura" id="btnCerrarFactura">Cerrar</button>
+        </div>
+    </div>
+</div>
+<style>
+/* Igualar tabla de factura a detalles de mesa y ver totales */
+.factura-table,
+.factura-table th,
+.factura-table td,
+.factura-table tr {
+    border: 2.5px solid #00cfff !important;
+    border-collapse: separate !important;
+    box-sizing: border-box;
+}
+.factura-table {
+    width: 100%;
+    background: #fff;
+    border-radius: 1rem;
+    overflow: auto;
+    box-shadow: 0 2px 12px #00cfff22;
+    margin-bottom: 1.2rem;
+    table-layout: auto;
+    border-spacing: 0;
+}
+.factura-table th, .factura-table td {
+    padding: 1rem 1.2rem;
+    font-size: 1.13rem;
+    color: #232946;
+    background: #fff;
+    text-align: left;
+    font-weight: 600;
+    transition: background 0.2s;
+    word-break: break-word;
+    z-index: 1;
+    position: relative;
+}
+.factura-table th {
+    background: #fff;
+    color: #0056b3;
+    font-weight: 900;
+    font-size: 1.18rem;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px #00cfff33, 0 1px 0 #fff;
+}
+.factura-table tr:last-child td {
+    border-bottom: none;
+}
+.factura-table tr:hover td {
+    background: #f5f7fa;
+    color: #00cfff;
+}
+.factura-table thead th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 3;
+}
+@media (max-width: 950px) {
+    .factura-modal-content {
+        max-width: 99vw !important;
+        width: 99vw !important;
+        padding: 0.5rem !important;
+    }
+    .factura-table {
+        min-width: 320px;
+        font-size: 0.98rem;
+        max-width: 99vw;
+    }
+}
+/* Estilo modal factura igual a detalles de mesa y ver totales */
+#facturaModal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(30,30,40,0.97);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.factura-modal-content {
+    max-width: 900px;
+    min-width: 320px;
+    width: 100%;
+    border-radius: 1.5rem;
+    background: linear-gradient(120deg,#232946 0%,#00cfff 100%);
+    box-shadow: 0 8px 32px rgba(0,207,255,0.18);
+    position: relative;
+    padding: 2.5rem 2rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: visible;
+    margin: 0 auto;
+}
+.factura-modal-content h2 {
+    color: #fff;
+    font-size: 2.2rem;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-weight: 900;
+    letter-spacing: 2px;
+    border-bottom: 4px solid #fff;
+    display: inline-block;
+    padding-bottom: 0.3rem;
+    margin-bottom: 1.2rem;
+    filter: none;
+}
+.factura-detalle {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px #00cfff22;
+    padding: 1.2rem 0.7rem;
+}
+.factura-detalle table {
+    width: 100%;
+    min-width: 600px;
+    border-radius: 1rem;
+    border-spacing: 0;
+    background: #fff;
+    font-size: 1.13rem;
+    margin-bottom: 1rem;
+}
+.factura-detalle th, .factura-detalle td {
+    padding: 1rem 1.2rem;
+    color: #232946;
+    background: #fff;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #00cfff22;
+}
+.factura-detalle th {
+    background: #fff;
+    color: #0056b3;
+    font-weight: 900;
+    font-size: 1.18rem;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px #00cfff33, 0 1px 0 #fff;
+}
+.factura-detalle tr:last-child td {
+    border-bottom: none;
+}
+.factura-total {
+    text-align: right;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #00cfff;
+    margin-top: 1.2rem;
+}
+.factura-modal-buttons {
+    display: flex;
+    gap: 1.2rem;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: 2rem;
+}
+.btn-factura {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.7rem 2.2rem;
+    font-size: 1.13rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-factura:hover {
+    background: #0056b3;
+}
+.btn-cerrar-factura {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.7rem 2.2rem;
+    font-size: 1.13rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-cerrar-factura:hover {
+    background: #c0392b;
+}
+@media (max-width: 950px) {
+    .factura-modal-content {
+        max-width: 99vw !important;
+        width: 99vw !important;
+        padding: 0.5rem !important;
+    }
+    .factura-table {
+        min-width: 320px;
+        font-size: 0.98rem;
+        max-width: 99vw;
+    }
+}
+</style>

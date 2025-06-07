@@ -49,4 +49,127 @@
     background: #c0392b;
     color: #fff;
 }
+.visualizar-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(120deg, #232946 0%, #00cfff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2100;
+}
+.visualizar-modal-content {
+    background: #fff;
+    padding: 2.5rem 2rem 2rem 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,207,255,0.18);
+    min-width: 340px;
+    max-width: 98vw;
+    min-height: 420px;
+    text-align: center;
+    border: 2.5px solid #00cfff;
+    position: relative;
+    transition: box-shadow 0.3s;
+}
+.visualizar-header h2 {
+    margin-bottom: 0.5rem;
+    color: #232946;
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', Arial, sans-serif;
+    background: linear-gradient(90deg, #232946 60%, #00cfff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.visualizar-info {
+    color: #00cfff;
+    font-size: 1.13rem;
+    margin-bottom: 1.2rem;
+    font-weight: 500;
+}
+.visualizar-detalle {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.5rem 1.2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,207,255,0.08);
+    font-size: 1.08rem;
+    color: #232946;
+    overflow-x: auto;
+}
+.visualizar-detalle table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 1rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px #00cfff11;
+    min-width: 600px;
+}
+.visualizar-detalle th, .visualizar-detalle td {
+    padding: 0.7rem 1.1rem;
+    border-bottom: 1px solid #e0e7ef;
+    text-align: left;
+    font-size: 1.08rem;
+    white-space: nowrap;
+}
+.visualizar-detalle th {
+    background: #00cfff;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.13rem;
+}
+.visualizar-detalle tr:nth-child(even) td {
+    background: #f5f7fa;
+}
+.visualizar-detalle tr:last-child td {
+    border-bottom: none;
+}
+.visualizar-close-btn {
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    font-size: 2rem;
+    color: #e74c3c;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.visualizar-close-btn:hover {
+    color: #c0392b;
+}
+@media (max-width: 700px) {
+    .visualizar-modal-content {
+        min-width: 95vw;
+        padding: 1.2rem 0.3rem;
+    }
+    .visualizar-detalle table {
+        min-width: 320px;
+        font-size: 0.98rem;
+    }
+}
+.visualizar-snackbar-scroll {
+    background: #232946;
+    color: #00cfff;
+    padding: 8px 22px;
+    border-radius: 1.2rem;
+    display: block;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(0,207,255,0.08);
+    opacity: 0.92;
+    margin-bottom: 10px;
+    margin-top: 2px;
+    text-align: center;
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    cursor: pointer;
+}
 /* ...puedes agregar aquí más estilos específicos del modal de visualizar si lo necesitas... */

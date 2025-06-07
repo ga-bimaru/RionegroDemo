@@ -1,0 +1,157 @@
+.factura-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(120deg, #232946 0%, #00cfff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+.factura-modal-content {
+    background: #fff;
+    padding: 2.7rem 2.2rem 2.2rem 2.2rem;
+    border-radius: 1.7rem;
+    box-shadow: 0 8px 32px rgba(0,207,255,0.18);
+    min-width: 340px;
+    max-width: 98vw;
+    min-height: 420px;
+    text-align: center;
+    border: 2.5px solid #00cfff;
+    position: relative;
+    transition: box-shadow 0.3s;
+}
+.factura-logo {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 1.2rem auto;
+    background: linear-gradient(135deg, #00cfff 60%, #232946 100%);
+    border-radius: 50%;
+    box-shadow: 0 2px 12px rgba(0,207,255,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.factura-header h2 {
+    margin-bottom: 0.5rem;
+    color: #232946;
+    font-size: 2.3rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', Arial, sans-serif;
+    background: linear-gradient(90deg, #232946 60%, #00cfff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.factura-info {
+    color: #00cfff;
+    font-size: 1.13rem;
+    margin-bottom: 1.2rem;
+    font-weight: 500;
+}
+.factura-detalle, .factura-subtotal {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.5rem 1.2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,207,255,0.08);
+    font-size: 1.08rem;
+    color: #232946;
+}
+.factura-detalle table, .factura-subtotal table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 1rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px #00cfff11;
+}
+.factura-detalle th, .factura-detalle td,
+.factura-subtotal th, .factura-subtotal td {
+    padding: 0.7rem 1.1rem;
+    border-bottom: 1px solid #e0e7ef;
+    text-align: left;
+    font-size: 1.08rem;
+    white-space: nowrap;
+}
+.factura-detalle th, .factura-subtotal th {
+    background: #00cfff;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.13rem;
+}
+.factura-detalle tr:nth-child(even) td,
+.factura-subtotal tr:nth-child(even) td {
+    background: #f5f7fa;
+}
+.factura-detalle tr:last-child td,
+.factura-subtotal tr:last-child td {
+    border-bottom: none;
+}
+.factura-total, .factura-totales .total-value {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #00cfff;
+    margin-bottom: 1.2rem;
+}
+.factura-totales {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1.2rem;
+    margin-top: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.18rem;
+}
+.factura-totales .total-label {
+    color: #232946;
+    font-weight: 600;
+}
+.factura-totales .total-value {
+    color: #00cfff;
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+.factura-btns {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 0.7rem;
+}
+.factura-btns button {
+    background: linear-gradient(90deg, #00cfff 60%, #232946 100%);
+    color: #fff;
+    border: none;
+    padding: 0.8rem 2.2rem;
+    border-radius: 0.7rem;
+    font-size: 1.15rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,207,255,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.factura-btns button.cerrar {
+    background: linear-gradient(90deg, #e74c3c 60%, #232946 100%);
+}
+.factura-btns button.cerrar:hover {
+    background: linear-gradient(90deg, #232946 0%, #e74c3c 100%);
+}
+.factura-btns button.confirmar {
+    background: linear-gradient(90deg, #43e97b 60%, #00cfff 100%);
+    color: #232946;
+}
+.factura-btns button.confirmar:hover {
+    background: linear-gradient(90deg, #00cfff 0%, #43e97b 100%);
+    color: #fff;
+}
+.factura-btns button:hover {
+    box-shadow: 0 4px 16px rgba(0,207,255,0.18);
+}
+@media (max-width: 700px) {
+    .factura-modal-content {
+        min-width: 95vw;
+        padding: 1.5rem 0.5rem;
+    }
+}

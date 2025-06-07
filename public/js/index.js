@@ -479,12 +479,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <td>${data.numero_mesa}</td>
                     </tr>
                     <tr>
-                        <th>Estado</th>
-                        <td>${data.estado}</td>
-                    </tr>
-                    <tr>
                         <th>Hora de inicio</th>
-                        <td id="hora-inicio-vz">${horaInicioFormateada}</td>
+                        <td>${horaInicioFormateada}</td>
                     </tr>
                     <tr>
                         <th>Tiempo transcurrido</th>
@@ -957,336 +953,53 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error(err);
             });
         } else {
-          // --- FINALIZAR ALQUILER CON FACTURA DETALLADA ---
-            (async () => {
-                // 1. Consulta el total antes de finalizar
-                let totalTiempo = null;
+            mostrarModalDetener(mesaId, async () => {
+                // 2. Finalizar el alquiler en el servidor directamente
                 try {
-                    const res = await fetch(`/api/mesas/${mesaId}/detalle`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        totalTiempo = data.total_tiempo;
-                    }
-                } catch (err) {
-                    totalTiempo = null;
-                }
-
-                // 2. Mostrar factura antes de finalizar el alquiler (detallada)
-                mostrarFacturaAlDetener(mesaId, totalTiempo, async () => {
-                    // --- SOLO aquí ocultar el botón "Ver Totales" ---
-                    if (verTotalesBtn) verTotalesBtn.style.display = 'none';
-                    verTotalesVisible[mesaId] = false;
-                    localStorage.setItem('verTotalesVisible', JSON.stringify(verTotalesVisible));
-                    // 3. Finalizar el alquiler en el servidor
-                    try {
-                        const response = await fetch('/api/alquileres/finalizar', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id_mesa: mesaId })
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.text();
-                            throw new Error(`Error al finalizar alquiler: ${errorData}`);
-                        }
-
-                        const data = await response.json();
-                        if (data.error) {
-                            throw new Error(data.error);
-                        }
-
-                        // 4. Detener el contador local y resetear la UI
-                        if (intervalesMesa[mesaId] && intervalesMesa[mesaId].intervalId) {
-                            clearInterval(intervalesMesa[mesaId].intervalId);
-                            intervalesMesa[mesaId].intervalId = null;
-                        }
-
-                        if (detenerBtn) detenerBtn.classList.add('hidden');
-                        if (startBtn) {
-                            startBtn.classList.remove('hidden');
-                            startBtn.textContent = 'Iniciar';
-                        }
-                        if (pedidaBtn) pedidaBtn.classList.add('hidden');
-                        if (visualizarBtn) visualizarBtn.classList.add('hidden');
-                        if (pasarTiempoBtn) pasarTiempoBtn.classList.add('hidden');
-                        if (intervalesMesa[mesaId]) {
-                            intervalesMesa[mesaId].segundos = 0;
-                            intervalesMesa[mesaId].horaInicio = null;
-                        }
-                        guardarEstadoContadores();
-
-                        // 5. (Opcional) Notificación de éxito
-                        showNotification('Alquiler finalizado correctamente.');
-                    } catch (error) {
-                        console.error('Error al finalizar el alquiler:', error);
-                        alert('Error al finalizar el alquiler: ' + (error.message || error));
-                    }
-                });
-            })();
-        }
-    }
-
-    // Reemplaza mostrarFacturaAlDetener para mostrar tiempo, productos, valores y total, y agrega botón cerrar
-    function mostrarFacturaAlDetener(mesaId, totalTiempo, callback) {
-        // Elimina cualquier modal de factura anterior
-        const modalExistente = document.getElementById('modalFacturaDetener');
-        if (modalExistente) {
-            modalExistente.remove();
-        }
-
-        fetch(`/api/mesas/${mesaId}/detalle`)
-            .then(async res => {
-                // --- NUEVO: Verifica que la respuesta sea JSON antes de parsear ---
-                const contentType = res.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await res.text();
-                    throw new Error('Respuesta inesperada del servidor: ' + text.substring(0, 200));
-                }
-                return res.json();
-            })
-            .then(data => {
-                // Agrupar pedidos por hora_pedido (redondeando a minutos)
-                const agrupados = {};
-                (data.pedidos || []).forEach(p => {
-                    let key = '';
-                    if (p.hora_pedido) {
-                        const d = new Date(p.hora_pedido);
-                        key = d.getFullYear() + '-' +
-                            String(d.getMonth() + 1).padStart(2, '0') + '-' +
-                            String(d.getDate()).padStart(2, '0') + ' ' +
-                            String(d.getHours()).padStart(2, '0') + ':' +
-                            String(d.getMinutes()).padStart(2, '0');
-                    }
-                    if (!agrupados[key]) agrupados[key] = [];
-                    agrupados[key].push(p);
-                });
-                // --- NUEVO: Mantener el mismo orden y numeración que en visualizar ---
-                const pedidosAgrupados = Object.entries(agrupados)
-                    .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([hora, productos], idx) => ({
-                        hora,
-                        productos,
-                        numero: idx + 1 // número de pedida consistente
-                    }));
-
-                // Separa pedidas pagadas y por pagar
-                const pedidasPagadas = pedidosAgrupados.filter(grupo =>
-                    grupo.productos.every(p => p.estado === 'Ya Pagada')
-                );
-                const pedidasPorPagar = pedidosAgrupados.filter(grupo =>
-                    grupo.productos.some(p => p.estado !== 'Ya Pagada')
-                );
-
-                // --- Tabla de pedidas ya pagadas (con número consistente) ---
-                let htmlPagadas = `<div style="margin-bottom:1.2rem;">`;
-                if (pedidasPagadas.length === 0) {
-                    htmlPagadas += `<div style="background:#f5f7fa;padding:1rem;border-radius:0.7rem;color:#888;text-align:center;font-weight:500;">
-                        No hay ninguna pedida ya pagada
-                    </div>`;
-                } else {
-                    htmlPagadas += `<div style="background:#eaffea;padding:1rem;border-radius:0.7rem;margin-bottom:0.7rem;">
-                        <strong style="color:#232323;">Pedidas ya pagadas:</strong>
-                        <table style="width:100%;margin-top:0.7rem;">
-                            <thead>
-                                <tr>
-                                    <th style="text-align:center;">N° Pedida</th>
-                                    <th style="text-align:center;">Hora</th>
-                                    <th style="text-align:left;">Producto</th>
-                                    <th style="text-align:center;">Cant.</th>
-                                    <th style="text-align:right;">Precio</th>
-                                    <th style="text-align:right;">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-                    let idxPedida = 0;
-                    pedidasPagadas.forEach((grupo) => {
-                        idxPedida++;
-                        let horaLegible = '-';
-                        if (grupo.hora) {
-                            const horaBD = grupo.productos[0]?.hora_pedido;
-                            let fechaObj;
-                            if (horaBD) {
-                                let str = horaBD.includes('T') ? horaBD : horaBD.replace(' ', 'T');
-                                fechaObj = new Date(str);
-                            }
-                            if (fechaObj && !isNaN(fechaObj.getTime())) {
-                                horaLegible = fechaObj.toLocaleTimeString('es-CO', { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit', 
-                                    second: '2-digit',
-                                    hour12: true 
-                                });
-                            }
-                        }
-                        const totalPedida = grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
-                        grupo.productos.forEach((p, idx) => {
-                            htmlPagadas += `
-                                <tr>
-                                    ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${grupo.numero}</td>` : ''}
-                                    ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
-                                    <td>${p.nombre_producto}</td>
-                                    <td style="text-align:center;">${p.cantidad}</td>
-                                    <td style="text-align:right;">$${parseFloat(p.subtotal/p.cantidad).toLocaleString('es-CO')}</td>
-                                    <td style="text-align:right;">$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
-                                </tr>
-                            `;
-                        });
-                        htmlPagadas += `
-                            <tr>
-                                <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${grupo.numero}:</td>
-                                <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
-                            </tr>
-                        `;
+                    const response = await fetch('/api/alquileres/finalizar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id_mesa: mesaId })
                     });
-                    htmlPagadas += `
-                            </tbody>
-                        </table>
-                    </div>`;
+
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        throw new Error(`Error al finalizar alquiler: ${errorData}`);
+                    }
+
+                    const data = await response.json();
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    // 3. Detener el contador local y resetear la UI
+                    if (intervalesMesa[mesaId] && intervalesMesa[mesaId].intervalId) {
+                        clearInterval(intervalesMesa[mesaId].intervalId);
+                        intervalesMesa[mesaId].intervalId = null;
+                    }
+
+                    if (detenerBtn) detenerBtn.classList.add('hidden');
+                    if (startBtn) {
+                        startBtn.classList.remove('hidden');
+                        startBtn.textContent = 'Iniciar';
+                    }
+                    if (pedidaBtn) pedidaBtn.classList.add('hidden');
+                    if (visualizarBtn) visualizarBtn.classList.add('hidden');
+                    if (pasarTiempoBtn) pasarTiempoBtn.classList.add('hidden');
+                    if (intervalesMesa[mesaId]) {
+                        intervalesMesa[mesaId].segundos = 0;
+                        intervalesMesa[mesaId].horaInicio = null;
+                    }
+                    guardarEstadoContadores();
+
+                    // 4. (Opcional) Notificación de éxito
+                    showNotification('Alquiler finalizado correctamente.');
+                } catch (error) {
+                    console.error('Error al finalizar el alquiler:', error);
+                    alert('Error al finalizar el alquiler: ' + (error.message || error));
                 }
-                htmlPagadas += `</div>`;
-
-                // --- Tabla de productos de pedidas por pagar (con número consistente) ---
-                let totalProductos = 0;
-                let htmlTabla = '';
-                pedidasPorPagar.forEach((grupo) => {
-                    let horaLegible = '-';
-                    if (grupo.hora) {
-                        const horaBD = grupo.productos[0]?.hora_pedido;
-                        let fechaObj;
-                        if (horaBD) {
-                            let str = horaBD.includes('T') ? horaBD : horaBD.replace(' ', 'T');
-                            fechaObj = new Date(str);
-                        }
-                        if (fechaObj && !isNaN(fechaObj.getTime())) {
-                            horaLegible = fechaObj.toLocaleTimeString('es-CO', { 
-                                hour: '2-digit', 
-                                minute: '2-digit', 
-                                second: '2-digit',
-                                hour12: true 
-                            });
-                        }
-                    }
-                    const totalPedida = grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
-                    grupo.productos.forEach((p, idx) => {
-                        htmlTabla += `
-                            <tr>
-                                ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${grupo.numero}</td>` : ''}
-                                ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
-                                <td>${p.nombre_producto}</td>
-                                <td style="text-align:center;">${p.cantidad}</td>
-                                <td style="text-align:right;">$${parseFloat(p.subtotal/p.cantidad).toLocaleString('es-CO')}</td>
-                                <td style="text-align:right;">$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
-                            </tr>
-                        `;
-                    });
-                    htmlTabla += `
-                        <tr>
-                            <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${grupo.numero}:</td>
-                            <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
-                        </tr>
-                    `;
-                    totalProductos += totalPedida;
-                });
-
-                // Tiempo y totales
-                const tiempo = data.tiempo || '00:00:00';
-                const valorTiempo = parseFloat(data.total_tiempo) || 0;
-                const totalFactura = valorTiempo + totalProductos;
-
-                // --- Modal HTML ---
-                const modal = document.createElement('div');
-                modal.id = 'modalFacturaDetener';
-                modal.className = 'modal';
-                modal.style.position = 'fixed';
-                modal.style.top = 0;
-                modal.style.left = 0;
-                modal.style.width = '100vw';
-                modal.style.height = '100vh';
-                modal.style.background = 'rgba(30,30,40,0.92)';
-                modal.style.display = 'flex';
-                modal.style.justifyContent = 'center';
-                modal.style.alignItems = 'center';
-                modal.style.zIndex = 4000;
-
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <div class="factura-logo"></div>
-                        <div class="factura-header">
-                            <h2>Factura de Mesa</h2>
-                            <div class="factura-info">Mesa: ${data.numero_mesa || ''} &nbsp; | &nbsp; Fecha: ${new Date().toLocaleDateString('es-CO')}</div>
-                        </div>
-                        ${htmlPagadas}
-                        <div class="factura-subtotal">
-                            <table style="width:100%;margin-bottom:1.2rem;">
-                                <tbody>
-                                    <tr>
-                                        <td><strong>Tiempo jugado:</strong></td>
-                                        <td style="text-align:right;">${tiempo}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Valor tiempo:</strong></td>
-                                        <td style="text-align:right;">$${valorTiempo.toLocaleString('es-CO')}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <strong style="color:#232323;">Productos consumidos (sin pedidas ya pagadas):</strong>
-                            <table class="factura-table">
-                                <thead>
-                                    <tr>
-                                        <th style="text-align:center;">N° Pedida</th>
-                                        <th style="text-align:center;">Hora</th>
-                                        <th style="text-align:left;">Producto</th>
-                                        <th style="text-align:center;">Cant.</th>
-                                        <th style="text-align:right;">Precio</th>
-                                        <th style="text-align:right;">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${htmlTabla || `<tr><td colspan="6" style="text-align:center;">No hay productos por pagar.</td></tr>`}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="5" style="text-align:right;font-weight:bold;">Total productos:</td>
-                                        <td style="text-align:right;font-weight:bold;">$${totalProductos.toLocaleString('es-CO')}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                        <div class="factura-totales">
-                            <span class="total-label">Total a pagar:</span>
-                            <span class="total-value">$${totalFactura.toLocaleString('es-CO')}</span>
-                        </div>
-                        <div class="factura-btns">
-                            <button class="cerrar">Cerrar</button>
-                            <button class="confirmar">Confirmar y finalizar</button>
-                        </div>
-                    </div>
-                `;
-
-                document.body.appendChild(modal);
-
-                // Mostrar el modal correctamente
-                setTimeout(() => {
-                    modal.classList.remove('hidden');
-                    modal.style.display = 'flex';
-                }, 10);
-
-                // Botón cerrar
-                modal.querySelector('.cerrar').onclick = () => {
-                    modal.remove();
-                };
-                // Botón confirmar
-                modal.querySelector('.confirmar').onclick = () => {
-                    modal.remove();
-                    if (typeof callback === 'function') callback();
-                };
-                // Cerrar al hacer clic fuera del contenido
-                modal.addEventListener('mousedown', function(e) {
-                    if (e.target === modal) {
-                        modal.remove();
-                    }
-                });
             });
+        }
     }
 
     // --- NUEVO: Mostrar totales de pedidas ---
@@ -1336,8 +1049,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <tr>
                             <th>N° Pedida</th>
                             <th>Hora de la Pedida</th>
-                            <th>Productos</th>
-                            <th>Cant.</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
                             <th>Subtotal</th>
                             <th>Acción</th>
                         </tr>
@@ -1377,7 +1091,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
                             <td>${p.nombre_producto}</td>
                             <td>${p.cantidad}</td>
-                            <td>$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
+                            <td style="text-align:right;">$${parseFloat(p.subtotal/p.cantidad).toLocaleString('es-CO')}</td>
+                            <td style="text-align:right;">$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
                             ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">
                                 <button class="btn-pagar-pedida" 
                                     data-mesa="${mesaId}" 
@@ -1393,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 html += `
                     <tr>
-                        <td colspan="4" style="text-align:right;font-weight:bold;">Total de la pedida N° ${grupo.numero}:</td>
+                        <td colspan="5" style="text-align:right;font-weight:bold;">Total de la pedida N° ${grupo.numero}:</td>
                         <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
                         <td></td>
                     </tr>
@@ -1403,7 +1118,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="4" style="text-align:right;font-weight:bold;">Total acumulado (sin "Ya Pagada"):</td>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5" style="text-align:right;font-weight:bold;">Total acumulado (sin "Ya Pagada"):</td>
                             <td style="font-weight:bold;">$${totalAcumulado.toLocaleString('es-CO')}</td>
                             <td></td>
                         </tr>
@@ -1474,7 +1192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
 
                     confirmModal.innerHTML = `
-                        <div style="background:#fff;padding:2rem 2.5rem;border-radius:1.2rem;box-shadow:0 4px 24px rgba(30,180,120,0.18);min-width:320px;max-width:90vw;display:flex;flex-direction:column;align-items:center;">
+                        <div style="background:#fff;padding:2rem 2.5rem;border-radius:1.2rem;box-shadow:0 4px 24px rgba(0,207,255,0.18);min-width:320px;max-width:90vw;display:flex;flex-direction:column;align-items:center;">
                             <div style="font-size:1.7rem;font-weight:700;margin-bottom:1.5rem;text-align:center;color:#000;">
                                 ${pregunta}
                             </div>
@@ -1532,46 +1250,257 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- NUEVO: Función para mostrar mensaje elegante de éxito ---
-    function mostrarMensajeExitoPedida() {
-        // Elimina cualquier mensaje anterior
-        let msg = document.getElementById('msgEstadoPedida');
-        if (msg) msg.remove();
+    // MODAL DE DETENER/FACTURAR IGUAL A DETALLES DE MESA
+    function crearModalDetenerMesa() {
+        let modal = document.getElementById('modalDetenerMesa');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modalDetenerMesa';
+            modal.className = 'modal hidden';
+            modal.innerHTML = `
+                <div class="modal-content visualizar-modal-content" style="max-width:900px; min-width:320px; border-radius:1.5rem; background:linear-gradient(120deg,#232946 0%,#00cfff 100%); box-shadow:0 8px 32px rgba(0,207,255,0.18); position:relative; padding:2.5rem 2rem 2rem 2rem;">
+                    <button class="close-btn" id="closeDetenerMesaModal" style="position:absolute;top:18px;right:24px;font-size:2rem;color:#e74c3c;background:none;border:none;cursor:pointer;transition:color 0.2s;">&times;</button>
+                    <div id="detenerMesaDetalle"></div>
+                    <div style="display:flex;gap:1.2rem;justify-content:flex-end;margin-top:2.5rem;">
+                        <button id="cancelarDetenerMesaBtn" style="background:#e74c3c;color:#fff;padding:0.7rem 2.2rem;border-radius:0.7rem;font-size:1.13rem;border:none;cursor:pointer;">Cancelar</button>
+                        <button id="confirmarDetenerMesaBtn" style="background:#007bff;color:#fff;padding:0.7rem 2.2rem;border-radius:0.7rem;font-size:1.13rem;border:none;cursor:pointer;">Confirmar y finalizar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        return modal;
+    }
 
-        msg = document.createElement('div');
-        msg.id = 'msgEstadoPedida';
-        msg.style.position = 'fixed';
-        msg.style.top = '50%';
-        msg.style.left = '50%';
-        msg.style.transform = 'translate(-50%, -50%)';
-        msg.style.background = 'linear-gradient(90deg,#43e97b 60%,#38f9d7 100%)';
-        msg.style.color = '#232946';
-        msg.style.padding = '2.2rem 3.5rem';
-        msg.style.borderRadius = '1.5rem';
-        msg.style.boxShadow = '0 8px 32px rgba(30,180,120,0.18)';
-        msg.style.fontSize = '2.1rem';
-        msg.style.fontWeight = 'bold';
-        msg.style.zIndex = 9999;
-        msg.style.display = 'flex';
-        msg.style.alignItems = 'center';
-        msg.style.gap = '1.5rem';
-        msg.style.textAlign = 'center';
-        msg.innerHTML = `
-            <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="12" fill="#fff"/>
-                <path d="M7 13l3 3 7-7" stroke="#43e97b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Estado de pedida actualizado correctamente
-        `;
-        document.body.appendChild(msg);
+    async function mostrarModalDetener(mesaId, onFinalizar) {
+        const modal = crearModalDetenerMesa();
+        const detalle = modal.querySelector('#detenerMesaDetalle');
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
 
-        setTimeout(() => {
-            msg.style.transition = 'opacity 0.5s';
-            msg.style.opacity = '0';
-            setTimeout(() => {
-                if (msg.parentNode) msg.parentNode.removeChild(msg);
-            }, 500);
-        }, 1800);
+        try {
+            const res = await fetch(`/api/mesas/${mesaId}/detalle`);
+            if (!res.ok) throw new Error('Error al obtener detalles');
+            const data = await res.json();
+
+            // Agrupar pedidos por hora_pedido
+            let pedidosAgrupados = [];
+            if (Array.isArray(data.pedidos) && data.pedidos.length > 0) {
+                const agrupados = {};
+                data.pedidos.forEach(p => {
+                    let key = '';
+                    if (p.hora_pedido) {
+                        const d = new Date(p.hora_pedido);
+                        key = d.getFullYear() + '-' +
+                            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                            String(d.getDate()).padStart(2, '0') + ' ' +
+                            String(d.getHours()).padStart(2, '0') + ':' +
+                            String(d.getMinutes()).padStart(2, '0');
+                    }
+                    if (!agrupados[key]) agrupados[key] = [];
+                    agrupados[key].push(p);
+                });
+                pedidosAgrupados = Object.entries(agrupados)
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([hora, productos], idx) => ({
+                        hora,
+                        productos,
+                        numero: idx + 1
+                    }));
+            }
+
+            // Separa pedidas pagadas y por pagar
+            const pedidasPagadas = pedidosAgrupados.filter(grupo =>
+                grupo.productos.every(p => p.estado === 'Ya Pagada')
+            );
+            const pedidasPorPagar = pedidosAgrupados.filter(grupo =>
+                grupo.productos.some(p => p.estado !== 'Ya Pagada')
+            );
+
+            // Calcular total de pedidas por pagar
+            let totalPedidasPorPagar = 0;
+            pedidasPorPagar.forEach(grupo => {
+                totalPedidasPorPagar += grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
+            });
+            // Valor tiempo jugado
+            const valorTiempoJugado = parseFloat(data.total_tiempo || 0);
+            const totalAPagar = totalPedidasPorPagar + valorTiempoJugado;
+
+            let html = `
+                <table>
+                    <tr>
+                        <th>Mesa</th>
+                        <td>${data.numero_mesa}</td>
+                    </tr>
+                    <tr>
+                        <th>Estado</th>
+                        <td>${data.estado}</td>
+                    </tr>
+                    <tr>
+                        <th>Hora de inicio</th>
+                        <td>${data.hora_inicio ? new Date(data.hora_inicio.replace(' ', 'T')).toLocaleTimeString('es-CO', { hour12: true }) : '-'}</td>
+                    </tr>
+                    <tr>
+                        <th>Tiempo jugado</th>
+                        <td>${data.tiempo || '00:00:00'}</td>
+                    </tr>
+                    <tr>
+                        <th>Valor tiempo jugado</th>
+                        <td>$${valorTiempoJugado.toLocaleString('es-CO')}</td>
+                    </tr>
+                </table>
+            `;
+
+            // Pedidas ya pagadas
+            html += `
+                <h3>Pedidas ya pagadas</h3>
+                <div style="background:#eaffea;padding:1rem;border-radius:0.7rem;margin-bottom:0.7rem;">
+                    <table style="width:100%;margin-top:0.7rem;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;">N° Pedida</th>
+                                <th style="text-align:center;">Hora</th>
+                                <th style="text-align:left;">Producto</th>
+                                <th style="text-align:center;">Cant.</th>
+                                <th style="text-align:right;">Precio</th>
+                                <th style="text-align:right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${
+                                pedidasPagadas.length === 0
+                                ? `<tr><td colspan="6" style="text-align:center;color:#888;">No hay ninguna pedida ya pagada</td></tr>`
+                                : pedidasPagadas.map(grupo => {
+                                    let horaLegible = '-';
+                                    if (grupo.hora) {
+                                        const horaBD = grupo.productos[0]?.hora_pedido;
+                                        let fechaObj;
+                                        if (horaBD) {
+                                            let str = horaBD.includes('T') ? horaBD : horaBD.replace(' ', 'T');
+                                            fechaObj = new Date(str);
+                                        }
+                                        if (fechaObj && !isNaN(fechaObj.getTime())) {
+                                            horaLegible = fechaObj.toLocaleTimeString('es-CO', { 
+                                                hour: '2-digit', 
+                                                minute: '2-digit', 
+                                                second: '2-digit',
+                                                hour12: true 
+                                            });
+                                        }
+                                    }
+                                    const totalPedida = grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
+                                    return grupo.productos.map((p, idx) => `
+                                        <tr>
+                                            ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${grupo.numero}</td>` : ''}
+                                            ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
+                                            <td>${p.nombre_producto}</td>
+                                            <td>${p.cantidad}</td>
+                                            <td style="text-align:right;">$${parseFloat(p.subtotal/p.cantidad).toLocaleString('es-CO')}</td>
+                                            <td style="text-align:right;">$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
+                                        </tr>
+                                    `).join('') + `
+                                        <tr>
+                                            <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${grupo.numero}:</td>
+                                            <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
+                                        </tr>
+                                    `;
+                                }).join('')
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Pedidas por pagar
+            html += `
+                <h3>Pedidas por pagar</h3>
+                <div style="background:#fffbe6;padding:1rem;border-radius:0.7rem;margin-bottom:0.7rem;">
+                    <table style="width:100%;margin-top:0.7rem;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;">N° Pedida</th>
+                                <th style="text-align:center;">Hora</th>
+                                <th style="text-align:left;">Producto</th>
+                                <th style="text-align:center;">Cant.</th>
+                                <th style="text-align:right;">Precio</th>
+                                <th style="text-align:right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${
+                                pedidasPorPagar.length === 0
+                                ? `<tr><td colspan="6" style="text-align:center;color:#888;">No hay pedidas por pagar</td></tr>`
+                                : pedidasPorPagar.map(grupo => {
+                                    let horaLegible = '-';
+                                    if (grupo.hora) {
+                                        const horaBD = grupo.productos[0]?.hora_pedido;
+                                        let fechaObj;
+                                        if (horaBD) {
+                                            let str = horaBD.includes('T') ? horaBD : horaBD.replace(' ', 'T');
+                                            fechaObj = new Date(str);
+                                        }
+                                        if (fechaObj && !isNaN(fechaObj.getTime())) {
+                                            horaLegible = fechaObj.toLocaleTimeString('es-CO', { 
+                                                hour: '2-digit', 
+                                                minute: '2-digit', 
+                                                second: '2-digit',
+                                                hour12: true 
+                                            });
+                                        }
+                                    }
+                                    const totalPedida = grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
+                                    return grupo.productos.map((p, idx) => `
+                                        <tr>
+                                            ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${grupo.numero}</td>` : ''}
+                                            ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
+                                            <td>${p.nombre_producto}</td>
+                                            <td style="text-align:center;">${p.cantidad}</td>
+                                            <td style="text-align:right;">$${parseFloat(p.subtotal/p.cantidad).toLocaleString('es-CO')}</td>
+                                            <td style="text-align:right;">$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
+                                        </tr>
+                                    `).join('') + `
+                                        <tr>
+                                            <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${grupo.numero}:</td>
+                                            <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
+                                        </tr>
+                                    `;
+                                }).join('')
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Campo total a pagar (abajo del contenido)
+            html += `
+                <div style="text-align:right; margin-top:1.5rem; font-size:1.35rem; font-weight:bold; color:#000000FF; background:#fff; border-radius:1rem; box-shadow:0 2px 12px #00cfff22; padding:1.2rem 2rem;">
+                    Total a pagar: 
+                    <span id="totalAPagarDetenerMesa">$${totalAPagar.toLocaleString('es-CO')}</span>
+                </div>
+            `;
+
+            detalle.innerHTML = html;
+        } catch (err) {
+            detalle.innerHTML = `<p style="color:red;">Error al cargar detalles: ${err.message}</p>`;
+        }
+
+        // Botón cancelar: solo cierra el modal
+        modal.querySelector('#cancelarDetenerMesaBtn').onclick =
+        modal.querySelector('#closeDetenerMesaModal').onclick = function() {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        };
+
+        // Botón confirmar: solo finaliza el tiempo y oculta el botón "Ver Totales"
+        modal.querySelector('#confirmarDetenerMesaBtn').onclick = async function() {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            // Ocultar el botón "Ver Totales" de la mesa correspondiente
+            const verTotalesBtn = document.querySelector(`.ver-totales-btn[data-mesa="${mesaId}"]`);
+            if (verTotalesBtn) verTotalesBtn.style.display = 'none';
+            // Solo finalizar el tiempo (llama a la función de finalizar alquiler)
+            if (typeof onFinalizar === 'function') await onFinalizar();
+        };
     }
 
     // Cargar mesas al iniciar
@@ -1676,11 +1605,307 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cuando se detiene el tiempo en una mesa
     document.body.addEventListener('click', function(e) {
+
         if (e.target.classList.contains('detener-btn')) {
             const mesaId = e.target.getAttribute('data-mesa');
-            // marcarTiempoDetenido(mesaId);
+            toggleContador(mesaId, e.target);
         }
     });
 
     // ...existing code...
 });
+
+// MODAL DE DETENER/FACTURAR IGUAL A DETALLES DE MESA
+function crearModalDetenerMesa() {
+    let modal = document.getElementById('modalDetenerMesa');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalDetenerMesa';
+        modal.className = 'modal hidden';
+        modal.innerHTML = `
+            <div class="modal-content visualizar-modal-content" style="max-width:900px; min-width:320px; border-radius:1.5rem; background:linear-gradient(120deg,#232946 0%,#00cfff 100%); box-shadow:0 8px 32px rgba(0,207,255,0.18); position:relative; padding:2.5rem 2rem 2rem 2rem;">
+                <button class="close-btn" id="closeDetenerMesaModal" style="position:absolute;top:18px;right:24px;font-size:2rem;color:#e74c3c;background:none;border:none;cursor:pointer;transition:color 0.2s;">&times;</button>
+                <div id="detenerMesaDetalle"></div>
+                <div style="display:flex;gap:1.2rem;justify-content:flex-end;margin-top:2.5rem;">
+                    <button id="cancelarDetenerMesaBtn" style="background:#e74c3c;color:#fff;padding:0.7rem 2.2rem;border-radius:0.7rem;font-size:1.13rem;border:none;cursor:pointer;">Cancelar</button>
+                    <button id="confirmarDetenerMesaBtn" style="background:#007bff;color:#fff;padding:0.7rem 2.2rem;border-radius:0.7rem;font-size:1.13rem;border:none;cursor:pointer;">Confirmar y finalizar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    return modal;
+}
+
+async function mostrarModalDetener(mesaId, onFinalizar) {
+    const modal = crearModalDetenerMesa();
+    const detalle = modal.querySelector('#detenerMesaDetalle');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    try {
+        const res = await fetch(`/api/mesas/${mesaId}/detalle`);
+        if (!res.ok) throw new Error('Error al obtener detalles');
+        const data = await res.json();
+
+        // Agrupar pedidos por hora_pedido
+        let pedidosAgrupados = [];
+        if (Array.isArray(data.pedidos) && data.pedidos.length > 0) {
+            const agrupados = {};
+            data.pedidos.forEach(p => {
+                let key = '';
+                if (p.hora_pedido) {
+                    const d = new Date(p.hora_pedido);
+                    key = d.getFullYear() + '-' +
+                        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(d.getDate()).padStart(2, '0') + ' ' +
+                        String(d.getHours()).padStart(2, '0') + ':' +
+                        String(d.getMinutes()).padStart(2, '0');
+                }
+                if (!agrupados[key]) agrupados[key] = [];
+                agrupados[key].push(p);
+            });
+            pedidosAgrupados = Object.entries(agrupados)
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .map(([hora, productos], idx) => ({
+                    hora,
+                    productos,
+                    numero: idx + 1
+                }));
+        }
+
+        // Separa pedidas pagadas y por pagar
+        const pedidasPagadas = pedidosAgrupados.filter(grupo =>
+            grupo.productos.every(p => p.estado === 'Ya Pagada')
+        );
+        const pedidasPorPagar = pedidosAgrupados.filter(grupo =>
+            grupo.productos.some(p => p.estado !== 'Ya Pagada')
+        );
+
+        // Calcular total de pedidas por pagar
+        let totalPedidasPorPagar = 0;
+        pedidasPorPagar.forEach(grupo => {
+            totalPedidasPorPagar += grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
+        });
+        // Valor tiempo jugado
+        const valorTiempoJugado = parseFloat(data.total_tiempo || 0);
+        const totalAPagar = totalPedidasPorPagar + valorTiempoJugado;
+
+        let html = `
+            <table>
+                <tr>
+                    <th>Mesa</th>
+                    <td>${data.numero_mesa}</td>
+                </tr>
+                <tr>
+                    <th>Estado</th>
+                    <td>${data.estado}</td>
+                </tr>
+                <tr>
+                    <th>Hora de inicio</th>
+                    <td>${data.hora_inicio ? new Date(data.hora_inicio.replace(' ', 'T')).toLocaleTimeString('es-CO', { hour12: true }) : '-'}</td>
+                </tr>
+                <tr>
+                    <th>Tiempo jugado</th>
+                    <td>${data.tiempo || '00:00:00'}</td>
+                </tr>
+                <tr>
+                    <th>Valor tiempo jugado</th>
+                    <td>$${valorTiempoJugado.toLocaleString('es-CO')}</td>
+                </tr>
+            </table>
+        `;
+
+        // Pedidas ya pagadas
+        html += `
+            <h3>Pedidas ya pagadas</h3>
+            <div style="background:#eaffea;padding:1rem;border-radius:0.7rem;margin-bottom:0.7rem;">
+                <table style="width:100%;margin-top:0.7rem;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center;">N° Pedida</th>
+                            <th style="text-align:center;">Hora</th>
+                            <th style="text-align:left;">Producto</th>
+                            <th style="text-align:center;">Cant.</th>
+                            <th style="text-align:right;">Precio</th>
+                            <th style="text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${
+                            pedidasPagadas.length === 0
+                            ? `<tr><td colspan="6" style="text-align:center;color:#888;">No hay ninguna pedida ya pagada</td></tr>`
+                            : pedidasPagadas.map(grupo => {
+                                let horaLegible = '-';
+                                if (grupo.hora) {
+                                    const horaBD = grupo.productos[0]?.hora_pedido;
+                                    let fechaObj;
+                                    if (horaBD) {
+                                        let str = horaBD.includes('T') ? horaBD : horaBD.replace(' ', 'T');
+                                        fechaObj = new Date(str);
+                                    }
+                                    if (fechaObj && !isNaN(fechaObj.getTime())) {
+                                        horaLegible = fechaObj.toLocaleTimeString('es-CO', { 
+                                            hour: '2-digit', 
+                                            minute: '2-digit', 
+                                            second: '2-digit',
+                                            hour12: true 
+                                        });
+                                    }
+                                }
+                                const totalPedida = grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
+                                return grupo.productos.map((p, idx) => `
+                                    <tr>
+                                        ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${grupo.numero}</td>` : ''}
+                                        ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
+                                        <td>${p.nombre_producto}</td>
+                                        <td>${p.cantidad}</td>
+                                        <td style="text-align:right;">$${parseFloat(p.subtotal/p.cantidad).toLocaleString('es-CO')}</td>
+                                        <td style="text-align:right;">$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
+                                    </tr>
+                                `).join('') + `
+                                    <tr>
+                                        <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${grupo.numero}:</td>
+                                        <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
+                                    </tr>
+                                `;
+                            }).join('')
+                        }
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        // Pedidas por pagar
+        html += `
+            <h3>Pedidas por pagar</h3>
+            <div style="background:#fffbe6;padding:1rem;border-radius:0.7rem;margin-bottom:0.7rem;">
+                <table style="width:100%;margin-top:0.7rem;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center;">N° Pedida</th>
+                            <th style="text-align:center;">Hora</th>
+                            <th style="text-align:left;">Producto</th>
+                            <th style="text-align:center;">Cant.</th>
+                            <th style="text-align:right;">Precio</th>
+                            <th style="text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${
+                            pedidasPorPagar.length === 0
+                            ? `<tr><td colspan="6" style="text-align:center;color:#888;">No hay pedidas por pagar</td></tr>`
+                            : pedidasPorPagar.map(grupo => {
+                                let horaLegible = '-';
+                                if (grupo.hora) {
+                                    const horaBD = grupo.productos[0]?.hora_pedido;
+                                    let fechaObj;
+                                    if (horaBD) {
+                                        let str = horaBD.includes('T') ? horaBD : horaBD.replace(' ', 'T');
+                                        fechaObj = new Date(str);
+                                    }
+                                    if (fechaObj && !isNaN(fechaObj.getTime())) {
+                                        horaLegible = fechaObj.toLocaleTimeString('es-CO', { 
+                                            hour: '2-digit', 
+                                            minute: '2-digit', 
+                                            second: '2-digit',
+                                            hour12: true 
+                                        });
+                                    }
+                                }
+                                const totalPedida = grupo.productos.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
+                                return grupo.productos.map((p, idx) => `
+                                    <tr>
+                                        ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${grupo.numero}</td>` : ''}
+                                        ${idx === 0 ? `<td rowspan="${grupo.productos.length}" style="vertical-align:middle;text-align:center;">${horaLegible}</td>` : ''}
+                                        <td>${p.nombre_producto}</td>
+                                        <td style="text-align:center;">${p.cantidad}</td>
+                                        <td style="text-align:right;">$${parseFloat(p.subtotal/p.cantidad).toLocaleString('es-CO')}</td>
+                                        <td style="text-align:right;">$${parseFloat(p.subtotal).toLocaleString('es-CO')}</td>
+                                    </tr>
+                                `).join('') + `
+                                    <tr>
+                                        <td colspan="5" style="text-align:right;font-weight:bold;">Subtotal de la pedida N° ${grupo.numero}:</td>
+                                        <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
+                                    </tr>
+                                `;
+                            }).join('')
+                        }
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        // Campo total a pagar (abajo del contenido)
+        html += `
+            <div style="text-align:right; margin-top:1.5rem; font-size:1.35rem; font-weight:bold; color:#00cfff; background:#fff; border-radius:1rem; box-shadow:0 2px 12px #00cfff22; padding:1.2rem 2rem;">
+                Total a pagar (tiempo + pedidas por pagar): 
+                <span id="totalAPagarDetenerMesa">$${totalAPagar.toLocaleString('es-CO')}</span>
+            </div>
+        `;
+
+        detalle.innerHTML = html;
+    } catch (err) {
+        detalle.innerHTML = `<p style="color:red;">Error al cargar detalles: ${err.message}</p>`;
+    }
+
+    // Botón cancelar: solo cierra el modal
+    modal.querySelector('#cancelarDetenerMesaBtn').onclick =
+    modal.querySelector('#closeDetenerMesaModal').onclick = function() {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    };
+
+    // Botón confirmar: solo finaliza el tiempo y oculta el botón "Ver Totales"
+    modal.querySelector('#confirmarDetenerMesaBtn').onclick = async function() {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        // Ocultar el botón "Ver Totales" de la mesa correspondiente
+        const verTotalesBtn = document.querySelector(`.ver-totales-btn[data-mesa="${mesaId}"]`);
+        if (verTotalesBtn) verTotalesBtn.style.display = 'none';
+        // Solo finalizar el tiempo (llama a la función de finalizar alquiler)
+        if (typeof onFinalizar === 'function') await onFinalizar();
+    };
+}
+
+// --- NUEVO: Función para mostrar mensaje elegante de éxito ---
+function mostrarMensajeExitoPedida() {
+    // Elimina cualquier mensaje anterior
+    let msg = document.getElementById('msgEstadoPedida');
+    if (msg) msg.remove();
+
+    msg = document.createElement('div');
+    msg.id = 'msgEstadoPedida';
+    msg.style.position = 'fixed';
+    msg.style.top = '50%';
+    msg.style.left = '50%';
+    msg.style.transform = 'translate(-50%, -50%)';
+    msg.style.background = 'linear-gradient(90deg,#43e97b 60%,#38f9d7 100%)';
+    msg.style.color = '#232946';
+    msg.style.padding = '2.2rem 3.5rem';
+    msg.style.borderRadius = '1.5rem';
+    msg.style.boxShadow = '0 8px 32px rgba(0,207,255,0.18)';
+    msg.style.fontSize = '2.1rem';
+    msg.style.fontWeight = 'bold';
+    msg.style.zIndex = 9999;
+    msg.style.display = 'flex';
+    msg.style.alignItems = 'center';
+    msg.style.gap = '1.5rem';
+    msg.style.textAlign = 'center';
+    msg.innerHTML = `
+        <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="12" fill="#fff"/>
+            <path d="M7 13l3 3 7-7" stroke="#43e97b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Estado de pedida actualizado correctamente
+    `;
+    document.body.appendChild(msg);
+
+    setTimeout(() => {
+        msg.style.transition = 'opacity 0.5s';
+        msg.style.opacity = '0';
+        setTimeout(() => {
+            if (msg.parentNode) msg.parentNode.removeChild(msg);
+        }, 500);
+    }, 1800);
+}

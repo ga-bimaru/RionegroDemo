@@ -129,6 +129,65 @@
             width: 100vw;
             overflow-x: hidden;
         }
+        /* Bordes para tablas de detalles de mesa (modal de detener/factura) */
+#detenerMesaDetalle table,
+#detenerMesaDetalle th,
+#detenerMesaDetalle td,
+#detenerMesaDetalle tr {
+    border: 2.5px solid #00cfff !important;
+    border-collapse: separate !important;
+    box-sizing: border-box;
+}
+#detenerMesaDetalle table {
+    width: 100%;
+    background: #fff;
+    border-radius: 1rem;
+    overflow: auto;
+    box-shadow: 0 2px 12px #00cfff22;
+    margin-bottom: 1.2rem;
+    table-layout: auto;
+    border-spacing: 0;
+}
+#detenerMesaDetalle th, #detenerMesaDetalle td {
+    padding: 1rem 1.2rem;
+    font-size: 1.13rem;
+    color: #232946;
+    background: #fff;
+    text-align: left;
+    font-weight: 600;
+    transition: background 0.2s;
+    word-break: break-word;
+    z-index: 1;
+    position: relative;
+}
+#detenerMesaDetalle th {
+    background: #fff;
+    color: #0056b3;
+    font-weight: 900;
+    font-size: 1.18rem;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px #00cfff33, 0 1px 0 #fff;
+}
+#detenerMesaDetalle tr:last-child td {
+    border-bottom: none;
+}
+#detenerMesaDetalle tr:hover td {
+    background: #f5f7fa;
+    color: #00cfff;
+}
+#detenerMesaDetalle thead th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 3;
+}
+@media (max-width: 950px) {
+    #detenerMesaDetalle table {
+        min-width: 320px;
+        font-size: 0.98rem;
+        max-width: 99vw;
+    }
+}
     </style>
 </head>
 <body>
@@ -172,48 +231,79 @@
 
     <!-- Modal para visualizar detalles de mesa -->
     <div id="visualizarModal" class="modal hidden">
-        <div class="modal-content" style="max-width:900px; min-width:320px;">
-            <span class="close-btn" id="closeVisualizarModal">&times;</span>
-            <h2>Detalle de Mesa</h2>
-            <!-- Snackbar para scroll horizontal -->
-            <div id="snackbar-scroll" style="width:100%;margin-bottom:8px;"></div>
-            <div id="visualizarDetalle" style="overflow-x:auto; max-width:100vw; padding-bottom: 1rem;">
-                <!-- ...el contenido de la tabla se genera dinámicamente por JS... -->
+        <div class="modal-content visualizar-modal-content" style="max-width:900px; min-width:320px; border-radius:1.5rem; background:linear-gradient(120deg,#232946 0%,#00cfff 100%); box-shadow:0 8px 32px rgba(0,207,255,0.18); position:relative; padding:2.5rem 2rem 2rem 2rem;">
+            <button class="close-btn visualizar-close-btn" id="closeVisualizarModal" style="position:absolute;top:18px;right:24px;font-size:2rem;color:#e74c3c;background:none;border:none;cursor:pointer;transition:color 0.2s;">&times;</button>
+            <div class="visualizar-header" style="display:flex;align-items:center;justify-content:center;gap:1.2rem;margin-bottom:1.2rem;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;background:linear-gradient(135deg,#00cfff 60%,#232946 100%);border-radius:50%;box-shadow:0 2px 12px rgba(0,207,255,0.18);">
+                    <svg width="38" height="38" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" fill="#232946" stroke="#00cfff" stroke-width="4"/><circle cx="32" cy="32" r="18" fill="#fff" stroke="#e0e7ef" stroke-width="2"/><text x="32" y="44" text-anchor="middle" font-size="26" font-family="Arial, sans-serif" fill="#232946" font-weight="bold" dominant-baseline="middle">8</text></svg>
+                </span>
+                <h2
+                    style="
+                        margin:0;
+                        color:#fff;
+                        font-size:2.7rem;
+                        font-family:'Orbitron',Arial,sans-serif;
+                        font-weight:900;
+                        letter-spacing:2px;
+                        background:none;
+                        -webkit-background-clip:initial;
+                        background-clip:initial;
+                        -webkit-text-fill-color:initial;
+                        text-shadow: none;
+                        border-bottom: 4px solid #fff;
+                        display:inline-block;
+                        padding-bottom:0.3rem;
+                        margin-bottom:0.7rem;
+                        filter: none;
+                    "
+                >
+                    Detalle de Mesa
+                </h2>
             </div>
+            <div class="visualizar-info" style="color:#00cfff;font-size:1.13rem;text-align:center;margin-bottom:1.2rem;font-weight:500;">
+                <!-- Aquí puedes poner info adicional si lo deseas -->
+            </div>
+            <div id="visualizarDetalle" class="visualizar-detalle" style="overflow-x:auto; max-width:100vw; padding-bottom: 1rem; background:#fff; border-radius:1rem; box-shadow:0 2px 12px rgba(0,207,255,0.08);">
+                <table style="min-width:600px;">
+                <tbody>
+                    <tr>
+                        <th style="background:#00cfff;color:#fff;">Mesa</th>
+                        <td style="color:#232946;">3</td>
+                    </tr>
+                    <!-- Eliminado: Estado -->
+                    <tr>
+                        <th style="background:#00cfff;color:#fff;">Hora de inicio</th>
+                        <td id="hora-inicio-vz" style="color:#232946;">11:22:05 p.&nbsp;m.</td>
+                    </tr>
+                    <tr>
+                        <th style="background:#00cfff;color:#fff;">Tiempo transcurrido</th>
+                        <td id="tiempo-transcurrido-vz" style="color:#232946;">00:00:52</td>
+                    </tr>
+                    <tr>
+                        <th style="background:#00cfff;color:#fff;">Precio por hora</th>
+                        <td style="color:#232946;">$6.000</td>
+                    </tr>
+                    <tr>
+                        <th style="background:#00cfff;color:#fff;">Total a pagar (tiempo)</th>
+                        <td id="total-tiempo-vz" style="color:#232946;">$87</td>
+                    </tr>
+                    <tr>
+                        <th style="background:#00cfff;color:#fff;">Pedidos realizados</th>
+                        <td style="color:#232946;">0</td>
+                    </tr>
+                </tbody>
+            </table>
+            <em style="color:#888;font-size:1.13rem;">No hay pedidos registrados para esta mesa.</em>
         </div>
+    </div>
     </div>
 
-    <!-- Modal de factura detallada con icono de bola de pool -->
-    <div id="modalFacturaDetener" class="modal hidden" style="display:none;">
-        <div class="modal-content">
-            <div class="factura-logo">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="32" cy="32" r="30" fill="#232946" stroke="#00cfff" stroke-width="4"/>
-                    <circle cx="32" cy="32" r="18" fill="#fff" stroke="#e0e7ef" stroke-width="2"/>
-                    <text x="32" y="44" text-anchor="middle" font-size="26" font-family="Arial, sans-serif" fill="#232946" font-weight="bold" dominant-baseline="middle">8</text>
-                </svg>
-            </div>
-            <div class="factura-header">
-                <h2>Factura de Mesa</h2>
-                <div class="factura-info"><!-- Aquí puedes poner fecha, mesa, etc. dinámicamente --></div>
-            </div>
-            <table class="factura-table">
-                <!-- Aquí se llenan los detalles de la factura dinámicamente -->
-            </table>
-            <div class="factura-subtotal"><!-- Subtotales dinámicos --></div>
-            <div class="factura-totales">
-                <span class="total-label">Total a pagar:</span>
-                <span class="total-value"><!-- Total dinámico --></span>
-            </div>
-            <div class="factura-btns">
-                <button class="cerrar">Cerrar</button>
-                <button class="confirmar">Confirmar y finalizar</button>
-            </div>
-        </div>
-    </div>
+    <!-- Ejemplo de combo box para seleccionar mesa destino en el modal de transferencia -->
+    <select id="comboMesaDestino">
+        <!-- Las opciones se llenan dinámicamente -->
+    </select>
 
     <script src="js/index.js" type="module"></script>
-    <script src="js/factura.js" type="module"></script>
     <script src="js/estado-pedida.js"></script>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -226,46 +316,362 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 });
-</script>
-<style>
-/* --- NUEVO: Ajuste para tablas dentro del modal de detalles --- */
-#visualizarDetalle table {
-    min-width: 650px;
-    max-width: 100%;
-    width: max-content;
-    margin: 0 auto 1.2rem auto;
+
+// Cuando llenes el combo box de mesas destino para transferir tiempo:
+function llenarComboMesasDestino(mesas) {
+    const combo = document.getElementById('comboMesaDestino');
+    combo.innerHTML = '';
+    // Solo agregar mesas que estén disponibles
+    mesas.filter(m => m.estado === 'Disponible').forEach(mesa => {
+        const option = document.createElement('option');
+        option.value = mesa.id_mesa;
+        option.textContent = `Mesa ${mesa.numero}`;
+        combo.appendChild(option);
+    });
+}
+
+// Recargar la página al hacer clic en cualquier botón con clase "btn-iniciar"
+document.addEventListener('click', function(e) {
+    // Si el elemento clickeado tiene la clase "btn-iniciar", recarga la página
+    if (e.target.classList && e.target.classList.contains('btn-iniciar')) {
+        location.reload();
+    }
+});
+    </script>
+    <style>
+/* --- CUADRICULA NOTABLE SOLO CON BORDES COLORIDOS, FONDO BLANCO Y SIN INTERPOSICIÓN DE FILAS/CELDAS --- */
+#visualizarDetalle table,
+#visualizarDetalle th,
+#visualizarDetalle td,
+#visualizarDetalle tr,
+#totalesMesaDetalle table,
+#totalesMesaDetalle th,
+#totalesMesaDetalle td,
+#totalesMesaDetalle tr {
+    border: 2.5px solid #00cfff !important;
+    border-collapse: separate !important;
+    box-sizing: border-box;
+}
+#visualizarDetalle table,
+#totalesMesaDetalle table {
+    width: 100%;
     background: #fff;
     border-radius: 1rem;
     overflow: auto;
-    box-shadow: 0 2px 12px rgba(0,255,255,0.10);
+    box-shadow: 0 2px 12px #00cfff22;
+    margin-bottom: 1.2rem;
+    table-layout: auto;
+    border-spacing: 0;
 }
-#visualizarDetalle th, #visualizarDetalle td {
-    padding: 0.7rem 1.1rem;
-    border-bottom: 1px solid #e0e0e0;
+#visualizarDetalle th, #visualizarDetalle td,
+#totalesMesaDetalle th, #totalesMesaDetalle td {
+    padding: 1rem 1.2rem;
+    font-size: 1.13rem;
+    color: #232946;
+    background: #fff;
     text-align: left;
-    font-size: 1.08rem;
-    white-space: nowrap;
+    transition: background 0.2s;
+    word-break: break-word;
+    z-index: 1;
+    position: relative;
 }
-#visualizarDetalle th {
+#visualizarDetalle th, #totalesMesaDetalle th {
+    background: #fff;
+    color: #0056b3; /* Azul fuerte y más notable */
+    font-weight: 900;
+    font-size: 1.18rem;
+    text-align: left;
+    z-index: 2;
+    position: relative;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px #00cfff33, 0 1px 0 #fff;
+}
+#visualizarDetalle td, #totalesMesaDetalle td {
+    background: #fff;
+    color: #232946;
+    font-weight: 600;
+}
+#visualizarDetalle tr:hover td,
+#totalesMesaDetalle tr:hover td {
     background: #f5f7fa;
     color: #00cfff;
-    font-weight: 700;
+}
+#visualizarDetalle table thead th,
+#totalesMesaDetalle table thead th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 3;
+}
+#visualizarDetalle table,
+#totalesMesaDetalle table {
+    border-spacing: 0;
+}
+#totalesMesaDetalle td.subtotal-col {
+    min-width: 160px;
+    max-width: 220px;
+    width: 180px;
+    text-align: right;
+    white-space: nowrap;
+}
+/* --- FIN: CUADRICULA PARA AMBOS MODALES --- */
+
+/* --- MODAL DE VER TOTALES IGUAL AL DE VISUALIZAR MESA Y PEDIDAS --- */
+#modalTotalesMesa .modal-content {
+    max-width: 1400px !important;
+    min-width: 0;
+    width: 98vw !important;
+    border-radius: 1.5rem;
+    background: linear-gradient(120deg,#232946 0%,#00cfff 100%);
+    box-shadow: 0 8px 32px rgba(0,207,255,0.18);
+    position: relative;
+    padding: 2.5rem 2rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: visible;
+    z-index: 9999;
+    margin: 0 auto;
+}
+#totalesMesaDetalle {
+    width: 100%;
+    margin-top: 1.2rem;
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+#totalesMesaDetalle table {
+    min-width: 1200px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+#btnSalirTotalesMesa {
+    background: #e74c3c;
+    color: #fff;
+    padding: 0.7rem 2.2rem;
+    border-radius: 0.7rem;
     font-size: 1.13rem;
+    border: none;
+    cursor: pointer;
+    margin-top: 2.5rem;
+    margin-bottom: 0;
+    display: block;
+    width: 220px;
+    max-width: 90vw;
+    text-align: center;
+    align-self: center;
 }
-#visualizarDetalle tr:last-child td {
-    border-bottom: none;
-}
-@media (max-width: 900px) {
-    #visualizarModal .modal-content {
+@media (max-width: 1500px) {
+    #modalTotalesMesa .modal-content {
         max-width: 99vw !important;
-        min-width: 0 !important;
+        width: 99vw !important;
         padding: 0.5rem !important;
     }
-    #visualizarDetalle table {
-        min-width: 480px;
+    #totalesMesaDetalle table {
+        min-width: 700px;
         font-size: 0.98rem;
+        max-width: 99vw;
     }
 }
-</style>
+/* --- Hacer la columna de subtotal más ancha y evitar salto de línea --- */
+#totalesMesaDetalle th.subtotal-col,
+#totalesMesaDetalle td.subtotal-col {
+    min-width: 140px;
+    max-width: 220px;
+    width: 180px;
+    text-align: right;
+    white-space: nowrap;
+    font-size: 1.13rem;
+}
+/* Si generas la tabla dinámicamente, agrega la clase subtotal-col al th y td de Subtotal */
+#totalesMesaDetalle th:nth-child(5),
+#totalesMesaDetalle td:nth-child(5) {
+    min-width: 140px;
+    max-width: 220px;
+    width: 180px;
+    text-align: right;
+    white-space: nowrap;
+    font-size: 1.13rem;
+}
+#modalFacturaDetener .modal-content {
+    max-width: 1400px !important;
+    min-width: 0;
+    width: 98vw !important;
+    border-radius: 1.5rem;
+    background: linear-gradient(120deg,#232946 0%,#00cfff 100%);
+    box-shadow: 0 8px 32px rgba(0,207,255,0.18);
+    position: relative;
+    padding: 2.5rem 2rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: visible;
+    z-index: 9999;
+    margin: 0 auto;
+}
+#modalFacturaDetener .factura-header h2 {
+    color: #fff;
+    font-size: 2.2rem;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-weight: 900;
+    letter-spacing: 2px;
+    border-bottom: 4px solid #fff;
+    display: inline-block;
+    padding-bottom: 0.3rem;
+    margin-bottom: 1.2rem;
+    filter: none;
+}
+#modalFacturaDetener .factura-header .factura-info {
+    color: #00cfff;
+    font-size: 1.13rem;
+    margin-bottom: 1.2rem;
+    font-weight: 500;
+    text-align: center;
+}
+#modalFacturaDetener .factura-subtotal {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px #00cfff22;
+    padding: 1.2rem 0.7rem;
+}
+#modalFacturaDetener .factura-table,
+#modalFacturaDetener .factura-table th,
+#modalFacturaDetener .factura-table td,
+#modalFacturaDetener .factura-table tr {
+    border: 2.5px solid #00cfff !important;
+    border-collapse: separate !important;
+    box-sizing: border-box;
+}
+#modalFacturaDetener .factura-table {
+    width: 100%;
+    min-width: 1200px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px #00cfff22;
+    margin-bottom: 1.2rem;
+    table-layout: auto;
+    border-spacing: 0;
+    overflow: visible !important;
+}
+#modalFacturaDetener .factura-table th, 
+#modalFacturaDetener .factura-table td {
+    padding: 1rem 1.2rem;
+    font-size: 1.13rem;
+    color: #232946;
+    background: #fff;
+    text-align: left;
+    transition: background 0.2s;
+    word-break: break-word;
+    z-index: 1;
+    position: relative;
+}
+#modalFacturaDetener .factura-table th {
+    background: #fff;
+    color: #0056b3;
+    font-weight: 900;
+    font-size: 1.18rem;
+    text-align: left;
+    z-index: 2;
+    position: relative;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px #00cfff33, 0 1px 0 #fff;
+}
+#modalFacturaDetener .factura-table td {
+    background: #fff;
+    color: #232946;
+    font-weight: 600;
+}
+#modalFacturaDetener .factura-table tr:hover td {
+    background: #f5f7fa;
+    color: #00cfff;
+}
+#modalFacturaDetener .factura-table thead th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 3;
+}
+#modalFacturaDetener .factura-table {
+    border-spacing: 0;
+}
+#modalFacturaDetener .factura-total,
+#modalFacturaDetener .factura-totales {
+    text-align: right;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #00cfff;
+    margin-top: 1.2rem;
+}
+#modalFacturaDetener .factura-btns {
+    display: flex;
+    gap: 1.2rem;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: 2rem;
+}
+#modalFacturaDetener .factura-btns .cerrar {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.7rem 2.2rem;
+    font-size: 1.13rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#modalFacturaDetener .factura-btns .cerrar:hover {
+    background: #c0392b;
+}
+#modalFacturaDetener .factura-btns .confirmar {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.7rem 2.2rem;
+    font-size: 1.13rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#modalFacturaDetener .factura-btns .confirmar:hover {
+    background: #0056b3;
+}
+/* Mejorar posición del botón cerrar en el modal de detener/factura */
+#closeDetenerMesaModal {
+    position: absolute !important;
+    top: 8px !important;
+    right: 18px !important;
+    font-size: 2.3rem !important;
+    color: #e74c3c !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: color 0.2s !important;
+    z-index: 10 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+@media (max-width: 1500px) {
+    #modalFacturaDetener .modal-content {
+        max-width: 99vw !important;
+        width: 99vw !important;
+        padding: 0.5rem !important;
+    }
+    #modalFacturaDetener .factura-table {
+        min-width: 700px;
+        font-size: 0.98rem;
+        max-width: 99vw;
+    }
+}
+    </style>
 </body>
 </html>
