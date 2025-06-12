@@ -14,11 +14,15 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
             try {
                 // Convertir la fecha de MySQL a objeto Date de JavaScript
                 let str = data.hora_inicio.replace(' ', 'T');
-                horaInicioDate = new Date(str);
-                
-                if (!isNaN(horaInicioDate.getTime())) {
-                    // Formato personalizado para mostrar la hora (HH:MM:SS)
-                    horaInicioFormateada = horaInicioDate.toLocaleTimeString('es-CO', { 
+                // Ajustar a zona horaria de Colombia (America/Bogota)
+                // Si la fecha no tiene zona, se asume UTC y se ajusta manualmente
+                let fechaObj = new Date(str);
+                if (!isNaN(fechaObj.getTime())) {
+                    // Ajuste manual a Colombia (UTC-5)
+                    const offsetMs = 5 * 60 * 60 * 1000;
+                    fechaObj = new Date(fechaObj.getTime() - offsetMs);
+                    horaInicioDate = fechaObj;
+                    horaInicioFormateada = fechaObj.toLocaleTimeString('es-CO', { 
                         hour: '2-digit', 
                         minute: '2-digit',
                         second: '2-digit',
@@ -26,7 +30,7 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
                     });
                     console.log("Hora de inicio formateada:", horaInicioFormateada);
                 } else {
-                    console.error("La fecha convertida no es válida:", horaInicioDate);
+                    console.error("La fecha convertida no es válida:", fechaObj);
                 }
             } catch (error) {
                 console.error("Error al procesar la hora de inicio:", error);
@@ -70,7 +74,8 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
             data.pedidos.forEach(p => {
                 let key = '';
                 if (p.hora_pedido) {
-                    const d = new Date(p.hora_pedido);
+                    // Usa la hora tal como está en la BD (no restes 5 horas)
+                    const d = new Date(p.hora_pedido.replace(' ', 'T'));
                     key = d.getFullYear() + '-' +
                         String(d.getMonth() + 1).padStart(2, '0') + '-' +
                         String(d.getDate()).padStart(2, '0') + ' ' +
@@ -89,27 +94,35 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
             <table>
                 <tr>
                     <th>Mesa</th>
-                    <td>${data.numero_mesa}</td>
+                    <td class="td-valor">${data.numero_mesa}</td>
                 </tr>
                 <tr>
                     <th>Estado</th>
-                    <td>${data.estado}</td>
+                    <td class="td-valor">${data.estado}</td>
                 </tr>
                 <tr>
                     <th>Hora de inicio</th>
-                    <td id="hora-inicio-vz">${horaInicioFormateada}</td>
+                    <td class="td-valor" id="hora-inicio-vz">${horaInicioFormateada}</td>
                 </tr>
                 <tr>
                     <th>Precio por hora</th>
-                    <td>$${parseFloat(data.precio_hora).toLocaleString('es-CO')}</td>
+                    <td class="td-valor">$${parseFloat(data.precio_hora).toLocaleString('es-CO')}</td>
                 </tr>
                 <tr>
-                    <th>Total a pagar (tiempo)</th>
-                    <td id="total-tiempo-vz">$${parseFloat(data.total_tiempo || 0).toLocaleString('es-CO')}</td>
+                    <th>Tiempo jugado</th>
+                    <td class="td-valor" id="td-tiempo-jugado">
+                        <span id="contador-tiempo-vz">00:00:00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Valor del tiempo jugado</th>
+                    <td class="td-valor" id="td-valor-tiempo-jugado">
+                        <span id="contador-total-tiempo-vz">$0</span>
+                    </td>
                 </tr>
                 <tr>
                     <th>Pedidos realizados</th>
-                    <td>${pedidosAgrupados.length}</td>
+                    <td class="td-valor">${pedidosAgrupados.length}</td>
                 </tr>
             </table>
         `;
@@ -138,12 +151,8 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
                                 const horaBD = grupo.productos[0]?.hora_pedido;
                                 let fechaObj;
                                 if (horaBD) {
+                                    // Usa la hora tal como está en la BD (no restes 5 horas)
                                     let str = horaBD.replace(' ', 'T');
-                                    if (str.endsWith('Z')) {
-                                        str = str.replace('Z', '-05:00');
-                                    } else if (!/[\+\-]\d{2}:\d{2}$/.test(str)) {
-                                        str += '-05:00';
-                                    }
                                     fechaObj = new Date(str);
                                 }
                                 if (fechaObj && !isNaN(fechaObj.getTime())) {
@@ -170,7 +179,7 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
                             });
                             filas += `
                                 <tr>
-                                    <td colspan="4" style="text-align:right;font-weight:bold;">Total de la pedida N° ${idxGrupo + 1}:</td>
+                                    <td colspan="4" style="text-align:center;font-weight:bold;">Total de la pedida N° ${idxGrupo + 1}:</td>
                                     <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
                                 </tr>
                             `;
@@ -188,12 +197,59 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
         visualizarModal.classList.remove('hidden');
         visualizarModal.style.display = 'flex';
 
-        // Eliminar lógica del contador de tiempo
+        // --- Agrega el estilo para los td de valor para igualar el formato ---
+        if (!document.getElementById('visualizarMesaTdValorStyle')) {
+            const style = document.createElement('style');
+            style.id = 'visualizarMesaTdValorStyle';
+            style.innerHTML = `
+                #visualizarDetalle .td-valor {
+                    background: #fff !important;
+                    color: #232946 !important;
+                    font-weight: 600;
+                    border-radius: 0.5rem;
+                    box-shadow: 0 2px 8px #00cfff11;
+                    font-size: 1.13rem;
+                    padding: 0.7rem 1rem !important;
+                    text-align: left;
+                }
+                #visualizarDetalle th {
+                    color: #007bff !important;
+                    background: #f5f7fa !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // --- NUEVO: Lógica de contador visual en base a la BD ---
         if (visualizarIntervalRef.current) {
             clearInterval(visualizarIntervalRef.current);
             visualizarIntervalRef.current = null;
         }
-        // No iniciar ningún intervalo para tiempo transcurrido
+        if (data.estado === 'Ocupada' && horaInicioDate && !isNaN(horaInicioDate.getTime())) {
+            const precioHora = parseFloat(data.precio_hora) || 6000;
+            const contadorTiempo = document.getElementById('contador-tiempo-vz');
+            const contadorTotal = document.getElementById('contador-total-tiempo-vz');
+            function actualizarContador() {
+                const ahora = new Date();
+                let segundos = Math.floor((ahora - horaInicioDate) / 1000);
+                if (segundos < 0) segundos = 0;
+                const horas = Math.floor(segundos / 3600).toString().padStart(2, '0');
+                const minutos = Math.floor((segundos % 3600) / 60).toString().padStart(2, '0');
+                const segs = (segundos % 60).toString().padStart(2, '0');
+                if (contadorTiempo) contadorTiempo.textContent = `${horas}:${minutos}:${segs}`;
+                // Calcular total a pagar por tiempo y mostrarlo con formato moneda
+                const total = Math.round((segundos / 3600) * precioHora);
+                if (contadorTotal) contadorTotal.textContent = `$${total.toLocaleString('es-CO')}`;
+            }
+            actualizarContador();
+            visualizarIntervalRef.current = setInterval(actualizarContador, 1000);
+        } else {
+            // Si la mesa no está ocupada, muestra los valores por defecto
+            const contadorTiempo = document.getElementById('contador-tiempo-vz');
+            const contadorTotal = document.getElementById('contador-total-tiempo-vz');
+            if (contadorTiempo) contadorTiempo.textContent = '00:00:00';
+            if (contadorTotal) contadorTotal.textContent = '$0';
+        }
     } catch (err) {
         console.error("Error al mostrar detalles de mesa:", err);
         // showNotification para errores visuales

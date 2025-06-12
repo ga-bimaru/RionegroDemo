@@ -1684,4 +1684,81 @@ app.post('/api/validar-supervisor', async (req, res) => {
     }
 });
 
+// --- NUEVO: API para obtener la última pedida de una mesa (para botón "Repetir última pedida") ---
+app.get('/api/pedidas/ultima', async (req, res) => {
+    const mesaId = req.query.mesaId;
+    if (!mesaId) {
+        return res.status(400).json({ error: 'Falta el parámetro mesaId' });
+    }
+    try {
+        // 1. Buscar el alquiler activo de la mesa (si no hay, buscar el último alquiler finalizado)
+        let [alquilerRows] = await pool.query(
+            'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
+            [mesaId]
+        );
+        if (!alquilerRows.length) {
+            // Si no hay alquiler activo, busca el último finalizado
+            [alquilerRows] = await pool.query(
+                'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? ORDER BY hora_inicio DESC LIMIT 1',
+                [mesaId]
+            );
+        }
+        if (!alquilerRows.length) {
+            return res.status(404).json({ error: 'No hay alquiler registrado para esta mesa.' });
+        }
+        const id_alquiler = alquilerRows[0].id_alquiler;
+
+        // 2. Buscar todas las pedidas (agrupadas por hora_pedido redondeada a minutos)
+        // Soluciona el error de ambigüedad usando alias en los campos
+        const [pedidos] = await pool.query(
+            `SELECT pedido.id_producto, pedido.cantidad, pedido.subtotal, pedido.hora_pedido, 
+                    pr.nombre AS nombre, pr.precio
+             FROM pedido 
+             JOIN producto pr ON pedido.id_producto = pr.id_producto
+             WHERE pedido.id_alquiler = ?
+             ORDER BY pedido.hora_pedido DESC`,
+            [id_alquiler]
+        );
+        if (!pedidos.length) {
+            return res.status(404).json({ error: 'No hay pedidas para esta mesa.' });
+        }
+
+        // Agrupar por hora_pedido redondeada a minutos
+        const agrupados = {};
+        pedidos.forEach(p => {
+            let key = '';
+            if (p.hora_pedido) {
+                const d = new Date(p.hora_pedido);
+                key = d.getFullYear() + '-' +
+                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(d.getDate()).padStart(2, '0') + ' ' +
+                    String(d.getHours()).padStart(2, '0') + ':' +
+                    String(d.getMinutes()).padStart(2, '0');
+            }
+            if (!agrupados[key]) agrupados[key] = [];
+            agrupados[key].push(p);
+        });
+        const horas = Object.keys(agrupados);
+        if (!horas.length) {
+            return res.status(404).json({ error: 'No hay pedidas para esta mesa.' });
+        }
+        // Tomar la última hora (más reciente)
+        const ultimaHora = horas.sort().pop();
+        const productosUltimaPedida = agrupados[ultimaHora];
+
+        // Formato de respuesta: { productos: [ { id_producto, nombre, precio, cantidad } ] }
+        const productos = productosUltimaPedida.map(p => ({
+            id_producto: p.id_producto,
+            nombre: p.nombre,
+            precio: parseFloat(p.precio),
+            cantidad: p.cantidad
+        }));
+
+        res.json({ productos });
+    } catch (err) {
+        console.error('[API][GET /api/pedidas/ultima] Error:', err);
+        res.status(500).json({ error: 'Error al obtener la última pedida.' });
+    }
+});
+
 module.exports = app;

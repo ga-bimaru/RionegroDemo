@@ -75,37 +75,56 @@ addProductForm.addEventListener('submit', async (e) => {
         if (response.ok) {
             const result = await response.json();
             if (result.success) {
-                showNotification('Producto agregado exitosamente');
+                showNotification('Producto agregado exitosamente a la carta.');
                 addProductModal.style.display = 'none';
                 addProductForm.reset();
                 setTimeout(() => {
                     location.reload();
                 }, 2000);
             } else {
-                showNotification(result.message || 'Error al agregar el producto');
+                showNotification(result.message || 'Error al agregar el producto', "error");
             }
         } else {
             const errorData = await response.json();
-            showNotification(errorData.message || 'Error al agregar el producto');
+            showNotification(errorData.message || 'Error al agregar el producto', "error");
         }
     } catch (error) {
         console.error('Error al conectar con el servidor:', error);
-        showNotification('Error al conectar con el servidor');
+        showNotification('Error al conectar con el servidor', "error");
     }
 });
 
 // Asegúrate de que showNotification esté disponible globalmente y dura 3 segundos
-window.showNotification = function(message) {
-    const successNotification = document.getElementById('successNotification');
-    if (!successNotification) return;
-    successNotification.querySelector('span').innerHTML = message;
-    successNotification.classList.remove('hidden');
-    successNotification.classList.add('show');
-
+window.showNotification = function(message, tipo = "success") {
+    // Elimina notificaciones previas
+    let notif = document.getElementById('successNotification');
+    if (!notif) {
+        notif = document.createElement('div');
+        notif.id = 'successNotification';
+        notif.className = 'notification hidden';
+        document.body.appendChild(notif);
+    }
+    // Mensaje elegante y visualmente atractivo
+    let icono = tipo === "success"
+        ? '<span style="font-size:2.2rem;filter:drop-shadow(0 0 12px #00cfff);">✅</span>'
+        : '<span style="font-size:2.2rem;filter:drop-shadow(0 0 12px #e74c3c);">❌</span>';
+    notif.innerHTML = `
+        <div style="display:flex;align-items:center;gap:1rem;">
+            ${icono}
+            <span>
+                <b style="color:${tipo === "success" ? "#00cfff" : "#e74c3c"};font-size:1.15rem;">
+                    ${tipo === "success" ? "¡Operación exitosa!" : "Error"}
+                </b><br>
+                <span style="color:#232946;">${message}</span>
+            </span>
+        </div>
+    `;
+    notif.classList.remove('hidden');
+    notif.classList.add('show');
     setTimeout(() => {
-        successNotification.classList.remove('show');
-        successNotification.classList.add('hidden');
-    }, 3000); // 3 segundos
+        notif.classList.remove('show');
+        notif.classList.add('hidden');
+    }, 2500);
 };
 
 // Cargar productos al cargar la página
@@ -295,13 +314,13 @@ function crearModalAgregarMesa() {
             const result = await response.json();
 
             if (result.success) {
-                showNotification(`Mesa ${result.id_mesa} agregada correctamente con un precio por hora de 6000 COP.`);
+                showNotification(`Mesa agregada exitosamente.<br><span style="color:#00cfff;">ID: ${result.id_mesa}</span>`, "success");
             } else {
-                alert(`Error: ${result.message}`);
+                showNotification(`Error: ${result.message}`, "error");
             }
         } catch (err) {
             console.error('Error al agregar la mesa:', err);
-            alert('Ocurrió un error al agregar la mesa.');
+            showNotification('Ocurrió un error al agregar la mesa.', "error");
         }
         cerrarModalAgregarMesa();
         setTimeout(() => location.reload(), 1500);
@@ -322,25 +341,6 @@ function mostrarModalAgregarMesa() {
     modal.style.height = '100vh';
     modal.style.background = 'rgba(20, 20, 30, 0.92)';
     modal.style.zIndex = '3000';
-}
-
-function cerrarModalAgregarMesa() {
-    const modal = document.getElementById('confirmAddMesaModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-    }
-}
-
-// Reemplazar el evento del botón de agregar mesa
-document.getElementById('addMesaBtn').addEventListener('click', mostrarModalAgregarMesa);
-
-// Función para mostrar el modal de confirmación de pago
-function mostrarModalConfirmarPago(callback) {
-    // Evitar duplicados
-    if (document.getElementById('modalConfirmarPago')) return;
-
-    const modal = document.createElement('div');
     modal.id = 'modalConfirmarPago';
     modal.className = 'modal';
     modal.style.display = 'flex';
