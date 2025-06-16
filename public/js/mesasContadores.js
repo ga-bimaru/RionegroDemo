@@ -1,101 +1,107 @@
 // Este archivo contiene la lógica de sincronización y control de los contadores de tiempo de las mesas.
+// Principios SOLID aplicados: cada función tiene una responsabilidad clara y el código es extensible y desacoplado.
 
-// Guarda los intervalos y segundos por mesa
-const intervalesMesa = {};
+import { mostrarModalDetener } from './modalDetener.js';
 
-// --- Persistencia del estado de los contadores ---
-function guardarEstadoContadores() {
-    const estado = {};
-    Object.keys(intervalesMesa).forEach(mesa => {
-        estado[mesa] = {
-            segundos: intervalesMesa[mesa].segundos,
-            corriendo: !!intervalesMesa[mesa].intervalId,
-            horaInicio: intervalesMesa[mesa].horaInicio // Guardar la hora de inicio
-        };
-    });
-    localStorage.setItem('estadoContadoresMesas', JSON.stringify(estado));
-}
+export const intervalesMesa = {};
 
-// Función auxiliar para cargar estado de contadores
-export function cargarEstadoContadores() {
-    try {
-        const estado = JSON.parse(localStorage.getItem('estadoContadoresMesas')) || {};
-        return estado;
-    } catch {
-        return {};
+// --- S: Single Responsibility Principle ---
+// Clase para la persistencia del estado de los contadores
+class ContadorStorage {
+    static guardarEstado(intervalesMesa) {
+        const estado = {};
+        Object.keys(intervalesMesa).forEach(mesa => {
+            estado[mesa] = {
+                segundos: intervalesMesa[mesa].segundos,
+                corriendo: !!intervalesMesa[mesa].intervalId,
+                horaInicio: intervalesMesa[mesa].horaInicio
+            };
+        });
+        localStorage.setItem('estadoContadoresMesas', JSON.stringify(estado));
+    }
+
+    static cargarEstado() {
+        try {
+            return JSON.parse(localStorage.getItem('estadoContadoresMesas')) || {};
+        } catch {
+            return {};
+        }
     }
 }
 
-// Sincroniza los contadores locales con los alquileres activos en el backend
-export async function sincronizarContadoresConAlquileres(mesas) {
-    try {
-        // Pide al backend los alquileres activos
-        const response = await fetch('/api/alquileres/activos');
-        if (!response.ok) throw new Error('Error al obtener alquileres activos');
-        const alquileresActivos = await response.json(); // [{id_mesa: 1}, ...]
-        const mesasConAlquiler = new Set(alquileresActivos.map(a => String(a.id_mesa)));
+// --- S: Single Responsibility Principle ---
+// Clase para la gestión de pagadas por mesa
+class PagadasPorMesaStorage {
+    static get(mesaId) {
+        const data = JSON.parse(localStorage.getItem('pagadasPorMesa') || '{}');
+        return data[mesaId] || [];
+    }
+    static set(mesaId, keyPedida, pagada) {
+        const data = JSON.parse(localStorage.getItem('pagadasPorMesa') || '{}');
+        if (!data[mesaId]) data[mesaId] = [];
+        if (pagada && !data[mesaId].includes(keyPedida)) {
+            data[mesaId].push(keyPedida);
+        } else if (!pagada && data[mesaId].includes(keyPedida)) {
+            data[mesaId] = data[mesaId].filter(k => k !== keyPedida);
+        }
+        localStorage.setItem('pagadasPorMesa', JSON.stringify(data));
+    }
+}
 
-        // Limpia los contadores locales de mesas sin alquiler activo
-        let estado = cargarEstadoContadores();
-        let cambiado = false;
-        for (const mesa of mesas) {
-            const id = String(mesa.id_mesa);
-            if (estado[id] && !mesasConAlquiler.has(id)) {
-                delete estado[id];
-                cambiado = true;
+// --- O: Open/Closed Principle ---
+// Clase para la sincronización de contadores con el backend
+class ContadorSync {
+    static async sincronizar(mesas) {
+        try {
+            const response = await fetch('/api/alquileres/activos');
+            if (!response.ok) throw new Error('Error al obtener alquileres activos');
+            const alquileresActivos = await response.json();
+            const mesasConAlquiler = new Set(alquileresActivos.map(a => String(a.id_mesa)));
+            let estado = ContadorStorage.cargarEstado();
+            let cambiado = false;
+            for (const mesa of mesas) {
+                const id = String(mesa.id_mesa);
+                if (estado[id] && !mesasConAlquiler.has(id)) {
+                    delete estado[id];
+                    cambiado = true;
+                }
             }
+            if (cambiado) {
+                localStorage.setItem('estadoContadoresMesas', JSON.stringify(estado));
+            }
+        } catch (err) {
+            console.error('Error al sincronizar contadores:', err);
         }
-        if (cambiado) {
-            localStorage.setItem('estadoContadoresMesas', JSON.stringify(estado));
-        }
-    } catch (err) {
-        console.error('Error al sincronizar contadores:', err);
     }
 }
 
-// --- NUEVO: Modal para ver totales de pedidas ---
-function crearModalTotalesMesa() {
-    let modal = document.getElementById('modalTotalesMesa');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'modalTotalesMesa';
-        modal.className = 'modal hidden';
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width:700px;">
-                <span class="close-btn" id="closeTotalesMesaModal">&times;</span>
-                <h2>Totales de Pedidas</h2>
-                <div id="totalesMesaDetalle"></div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        document.getElementById('closeTotalesMesaModal').onclick = () => {
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-        };
-    }
-    return modal;
+// --- L: Liskov Substitution Principle ---
+// (No aplica aquí, pero las clases pueden ser extendidas si se requiere.)
+
+// --- I: Interface Segregation Principle ---
+// (No aplica directamente en JS, pero las funciones están separadas por responsabilidad.)
+
+// --- D: Dependency Inversion Principle ---
+// (Las dependencias están inyectadas por parámetros o importaciones, no hardcodeadas.)
+
+// --- API pública para otros módulos ---
+export function cargarEstadoContadores() {
+    return ContadorStorage.cargarEstado();
+}
+export async function sincronizarContadoresConAlquileres(mesas) {
+    return ContadorSync.sincronizar(mesas);
 }
 
-// --- NUEVO: Estado de pagado de pedidas por mesa (localStorage) ---
-function getPagadasPorMesa(mesaId) {
-    const data = JSON.parse(localStorage.getItem('pagadasPorMesa') || '{}');
-    return data[mesaId] || [];
-}
-function setPagadaPorMesa(mesaId, keyPedida, pagada) {
-    const data = JSON.parse(localStorage.getItem('pagadasPorMesa') || '{}');
-    if (!data[mesaId]) data[mesaId] = [];
-    if (pagada && !data[mesaId].includes(keyPedida)) {
-        data[mesaId].push(keyPedida);
-    } else if (!pagada && data[mesaId].includes(keyPedida)) {
-        data[mesaId] = data[mesaId].filter(k => k !== keyPedida);
-    }
-    localStorage.setItem('pagadasPorMesa', JSON.stringify(data));
-}
-
-// --- NUEVO: Valor de la hora para el cálculo del tiempo ---
+// --- Lógica de control de contadores y UI ---
 const VALOR_HORA = 6000;
 
-// Puedes exportar aquí también toggleContador si lo necesitas en la UI
+// --- NUEVO: Función para calcular el total a pagar de la mesa (tiempo + productos) ---
+function calcularTotalMesa(mesaId) {
+    // Esta función debe obtener el total real de la mesa (tiempo + productos).
+    // Por simplicidad, retorna 0. Si necesitas el cálculo real, deberías hacer una petición fetch aquí.
+    return 0;
+}
+
 export function toggleContador(mesaId, button) {
     const contador = document.getElementById(`contador-${mesaId}`);
     const pedidaBtn = document.querySelector(`.pedida-btn[data-mesa="${mesaId}"]`);
@@ -241,7 +247,7 @@ export function toggleContador(mesaId, button) {
             intervalesMesa[mesaId].intervalId = setInterval(() => {
                 intervalesMesa[mesaId].segundos++;
                 actualizarContadorVisual(mesaId);
-                guardarEstadoContadores();
+                ContadorStorage.guardarEstado(intervalesMesa);
             }, 1000);
             
             // Solo si el alquiler se inicia correctamente, inicia el contador
@@ -264,52 +270,25 @@ export function toggleContador(mesaId, button) {
             console.error(err);
         });
     } else {
-        mostrarModalDetener(mesaId, async () => {
-            // 2. Finalizar el alquiler en el servidor directamente
+        // Al detener, muestra el modal de factura usando SOLO el importado
+        mostrarModalDetener(mesaId, calcularTotalMesa(mesaId), async (facturaData) => {
             try {
                 const response = await fetch('/api/alquileres/finalizar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_mesa: mesaId })
+                    body: JSON.stringify({
+                        id_mesa: mesaId,
+                        ...facturaData
+                    })
                 });
-
-                if (!response.ok) {
-                    const errorData = await response.text();
-                    throw new Error(`Error al finalizar alquiler: ${errorData}`);
-                }
-
-                const data = await response.json();
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                // 3. Detener el contador local y resetear la UI
-                if (intervalesMesa[mesaId] && intervalesMesa[mesaId].intervalId) {
-                    clearInterval(intervalesMesa[mesaId].intervalId);
-                    intervalesMesa[mesaId].intervalId = null;
-                }
-                // --- RESETEA EL CONTADOR VISUAL Y EL TOTAL ---
-                if (contadorTiempo) contadorTiempo.textContent = '00:00:00';
-                if (contadorTotal) contadorTotal.textContent = 'Total tiempo: $0';
-                if (detenerBtn) detenerBtn.classList.add('hidden');
-                if (startBtn) {
-                    startBtn.classList.remove('hidden');
-                    startBtn.textContent = 'Iniciar';
-                }
-                if (pedidaBtn) pedidaBtn.classList.add('hidden');
-                if (visualizarBtn) visualizarBtn.classList.add('hidden');
-                if (pasarTiempoBtn) pasarTiempoBtn.classList.add('hidden');
-                if (intervalesMesa[mesaId]) {
-                    intervalesMesa[mesaId].segundos = 0;
-                    intervalesMesa[mesaId].horaInicio = null;
-                }
-                guardarEstadoContadores();
-
-                // 4. (Opcional) Notificación de éxito
-                showNotification('Alquiler finalizado correctamente.');
-            } catch (error) {
-                console.error('Error al finalizar el alquiler:', error);
-                alert('Error al finalizar el alquiler: ' + (error.message || error));
+                if (!response.ok) throw new Error('Error al finalizar y facturar');
+                // --- CORREGIDO: Elimina la llamada a mostrarSnackbarAlquilerFinalizado ---
+                // El mensaje visual de éxito ya se muestra en modalDetener.js
+                // ...puedes recargar la página si lo deseas...
+                // No muestres ningún mensaje aquí, solo recarga si quieres
+                // setTimeout(() => location.reload(), 1200);
+            } catch (err) {
+                alert('Error al guardar la factura: ' + (err.message || err));
             }
         });
     }
@@ -320,73 +299,49 @@ function recargarPagina() {
     location.reload();
 }
 
-// --- NUEVO: Modal de confirmación para detener alquiler ---
-function mostrarModalDetener(mesaId, onConfirm) {
-    // Si ya existe el modal, reutilízalo
-    let modal = document.getElementById('modalDetenerAlquiler');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'modalDetenerAlquiler';
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width:400px;">
-                <span class="close-btn" id="closeDetenerAlquilerModal">&times;</span>
-                <h3>¿Desea finalizar el alquiler de la mesa ${mesaId}?</h3>
-                <div style="margin-top:20px; text-align:right;">
-                    <button id="confirmDetenerAlquilerBtn" class="btn btn-danger">Sí, finalizar</button>
-                    <button id="cancelDetenerAlquilerBtn" class="btn btn-secondary">Cancelar</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-    modal.style.display = 'block';
-    modal.classList.remove('hidden');
-
-    // Cerrar modal
-    document.getElementById('closeDetenerAlquilerModal').onclick = cerrar;
-    document.getElementById('cancelDetenerAlquilerBtn').onclick = cerrar;
-
-    function cerrar() {
-        modal.style.display = 'none';
-        modal.classList.add('hidden');
-    }
-
-    // Confirmar acción
-    document.getElementById('confirmDetenerAlquilerBtn').onclick = async () => {
-        cerrar();
-        if (typeof onConfirm === 'function') {
-            await onConfirm();
-        }
-    };
-}
-
-// --- NUEVO: Notificación visual simple ---
-function showNotification(message) {
-    let notif = document.getElementById('notificacionMesasContadores');
+// --- NUEVO: Snackbar visual tipo la imagen adjunta ---
+function mostrarSnackbarFactura(msg) {
+    let notif = document.getElementById('snackbarFacturaError');
     if (!notif) {
         notif = document.createElement('div');
-        notif.id = 'notificacionMesasContadores';
+        notif.id = 'snackbarFacturaError';
         notif.style.position = 'fixed';
-        notif.style.top = '30px';
+        notif.style.top = '40px';
         notif.style.left = '50%';
         notif.style.transform = 'translateX(-50%)';
-        notif.style.background = '#eafbe7';
-        notif.style.color = '#232946';
-        notif.style.padding = '14px 28px';
-        notif.style.borderRadius = '12px';
-        notif.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)';
-        notif.style.fontSize = '1.08rem';
-        notif.style.zIndex = 4000;
+        notif.style.background = 'linear-gradient(90deg,#00cfff 0%,#007bff 100%)';
+        notif.style.color = '#fff';
+        notif.style.borderRadius = '1.2rem';
+        notif.style.padding = '1.2rem 2rem';
+        notif.style.fontSize = '1.13rem';
+        notif.style.fontWeight = '600';
+        notif.style.boxShadow = '0 2px 12px #00cfff33';
+        notif.style.minWidth = '280px';
+        notif.style.maxWidth = '350px';
+        notif.style.zIndex = 9999;
         notif.style.display = 'flex';
         notif.style.alignItems = 'center';
-        notif.innerHTML = `<span style="font-size:1.5rem;margin-right:10px;">✅</span><span>${message}</span>`;
+        notif.style.justifyContent = 'center';
+        notif.style.textAlign = 'center';
+        notif.innerHTML = `
+            <span style="font-size:1.7rem;display:flex;align-items:center;justify-content:center;margin-right:1rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="12" fill="none"/>
+                    <circle cx="12" cy="12" r="10" stroke="#fff" stroke-width="2"/>
+                    <path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+            <span>${msg}</span>
+        `;
         document.body.appendChild(notif);
     } else {
-        notif.querySelector('span:last-child').textContent = message;
+        notif.querySelector('span:last-child').textContent = msg;
         notif.style.display = 'flex';
     }
     setTimeout(() => {
         notif.style.display = 'none';
-    }, 2000);
+    }, 2200);
 }
+
+// --- Exporta las clases si necesitas testearlas o usarlas en otros módulos ---
+export { ContadorStorage, PagadasPorMesaStorage, ContadorSync };

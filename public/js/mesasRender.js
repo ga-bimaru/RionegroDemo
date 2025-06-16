@@ -1,7 +1,7 @@
 // Este archivo contiene la función para renderizar las mesas en pantalla y asociar los eventos de UI principales.
 // Principio SOLID: Responsabilidad Única (SRP). Solo renderiza y asocia eventos de UI de las mesas.
 
-import { toggleContador, cargarEstadoContadores } from './mesasContadores.js';
+import { toggleContador, cargarEstadoContadores, intervalesMesa } from './mesasContadores.js';
 import { openPedidoModal } from './pedidos.js';
 import { addVisualizarEvent } from './visualizar.js';
 import { abrirTransferirModal } from './transferir.js';
@@ -60,6 +60,16 @@ export function renderMesas(mesas, mesasContainer) {
         `;
         mesasContainer.appendChild(mesaCard);
 
+        // --- Solución: NO accedas a elementos que no existen ---
+        // El error ocurre porque intentas acceder a un elemento (por ejemplo, un contador visual)
+        // que no está en el DOM. Si tienes código como:
+        // contador.textContent = ...;
+        // asegúrate de que el elemento existe antes de modificarlo.
+
+        // Ejemplo seguro:
+        // const contador = mesaCard.querySelector('.contador-tiempo');
+        // if (contador) contador.textContent = '00:00:00';
+
         // Inicializa el estado del contador si estaba corriendo antes del reload
         const estadoMesa = estadoContadores[mesa.id_mesa];
         if (estadoMesa) {
@@ -67,27 +77,17 @@ export function renderMesas(mesas, mesasContainer) {
                 segundos: estadoMesa.segundos,
                 intervalId: null
             };
-            // Solo intenta actualizar el contador si existe
-            // const contador = document.getElementById(`contador-${mesa.id_mesa}`);
-            // if (contador) {
-            //     const segundos = estadoMesa.segundos;
-            //     const horas = Math.floor(segundos / 3600).toString().padStart(2, '0');
-            //     const minutos = Math.floor((segundos % 3600) / 60).toString().padStart(2, '0');
-            //     const segs = (segundos % 60).toString().padStart(2, '0');
-            //     contador.textContent = `${horas}:${minutos}:${segs}`;
-            // }
-
+            // --- Solución definitiva: verifica existencia antes de modificar ---
             // Si estaba corriendo, reanuda el contador y botones
             if (estadoMesa.corriendo) {
                 const startBtn = mesaCard.querySelector('.start-btn');
                 const pedidaBtn = mesaCard.querySelector('.pedida-btn');
                 const visualizarBtn = mesaCard.querySelector('.visualizar-btn');
-                startBtn.textContent = 'Detener';
-                pedidaBtn.classList.remove('hidden');
-                visualizarBtn.classList.remove('hidden');
+                if (startBtn) startBtn.textContent = 'Detener';
+                if (pedidaBtn) pedidaBtn.classList.remove('hidden');
+                if (visualizarBtn) visualizarBtn.classList.remove('hidden');
                 // Solo inicia el intervalo si no existe
                 if (!intervalesMesa[mesa.id_mesa].intervalId) {
-                    // Ya no existe el contador, así que no hagas nada aquí
                     // Si necesitas lógica adicional, agrégala aquí
                 }
             }

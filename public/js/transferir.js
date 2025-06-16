@@ -1,5 +1,51 @@
 // Este archivo contiene la lógica para transferir tiempo y pedidos entre mesas.
 
+// Notificación visual tipo snackbar para éxito (estilo igual a la imagen)
+function showTransferirNotification(msg) {
+    let notif = document.getElementById('snackbarTransferirExito');
+    if (!notif) {
+        notif = document.createElement('div');
+        notif.id = 'snackbarTransferirExito';
+        notif.style.position = 'fixed';
+        notif.style.top = '40px';
+        notif.style.left = '50%';
+        notif.style.transform = 'translateX(-50%)';
+        notif.style.background = 'linear-gradient(90deg,#00cfff 0%,#007bff 100%)';
+        notif.style.color = '#fff';
+        notif.style.borderRadius = '1.2rem';
+        notif.style.padding = '1.2rem 2rem';
+        notif.style.fontSize = '1.13rem';
+        notif.style.fontWeight = '600';
+        notif.style.boxShadow = '0 2px 12px #00cfff33';
+        notif.style.minWidth = '280px';
+        notif.style.maxWidth = '350px';
+        notif.style.zIndex = 9999;
+        notif.style.display = 'flex';
+        notif.style.alignItems = 'center';
+        notif.style.justifyContent = 'center'; // <-- Centrado horizontal
+        notif.style.textAlign = 'center';      // <-- Centrado texto
+        notif.innerHTML = `
+            <span style="font-size:1.7rem;display:flex;align-items:center;justify-content:center;margin-right:1rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="12" fill="none"/>
+                    <circle cx="12" cy="12" r="10" stroke="#fff" stroke-width="2"/>
+                    <path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+            <span>${msg}</span>
+        `;
+        document.body.appendChild(notif);
+    } else {
+        notif.querySelector('span:last-child').textContent = msg;
+        notif.style.display = 'flex';
+        notif.style.justifyContent = 'center'; // <-- Centrado horizontal
+        notif.style.textAlign = 'center';      // <-- Centrado texto
+    }
+    setTimeout(() => {
+        notif.style.display = 'none';
+    }, 2200);
+}
+
 export function abrirTransferirModal(mesaIdActual, mesas) {
     // Filtra solo las mesas disponibles (no la actual)
     const mesasDisponibles = mesas.filter(m => m.estado === 'Disponible' && m.id_mesa !== mesaIdActual);
@@ -14,7 +60,7 @@ export function abrirTransferirModal(mesaIdActual, mesas) {
             notif.style.top = '40px';
             notif.style.left = '50%';
             notif.style.transform = 'translateX(-50%)';
-            notif.style.background = 'linear-gradient(90deg,#00cfff 0%,#007bff 100%)';
+            notif.style.background = 'linear-gradient(90deg,#FF0000FF 0%,#FF0000FF 100%)';
             notif.style.color = '#fff';
             notif.style.borderRadius = '1.2rem';
             notif.style.padding = '1.2rem 2rem';
@@ -91,14 +137,20 @@ export function abrirTransferirModal(mesaIdActual, mesas) {
                 font-weight:bold;
                 z-index:2;
             ">&times;</button>
-            <div style="display:flex;align-items:center;gap:1.2rem;width:100%;margin-bottom:0.7rem;">
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;background:linear-gradient(135deg,#fff 40%,#00cfff 100%);border-radius:50%;box-shadow:0 2px 12px rgba(0,207,255,0.18);">
-                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" fill="#232946" stroke="#00cfff" stroke-width="4"/><circle cx="32" cy="32" r="18" fill="#fff" stroke="#e0e7ef" stroke-width="2"/><text x="32" y="44" text-anchor="middle" font-size="16" font-family="Arial, sans-serif" fill="#232946" font-weight="bold" dominant-baseline="middle">⇄</text></svg>
+            <div style="display:flex;align-items:center;justify-content:center;width:100%;margin-bottom:1.2rem;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;background:linear-gradient(135deg,#fff 40%,#00cfff 100%);border-radius:50%;box-shadow:0 2px 12px rgba(0,207,255,0.18);">
+                    <!-- Nuevo icono de transferencia mejorado -->
+                    <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+                        <circle cx="19" cy="19" r="18" fill="#fff" stroke="#00cfff" stroke-width="2"/>
+                        <g>
+                            <path d="M11 19h16" stroke="#00cfff" stroke-width="2.5" stroke-linecap="round"/>
+                            <path d="M23 14l4 5-4 5" stroke="#232946" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M15 24l-4-5 4-5" stroke="#232946" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </g>
+                    </svg>
                 </span>
             </div>
-            <div style="color:#fff;text-align:center;font-size:1.08rem;margin-bottom:1.2rem;font-weight:500;">
-                Selecciona la mesa destino a la que deseas transferir el tiempo y los pedidos.
-            </div>
+            <!-- Eliminado el texto de instrucción aquí -->
             <div style="width:100%;margin-bottom:1.2rem;">
                 <label for="selectMesaDestino" style="font-weight:700;color:#fff;display:block;text-align:center;font-size:1.13rem;margin-bottom:0.5rem;">Selecciona la mesa destino:</label>
                 <select id="selectMesaDestino" style="width:100%;margin:0 auto;padding:0.7rem 1.2rem;border-radius:0.7rem;font-size:1.13rem;display:block;border:none;box-shadow:0 2px 8px #00cfff22;text-align:center;text-align-last:center;">
@@ -141,11 +193,16 @@ export function abrirTransferirModal(mesaIdActual, mesas) {
                     id_mesa_destino: id_mesa_destino
                 })
             });
-            const data = await res.json();
+            const contentType = res.headers.get('content-type');
+            let data = {};
+            if (contentType && contentType.includes('application/json')) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                throw new Error('Respuesta inesperada del servidor: ' + text.substring(0, 200));
+            }
             if (res.ok && data.success) {
-                if (typeof showNotification === 'function') {
-                    showNotification('Tiempo y pedidos transferidos correctamente.');
-                }
+                showTransferirNotification('Tiempo y pedidos transferidos correctamente.');
                 modal.remove();
                 setTimeout(() => window.location.reload(), 1200);
             } else {

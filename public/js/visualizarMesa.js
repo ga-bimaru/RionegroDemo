@@ -14,13 +14,9 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
             try {
                 // Convertir la fecha de MySQL a objeto Date de JavaScript
                 let str = data.hora_inicio.replace(' ', 'T');
-                // Ajustar a zona horaria de Colombia (America/Bogota)
-                // Si la fecha no tiene zona, se asume UTC y se ajusta manualmente
+                // NO RESTAR 5 HORAS: la hora de inicio ya viene en hora local de Colombia desde el backend
                 let fechaObj = new Date(str);
                 if (!isNaN(fechaObj.getTime())) {
-                    // Ajuste manual a Colombia (UTC-5)
-                    const offsetMs = 5 * 60 * 60 * 1000;
-                    fechaObj = new Date(fechaObj.getTime() - offsetMs);
                     horaInicioDate = fechaObj;
                     horaInicioFormateada = fechaObj.toLocaleTimeString('es-CO', { 
                         hour: '2-digit', 
@@ -130,9 +126,6 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
         if (pedidosAgrupados.length > 0) {
             html += `
                 <h3>Detalle de Pedidas</h3>
-                <div id="snackbar-scroll" class="snackbar-scroll">
-                    Desliza horizontalmente para ver el total de cada pedida &rarr;
-                </div>
                 <div style="overflow-x:auto; width:100%;">
                 <table style="min-width:700px; max-width:1200px;">
                     <thead>
@@ -179,8 +172,9 @@ export async function mostrarDetalleMesa(mesaId, visualizarDetalle, visualizarMo
                             });
                             filas += `
                                 <tr>
-                                    <td colspan="4" style="text-align:center;font-weight:bold;">Total de la pedida N° ${idxGrupo + 1}:</td>
-                                    <td style="font-weight:bold;">$${totalPedida.toLocaleString('es-CO')}</td>
+                                    <td colspan="5" style="text-align:center;font-weight:bold;">
+                                        Total de la pedida N° ${idxGrupo + 1}: $${totalPedida.toLocaleString('es-CO')}
+                                    </td>
                                 </tr>
                             `;
                             return filas;
