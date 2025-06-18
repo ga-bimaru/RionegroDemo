@@ -1821,4 +1821,84 @@ app.post('/api/alquileres/transferir', async (req, res) => {
     }
 });
 
+// API: Listar facturas (con filtro por fecha opcional)
+app.get('/api/facturas', async (req, res) => {
+    try {
+        const fecha = req.query.fecha;
+        let sql = `
+            SELECT f.id_factura, f.fecha, f.numero_mesa, f.total, f.metodo_pago, f.total_recibido, f.total_vuelto,
+                   u.nombre AS nombre_usuario, f.id_usuario
+            FROM factura f
+            LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
+        `;
+        const params = [];
+        if (fecha) {
+            sql += " WHERE DATE(f.fecha) = ?";
+            params.push(fecha);
+        }
+        sql += " ORDER BY f.fecha DESC";
+        const [rows] = await pool.query(sql, params);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener facturas.' });
+    }
+});
+
+// API: Detalle de una factura (productos, métodos de pago, etc)
+app.get('/api/facturas/:id', async (req, res) => {
+    try {
+        const id_factura = req.params.id;
+        // Info de la factura
+        const [facturaRows] = await pool.query(`
+            SELECT f.*, u.nombre AS nombre_usuario
+            FROM factura f
+            LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
+            WHERE f.id_factura = ?
+        `, [id_factura]);
+        if (!facturaRows.length) return res.status(404).json({ error: 'Factura no encontrada' });
+        const factura = facturaRows[0];
+
+        // Productos de la factura (de los pedidos asociados al alquiler)
+        const [productos] = await pool.query(`
+            SELECT p.nombre AS nombre_producto, pd.cantidad, pd.subtotal
+            FROM pedido pd
+            INNER JOIN producto p ON pd.id_producto = p.id_producto
+            WHERE pd.id_alquiler = ?
+        `, [factura.id_alquiler]);
+
+        // Métodos de pago (si hay tabla de desglose)
+        let metodos_pago = [];
+        try {
+            const [metodos] = await pool.query(`
+                SELECT metodo_pago, valor
+                FROM factura_metodo_pago
+                WHERE id_factura = ?
+            `, [id_factura]);
+            metodos_pago = metodos;
+        } catch { /* tabla puede no existir */ }
+
+        res.json({ factura, productos, metodos_pago });
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener detalle de factura.' });
+    }
+});
+
+// API: Ranking de empleados que más venden en el mes actual
+app.get('/api/estadisticas/empleados-mas-venden', async (req, res) => {
+    try {
+        // Ventas por usuario (empleado/supervisor/administrador) en el mes actual
+        const [rows] = await pool.query(`
+            SELECT u.nombre, u.rol, COUNT(f.id_factura) AS cantidad_facturas, SUM(f.total) AS total_ventas
+            FROM factura f
+            LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
+            WHERE MONTH(f.fecha) = MONTH(CURRENT_DATE()) AND YEAR(f.fecha) = YEAR(CURRENT_DATE())
+            GROUP BY f.id_usuario
+            ORDER BY total_ventas DESC
+        `);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener ranking de empleados.' });
+    }
+});
+
 module.exports = app;

@@ -1,0 +1,65 @@
+.tabla-scroll-x {
+    overflow-x: auto;
+    width: 100%;
+    margin-bottom: 2.5rem;
+    min-height: 120px;
+}
+.ranking-empleados-table {
+    min-width: 500px;
+    width: max-content;
+    margin: 0 auto 2rem auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #181c2f;
+    border-radius: 1.2rem;
+    overflow: hidden;
+    box-shadow: 0 0 18px #00cfff, 0 2px 8px rgba(0,207,255,0.10);
+    font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
+}
+.ranking-empleados-table th, .ranking-empleados-table td {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1.5px solid #00cfff;
+    text-align: left;
+    font-size: 1.15rem;
+    white-space: nowrap;
+}
+.ranking-empleados-table th {
+    background: #232946;
+    color: #FFD600;
+    font-weight: 700;
+    font-size: 1.22rem;
+    text-shadow: 0 0 8px #FFD600;
+    border-bottom: 2.5px solid #00cfff;
+    letter-spacing: 1px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.ranking-empleados-table td {
+    color: #00cfff;
+    font-weight: 600;
+    text-shadow: 0 0 6px #00cfff;
+    background: #181c2f;
+    border-right: 1px solid #232946;
+    transition: background 0.2s;
+}
+.ranking-empleados-table tr:last-child td {
+    border-bottom: none;
+}
+.ranking-empleados-table tr:hover td {
+    background: #232946;
+    color: #FFD600;
+    text-shadow: 0 0 8px #FFD600;
+}
+.ranking-empleados-table td:first-child {
+    border-left: 4px solid #00cfff;
+}
+.ranking-empleados-table td:last-child {
+    border-right: 4px solid #00cfff;
+}
+.ranking-empleados-table th:first-child {
+    border-left: 4px solid #00cfff;
+}
+.ranking-empleados-table th:last-child {
+    border-right: 4px solid #00cfff;
+}
