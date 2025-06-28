@@ -65,9 +65,20 @@ async function mostrarGananciaNeta(periodo) {
 async function mostrarGraficaVentasMes() {
     try {
         const res = await fetch('/api/estadisticas/ventas-mes');
+        if (!res.ok) {
+            throw new Error('Respuesta no OK');
+        }
         const data = await res.json();
-        const ctx = document.getElementById('graficaVentasMes').getContext('2d');
-        new Chart(ctx, {
+        const canvas = document.getElementById('graficaVentasMes');
+        if (!canvas) {
+            throw new Error('No se encontró el canvas para la gráfica');
+        }
+        const ctx = canvas.getContext('2d');
+        // Destruye la gráfica anterior si existe
+        if (window._graficaVentasMesInstance) {
+            window._graficaVentasMesInstance.destroy();
+        }
+        window._graficaVentasMesInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: data.map(v => v.mes),
@@ -103,8 +114,11 @@ async function mostrarGraficaVentasMes() {
                 }
             }
         });
-    } catch {
-        document.getElementById('graficaVentasMes').parentNode.innerHTML = '<p>Error al cargar la gráfica de ventas por mes.</p>';
+    } catch (e) {
+        const canvas = document.getElementById('graficaVentasMes');
+        if (canvas && canvas.parentNode) {
+            canvas.parentNode.innerHTML = '<p style="color:#FFD600;font-size:1.2rem;text-align:center;">⚠️ Error al cargar la gráfica de ventas por mes.</p>';
+        }
     }
 }
 

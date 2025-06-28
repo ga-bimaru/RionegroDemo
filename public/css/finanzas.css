@@ -340,6 +340,11 @@ main {
     color: #fff;
     transform: scale(1.04);
 }
+/* Oculta los iconos de factura y seguimiento de facturas en el menú lateral */
+.sidebar-nav .icono-factura,
+.sidebar-nav .icono-seguimiento-facturas {
+    display: none !important;
+}
 @media (max-width: 900px) {
     .resumen-finanzas, .graficas {
         flex-direction: column;

@@ -280,3 +280,42 @@ export async function mostrarFacturaAlDetener(mesaId, totalTiempo, callback) {
         };
     }
 }
+
+// Función para generar la factura en el backend
+function generarFactura(datosFactura) {
+    // Obtén el usuario actual desde localStorage
+    const usuarioActual = localStorage.getItem('usuarioActual') || 'desconocido';
+    // Añade el usuario a los datos de la factura
+    datosFactura.usuario = usuarioActual;
+    // Envía la factura al backend (ejemplo con fetch)
+    fetch('/api/facturas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosFactura)
+    })
+    .then(res => res.json())
+    .then(data => {
+        // ...manejar respuesta...
+    });
+}
+
+// Función para finalizar la factura/alquiler
+async function finalizarFactura(datosFactura) {
+    // Recupera el usuario actual desde localStorage
+    const usuarioActual = JSON.parse(localStorage.getItem('usuarioActual'));
+    if (usuarioActual && usuarioActual.id) {
+        datosFactura.id_usuario_cierre = usuarioActual.id;
+    } else {
+        // Si no hay usuario logueado, muestra error y no envía la factura
+        alert('No hay usuario logueado. Por favor, inicia sesión de nuevo.');
+        return;
+    }
+    // Envía la petición al backend
+    const res = await fetch('/api/alquileres/finalizar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosFactura)
+    });
+    const data = await res.json();
+    // ...maneja la respuesta...
+}

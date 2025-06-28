@@ -449,10 +449,17 @@ app.get('/api/mesas/:id_mesa/detalle', async (req, res) => {
     }
 });
 
-// Ruta para iniciar un alquiler
+// Ruta para iniciar un alquiler (usa usuario de sesión)
 app.post('/api/alquileres', async (req, res) => {
-    const { id_mesa, id_usuario } = req.body;
-    
+    const { id_mesa } = req.body;
+
+    // Validar sesión
+    if (!req.session.usuario) {
+        return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+
+    const id_usuario = req.session.usuario.id;
+
     // Obtener la hora actual en Colombia/Bogotá usando Intl.DateTimeFormat
     const now = new Date();
     const formatter = new Intl.DateTimeFormat('es-CO', {
@@ -465,90 +472,52 @@ app.post('/api/alquileres', async (req, res) => {
         second: '2-digit',
         hour12: false
     });
-    // El formato será: dd/MM/yyyy, HH:mm:ss
     const parts = formatter.formatToParts(now);
     const get = type => parts.find(p => p.type === type)?.value || '';
-    // Formato MySQL DATETIME: YYYY-MM-DD HH:mm:ss
     const hora_inicio = `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
 
-    debug.info(`POST /api/alquileres - Iniciando alquiler: mesa=${id_mesa}, usuario=${id_usuario}, hora=${hora_inicio}`);
-    
-    if (!id_mesa || !id_usuario) {
-        debug.info(`POST /api/alquileres - Datos incompletos: mesa=${id_mesa}, usuario=${id_usuario}`);
-        return res.status(400).json({ error: 'Datos incompletos para iniciar el alquiler' });
-    }
     try {
-        // Verificar si ya existe un alquiler activo para esta mesa
         const [alquileresActivos] = await pool.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo"',
             [id_mesa]
         );
-        
         if (alquileresActivos.length > 0) {
-            debug.mesa(id_mesa, 'error iniciar alquiler', { 
-                error: 'Ya existe un alquiler activo',
-                id_alquiler_existente: alquileresActivos[0].id_alquiler
-            });
             return res.status(400).json({ error: 'Ya existe un alquiler activo para esta mesa' });
         }
-        
-        // Verificar si la mesa existe
+
         const [[mesaExiste]] = await pool.query('SELECT id_mesa FROM mesa WHERE id_mesa = ?', [id_mesa]);
         if (!mesaExiste) {
-            debug.mesa(id_mesa, 'error iniciar alquiler', { error: 'La mesa no existe' });
             return res.status(400).json({ error: 'La mesa especificada no existe' });
         }
-        
-        // Crear el alquiler con la hora generada en el servidor
-        debug.mesa(id_mesa, 'iniciando alquiler', { 
-            id_usuario,
-            hora_inicio
-        });
-        
+
         const [result] = await pool.query(
             'INSERT INTO alquiler (id_mesa, id_usuario, hora_inicio, estado) VALUES (?, ?, ?, "Activo")',
             [id_mesa, id_usuario, hora_inicio]
         );
-        
-        const id_alquiler = result.insertId;
-        debug.mesa(id_mesa, 'alquiler creado', { 
-            id_alquiler, 
-            hora_inicio 
-        });
-        
-        // Cambiar el estado de la mesa a "Ocupada"
-        await pool.query(
-            'UPDATE mesa SET estado = "Ocupada" WHERE id_mesa = ?',
-            [id_mesa]
-        );
-        debug.mesa(id_mesa, 'estado actualizado', { nuevo_estado: 'Ocupada' });
-        
-        debug.mesa(id_mesa, 'alquiler iniciado', { 
-            id_alquiler,
-            hora_inicio,
-            id_usuario
-        });
-        
-        // Devolver la hora de inicio para que el cliente la conozca
+
+        await pool.query('UPDATE mesa SET estado = "Ocupada" WHERE id_mesa = ?', [id_mesa]);
+
         res.status(200).json({ 
             message: 'Alquiler iniciado y mesa ocupada', 
-            id_alquiler,
+            id_alquiler: result.insertId,
             hora_inicio
         });
     } catch (error) {
-        debug.error(`POST /api/alquileres - Mesa ${id_mesa}`, error);
         res.status(500).json({ error: 'Error al iniciar el alquiler', detalle: error.message });
     }
 });
 
-// Ruta para finalizar un alquiler activo de una mesa (FACTURACIÓN)
+// Ruta para finalizar un alquiler activo de una mesa (FACTURACIÓN) - usa usuario de sesión
 app.post('/api/alquileres/finalizar', async (req, res) => {
-    const { id_mesa, metodo_pago, total_recibido, total_vuelto, id_usuario_cierre, recibidos } = req.body;
-    if (!id_mesa) {
-        return res.status(400).json({ success: false, message: 'Falta id_mesa' });
+    const { id_mesa, metodo_pago, total_recibido, total_vuelto, recibidos } = req.body;
+
+    if (!req.session.usuario) {
+        return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
     }
+
+    const id_usuario_cierre = req.session.usuario.id;
+
     try {
-        // 1. Busca el alquiler activo de la mesa
         const [alquilerRows] = await db.query(
             'SELECT * FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY id_alquiler DESC LIMIT 1',
             [id_mesa]
@@ -556,13 +525,13 @@ app.post('/api/alquileres/finalizar', async (req, res) => {
         if (!alquilerRows.length) {
             return res.status(404).json({ success: false, message: 'No hay alquiler activo para esta mesa.' });
         }
-        const alquiler = alquilerRows[0];
 
-        // 2. Calcula total_tiempo (en dinero) y total_a_pagar
+        const alquiler = alquilerRows[0];
         const horaInicio = new Date(alquiler.hora_inicio);
         const horaFin = new Date();
         const diffMs = horaFin - horaInicio;
         const totalHoras = diffMs / (1000 * 60 * 60);
+
         let precioHora = alquiler.precio_hora;
         if (!precioHora) {
             const [mesaRows] = await db.query('SELECT precio_hora FROM mesa WHERE id_mesa = ?', [id_mesa]);
@@ -570,16 +539,13 @@ app.post('/api/alquileres/finalizar', async (req, res) => {
         }
         const totalTiempo = +(totalHoras * precioHora).toFixed(2);
 
-        // 3. Suma productos por pagar (pedidos de este alquiler con estado 'Por Pagar')
         const [pedidosRows] = await db.query(
             'SELECT subtotal FROM pedido WHERE id_alquiler = ? AND estado = "Por Pagar"',
             [alquiler.id_alquiler]
         );
         const totalProductos = pedidosRows.reduce((acc, p) => acc + parseFloat(p.subtotal), 0);
-
         const totalAPagar = totalTiempo + totalProductos;
 
-        // 4. Finaliza el alquiler (actualiza estado y hora_fin)
         await db.query(
             `UPDATE alquiler SET 
                 estado = "Finalizado", 
@@ -595,7 +561,7 @@ app.post('/api/alquileres/finalizar', async (req, res) => {
             [
                 totalTiempo,
                 totalAPagar,
-                id_usuario_cierre || null,
+                id_usuario_cierre,
                 metodo_pago || '',
                 total_recibido || 0,
                 total_vuelto || 0,
@@ -603,13 +569,8 @@ app.post('/api/alquileres/finalizar', async (req, res) => {
             ]
         );
 
-        // 5. Cambia el estado de la mesa a Disponible
-        await db.query(
-            'UPDATE mesa SET estado = "Disponible" WHERE id_mesa = ?',
-            [id_mesa]
-        );
+        await db.query('UPDATE mesa SET estado = "Disponible" WHERE id_mesa = ?', [id_mesa]);
 
-        // 6. Inserta la factura y los métodos de pago
         const { id_factura } = await crearFacturaYMetodosPago(db, {
             id_alquiler: alquiler.id_alquiler,
             id_usuario_cierre,
@@ -629,7 +590,6 @@ app.post('/api/alquileres/finalizar', async (req, res) => {
             id_factura
         });
     } catch (err) {
-        console.error('[API][POST /api/alquileres/finalizar] Error:', err);
         res.status(500).json({ success: false, message: 'Error interno al finalizar y facturar.', error: err.message });
     }
 });
@@ -657,7 +617,7 @@ async function crearFacturaYMetodosPago(db, {
             VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)`,
             [
                 id_alquiler,
-                id_usuario_cierre || null,
+                id_usuario_cierre || null, // <-- aquí también
                 metodo_pago || '',
                 totalAPagar,
                 total_recibido || 0,
@@ -1537,8 +1497,8 @@ app.get('/api/dias-mas-ventas', async (req, res) => {
                 DAY(hora_pedido) AS dia,
                 SUM(subtotal - descuento) AS total
             FROM pedido
-            WHERE MONTH(hora_pedido) = MONTH(CURDATE())
-              AND YEAR(hora_pedido) = YEAR(CURDATE())
+            WHERE MONTH(hora_pedido) = MONTH(CURRENT_DATE())
+              AND YEAR(hora_pedido) = YEAR(CURRENT_DATE())
             GROUP BY dia
         `);
 
@@ -1560,12 +1520,15 @@ app.get('/api/dias-mas-ventas', async (req, res) => {
         const totales = resumen.map(r => r.total).filter(t => t > 0);
         const avg = totales.length ? totales.reduce((a, b) => a + b, 0) / totales.length : 0;
         const max = Math.max(...totales, 0);
+        const min = Math.min(...totales, 0);
 
-        resumen = resumen.map(r => {
+        // Asignar nivel según el rendimiento
+       
+        const resumenConNivel = resumen.map(r => {
             let nivel = 'normal';
-            if (r.total >= avg * 1.3) nivel = 'alta';
+            if (r.total >= avg * 1.5) nivel = 'alta';
             else if (r.total <= avg * 0.7 && r.total > 0) nivel = 'baja';
-            else if (r.total === 0) nivel = 'sin';
+            // Siempre retorna el objeto, incluso si total === 0
             return { ...r, nivel };
         });
 
@@ -1577,7 +1540,7 @@ app.get('/api/dias-mas-ventas', async (req, res) => {
             consejo = 'Tus ventas son bastante regulares. Analiza qué puedes hacer para potenciar los días bajos y mantener la constancia.';
         }
 
-        res.json({ resumen, consejo });
+        res.json({ resumen: resumenConNivel, consejo });
     } catch (err) {
         res.status(500).json({ error: 'Error al consultar los días con más ventas.' });
     }
@@ -1618,7 +1581,8 @@ app.post('/api/login', async (req, res) => {
         const usuario = rows[0];
         const match = await bcrypt.compare(password, usuario.password) || password === usuario.password;
         if (!match) return res.json({ ok: false, error: 'Contraseña incorrecta.' });
-        // Permitir login para cualquier rol
+        // Guardar usuario en sesión
+        req.session.usuario = { id: usuario.id_usuario, nombre: usuario.nombre, rol: usuario.rol };
         res.json({ ok: true, usuario: { id: usuario.id_usuario, nombre: usuario.nombre, rol: usuario.rol } });
     } catch (err) {
         res.json({ ok: false, error: 'Error en el servidor.' });
@@ -1658,9 +1622,9 @@ app.post('/api/validar-supervisor', async (req, res) => {
         return res.json({ autorizado: false });
     }
     try {
-        // Permitir acceso si el usuario es Administrador o Empleado
+        // Permitir acceso si el usuario es Supervisor o Administrador
         const [rows] = await pool.query(
-            'SELECT * FROM usuario WHERE documento = ? AND (rol = "Administrador" OR rol = "Empleado") LIMIT 1',
+            'SELECT * FROM usuario WHERE documento = ? AND (rol = "Supervisor" OR rol = "Administrador") LIMIT 1',
             [documento]
         );
         const autorizado = rows.length > 0;
@@ -1671,82 +1635,44 @@ app.post('/api/validar-supervisor', async (req, res) => {
 });
 
 // --- NUEVO: API para obtener la última pedida de una mesa (para botón "Repetir última pedida") ---
-app.get('/api/pedidas/ultima', async (req, res) => {
-    const mesaId = req.query.mesaId;
-    if (!mesaId) {
-        return res.status(400).json({ error: 'Falta el parámetro mesaId' });
+app.post('/api/pedidos/ultima-pedida', async (req, res) => {
+    const { id_mesa } = req.body;
+    if (!id_mesa) {
+        return res.status(400).json({ success: false, message: 'Falta id_mesa' });
     }
     try {
-        // 1. Buscar el alquiler activo de la mesa (si no hay, buscar el último alquiler finalizado)
-        let [alquilerRows] = await pool.query(
+        // Obtener el último alquiler activo de la mesa
+        const [alquilerRows] = await pool.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
-            [mesaId]
+            [id_mesa]
         );
-        if (!alquilerRows.length) {
-            // Si no hay alquiler activo, busca el último finalizado
-            [alquilerRows] = await pool.query(
-                'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? ORDER BY hora_inicio DESC LIMIT 1',
-                [mesaId]
-            );
-        }
-        if (!alquilerRows.length) {
-            return res.status(404).json({ error: 'No hay alquiler registrado para esta mesa.' });
+        if (alquilerRows.length === 0) {
+            return res.status(404).json({ success: false, message: 'No hay alquiler activo para esta mesa.' });
         }
         const id_alquiler = alquilerRows[0].id_alquiler;
-        // 2. Buscar todas las pedidas (agrupadas por hora_pedido redondeada a minutos)
-        // Soluciona el error de ambigüedad usando alias en los campos
-        const [pedidos] = await pool.query(
-            `SELECT pedido.id_producto, pedido.cantidad, pedido.subtotal, pedido.hora_pedido, 
-                    pr.nombre AS nombre, pr.precio
-             FROM pedido 
-             JOIN producto pr ON pedido.id_producto = pr.id_producto
-             WHERE pedido.id_alquiler = ?
-             ORDER BY pedido.hora_pedido DESC`,
+
+        // Obtener la última pedida (por hora_pedido) del alquiler
+        const [pedidosRows] = await pool.query(
+            `SELECT id_pedido, hora_pedido, id_producto, cantidad, subtotal, estado
+             FROM pedido
+             WHERE id_alquiler = ?
+             ORDER BY hora_pedido DESC
+             LIMIT 1`,
             [id_alquiler]
         );
-        if (!pedidos.length) {
-            return res.status(404).json({ error: 'No hay pedidas para esta mesa.' });
+        if (pedidosRows.length === 0) {
+            return res.status(404).json({ success: false, message: 'No se encontró ninguna pedida para este alquiler.' });
         }
+        const ultimaPedida = pedidosRows[0];
 
-        // Agrupar por hora_pedido redondeada a minutos
-        const agrupados = {};
-        pedidos.forEach(p => {
-            let key = '';
-            if (p.hora_pedido) {
-                const d = new Date(p.hora_pedido);
-                key = d.getFullYear() + '-' +
-                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
-                    String(d.getDate()).padStart(2, '0') + ' ' +
-                    String(d.getHours()).padStart(2, '0') + ':' +
-                    String(d.getMinutes()).padStart(2, '0');
-            }
-            if (!agrupados[key]) agrupados[key] = [];
-            agrupados[key].push(p);
-        });
-        const horas = Object.keys(agrupados);
-        if (!horas.length) {
-            return res.status(404).json({ error: 'No hay pedidas para esta mesa.' });
-        }
-        // Tomar la última hora (más reciente)
-        const ultimaHora = horas.sort().pop();
-        const productosUltimaPedida = agrupados[ultimaHora];
-
-        // Formato de respuesta: { productos: [ { id_producto, nombre, precio, cantidad } ] }
-        const productos = productosUltimaPedida.map(p => ({
-            id_producto: p.id_producto,
-            nombre: p.nombre,
-            precio: parseFloat(p.precio),
-            cantidad: p.cantidad
-        }));
-
-        res.json({ productos });
+        res.json({ success: true, ultimaPedida });
     } catch (err) {
-        console.error('[API][GET /api/pedidas/ultima] Error:', err);
-        res.status(500).json({ error: 'Error al obtener la última pedida.' });
+        console.error('Error en /api/pedidos/ultima-pedida:', err);
+        res.status(500).json({ error: 'Error interno del servidor', detalle: err.message });
     }
 });
 
-// Cambiar estado de productos de una pedida
+// Cambia el estado de productos de una pedida
 app.post('/api/pedidas/cambiar-estado-productos', async (req, res) => {
     const { id_mesa, key_pedida, estado } = req.body;
     if (!id_mesa || !key_pedida || !estado) {
@@ -1898,6 +1824,85 @@ app.get('/api/estadisticas/empleados-mas-venden', async (req, res) => {
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: 'Error al obtener ranking de empleados.' });
+    }
+});
+
+// Endpoint para empleados que más venden (top 3)
+app.get('/api/empleados-mas-venden', async (req, res) => {
+    try {
+        // Ajusta la consulta según tu base de datos
+        const empleados = await db.query(`
+            SELECT nombre, ventas
+            FROM empleados
+            ORDER BY ventas DESC
+            LIMIT 3
+        `);
+        res.json(empleados);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener empleados' });
+    }
+});
+
+// Al guardar una factura, asegúrate de guardar el usuario que factura
+app.post('/api/facturas', (req, res) => {
+    const { usuario, ...restoDatos } = req.body;
+    // Guarda la factura con el usuario correcto
+    // factura.usuario = usuario;
+    // ...guardar en base de datos...
+    res.json({ ok: true });
+});
+
+// API para obtener el empleado que más ha vendido
+app.get('/api/estadisticas/empleado-top', async (req, res) => {
+    try {
+        // Consulta el empleado con mayor total vendido en el mes actual
+        const [rows] = await pool.query(`
+            SELECT u.nombre, u.rol, SUM(f.total) AS total_ventas
+            FROM factura f
+            LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
+            WHERE MONTH(f.fecha) = MONTH(CURRENT_DATE()) AND YEAR(f.fecha) = YEAR(CURRENT_DATE())
+            GROUP BY f.id_usuario
+            ORDER BY total_ventas DESC
+            LIMIT 1
+        `);
+        if (!rows.length) return res.json({});
+        res.json({
+            nombre: rows[0].nombre,
+            total: rows[0].total_ventas
+        });
+    } catch (e) {
+        res.status(500).json({ error: 'Error al calcular el top vendedor' });
+    }
+});
+
+// --- RUTA PARA ACTUALIZAR PRODUCTO --- //
+app.put('/api/productos/:id', async (req, res) => {
+    const id = req.params.id;
+    const { nombre, categoria, precio, imagen } = req.body;
+
+    // Log de entrada
+    console.log(`[API][PUT /api/productos/${id}] Datos recibidos:`, req.body);
+
+    if (!nombre || !categoria || !precio || !imagen) {
+        console.error(`[API][PUT /api/productos/${id}] Faltan campos obligatorios`);
+        return res.status(400).json({ success: false, message: 'Todos los campos son obligatorios.', debug: req.body });
+    }
+
+    try {
+        const [result] = await pool.query(
+            'UPDATE producto SET nombre=?, categoria=?, precio=?, imagen=? WHERE id_producto=?',
+            [nombre, categoria, precio, imagen, id]
+        );
+        if (result.affectedRows > 0) {
+            console.log(`[API][PUT /api/productos/${id}] Producto actualizado correctamente`);
+            res.json({ success: true, message: 'Producto actualizado correctamente.' });
+        } else {
+            console.error(`[API][PUT /api/productos/${id}] No se encontró el producto para actualizar`);
+            res.status(404).json({ success: false, message: 'Producto no encontrado.', debug: { id, body: req.body } });
+        }
+    } catch (err) {
+        console.error(`[API][PUT /api/productos/${id}] Error al actualizar:`, err);
+        res.status(500).json({ success: false, message: 'Error al actualizar el producto.', error: err.message, debug: req.body });
     }
 });
 

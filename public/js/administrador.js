@@ -21,6 +21,18 @@ function capitalizarPalabras(str) {
 
 // Manejar el envío del formulario
 addProductForm.addEventListener('submit', async (e) => {
+    // Validación de URL de imagen antes de cualquier otra cosa
+    const imageInput = document.getElementById('productImage');
+    const url = imageInput.value.trim();
+    // Expresión regular para validar extensiones de imagen comunes
+    const imageUrlPattern = /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i;
+    if (!imageUrlPattern.test(url)) {
+        e.preventDefault();
+        imageInput.focus();
+        showNotification('Por favor ingresa una URL de imagen válida (jpg, png, gif, webp, etc).');
+        return;
+    }
+
     e.preventDefault();
 
     // Capitaliza el nombre antes de enviar
@@ -225,12 +237,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const categoria = document.getElementById('editProductCategory').value.trim();
             const precioStr = document.getElementById('editProductPrice').value.trim();
-            const imagen = document.getElementById('editProductImage').value.trim();
+            let imagen = document.getElementById('editProductImage').value.trim();
             const precio = parseFloat(precioStr);
 
-            // Validación de precio mínimo
-            if (!nombre || !categoria || isNaN(precio) || precio < 300) {
-                alert('Por favor, completa todos los campos correctamente y asegúrate que el precio sea mayor o igual a 300.');
+            // Validación de URL de imagen igual que en agregar producto
+            // Solo validar si el campo no está vacío y no es la imagen por defecto
+            const imageUrlPattern = /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i;
+            if (!imagen || imagen === 'images/default-product.jpg') {
+                showNotification('Por favor ingresa una URL de imagen válida (jpg, png, gif, webp, etc).');
+                document.getElementById('editProductImage').focus();
+                return;
+            }
+            if (!imageUrlPattern.test(imagen)) {
+                showNotification('Por favor ingresa una URL de imagen válida (jpg, png, gif, webp, etc).');
+                document.getElementById('editProductImage').focus();
+                return;
+            }
+
+            // Validación de precio mínimo y campos obligatorios
+            if (!nombre || !categoria || !imagen || isNaN(precio) || precio < 300) {
+                showNotification('Por favor, completa todos los campos correctamente y asegúrate que el precio sea mayor o igual a 300.');
                 return;
             }
 
@@ -241,16 +267,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify({ nombre, categoria, precio, imagen })
                 });
                 const result = await res.json();
+                // Log detallado para depuración
+                console.log('[EDIT PRODUCT][RESPONSE]', result);
+
                 if (res.ok && result.success) {
                     showNotification('Producto actualizado correctamente');
                     document.getElementById('editProductModal').classList.add('hidden');
                     document.getElementById('editProductModal').style.display = 'none';
-                    setTimeout(() => location.reload(), 1500);
+                    setTimeout(() => location.reload(), 12000); // 12 segundos para que el usuario lea el mensaje
                 } else {
-                    alert(result.message || 'Error al actualizar el producto');
+                    showNotification(result.message || 'Error al actualizar el producto');
+                    if (result.error || result.debug) {
+                        console.error('[EDIT PRODUCT][ERROR]', result);
+                    }
                 }
             } catch (err) {
-                alert('Error al actualizar el producto');
+                console.error('[EDIT PRODUCT][CATCH ERROR]', err);
+                showNotification('Error al actualizar el producto');
             }
         };
     }

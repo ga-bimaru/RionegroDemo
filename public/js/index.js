@@ -56,3 +56,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     obtenerYRenderizarMesas();
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const usuarioDiv = document.getElementById('usuarioHeader');
+    if (usuarioDiv) {
+        const usuario = JSON.parse(localStorage.getItem('usuarioActual'));
+        if (usuario && usuario.nombre) {
+            usuarioDiv.textContent = usuario.nombre;
+        } else {
+            usuarioDiv.textContent = '';
+        }
+    }
+});

@@ -96,9 +96,12 @@ export function renderMesas(mesas, mesasContainer) {
 
     // Evento para botón "Iniciar"
     document.querySelectorAll('.start-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
+        button.addEventListener('click', async (e) => {
             const mesaId = e.target.dataset.mesa;
-            toggleContador(mesaId, e.target);
+            // Solo intenta iniciar el alquiler, NO llames a toggleContador aquí
+            await iniciarAlquiler(mesaId);
+            // NO llames a toggleContador(mesaId, e.target);
+            // La recarga de la página actualizará el estado visual correctamente
         });
     });
 
@@ -137,4 +140,50 @@ export function renderMesas(mesas, mesasContainer) {
             await mostrarTotalesMesa(mesaId);
         });
     });
+}
+
+// Función para iniciar un alquiler de mesa
+async function iniciarAlquiler(id_mesa) {
+    const usuarioActual = JSON.parse(localStorage.getItem('usuarioActual'));
+    if (!usuarioActual || !usuarioActual.id) {
+        if (typeof snackbar === 'function') {
+            snackbar('No hay usuario logueado. Por favor, inicia sesión.', 'error');
+        } else if (typeof mostrarSnackbar === 'function') {
+            mostrarSnackbar('No hay usuario logueado. Por favor, inicia sesión.', 'error');
+        } else {
+            alert('No hay usuario logueado. Por favor, inicia sesión.');
+        }
+        return;
+    }
+    try {
+        const res = await fetch('/api/alquileres', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_mesa })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            // Usa snackbar o alert, pero NO recargues ni refresques la UI
+            const msg = data && data.error ? data.error : 'No se pudo iniciar el alquiler.';
+            if (typeof snackbar === 'function') {
+                snackbar(msg, 'error');
+            } else if (typeof mostrarSnackbar === 'function') {
+                mostrarSnackbar(msg, 'error');
+            } else {
+                alert(msg);
+            }
+            return; // Detén aquí, no sigas con la lógica de refresco
+        }
+        // Solo si fue exitoso, refresca la UI o recarga la página
+        location.reload(); // <-- AQUÍ, solo si fue exitoso
+        // o llama a renderMesas() si prefieres no recargar toda la página
+    } catch (err) {
+        if (typeof snackbar === 'function') {
+            snackbar('Error de conexión al iniciar el alquiler.', 'error');
+        } else if (typeof mostrarSnackbar === 'function') {
+            mostrarSnackbar('Error de conexión al iniciar el alquiler.', 'error');
+        } else {
+            alert('Error de conexión al iniciar el alquiler.');
+        }
+    }
 }

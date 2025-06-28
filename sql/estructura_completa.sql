@@ -173,3 +173,17 @@ BEGIN
     WHERE id_alquiler = p_id_alquiler;
 END//
 DELIMITER ;
+
+
+
+-- Si tienes el error 1175 por "safe update mode", puedes:
+-- 1. Desactivar el modo seguro temporalmente:
+SET SQL_SAFE_UPDATES = 0;
+
+-- 2. Ahora puedes ejecutar el borrado sin error:
+DELETE FROM alquiler;
+
+-- 3. (Opcional) Vuelve a activar el modo seguro si lo deseas:
+SET SQL_SAFE_UPDATES = 1;
+
+UPDATE alquiler SET estado = 'Finalizado', hora_fin = NOW() WHERE estado = 'Activo';
