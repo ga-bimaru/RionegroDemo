@@ -1,6 +1,9 @@
 // Este archivo contiene la lógica para abrir el modal de pedidos y gestionar productos.
 // Principios SOLID aplicados: cada función tiene una responsabilidad clara y el código es extensible y desacoplado.
 
+// Variable global para los productos de la pedida actual
+let productosPedidaActual = [];
+
 export function openPedidoModal(mesaId) {
     let modal = document.getElementById('pedidoModalCustom');
     if (!modal) {
@@ -10,7 +13,8 @@ export function openPedidoModal(mesaId) {
     mostrarModal(modal);
 
     let productosDisponibles = [];
-    let productosPedidaActual = [];
+    // Limpiar productos al abrir el modal
+    productosPedidaActual = [];
 
     fetchProductos().then(productos => {
         productosDisponibles = productos;
@@ -23,7 +27,7 @@ export function openPedidoModal(mesaId) {
                 const tienePedidas = data && Array.isArray(data.pedidos) && data.pedidos.length > 0;
                 let btn = document.getElementById('btnRepetirUltimaPedida');
                 if (tienePedidas) {
-                    if (!btn) crearBotonRepetirPedida();
+                    if (!btn) crearBotonRepetirPedida(mesaId);
                     else btn.style.display = '';
                 } else if (btn) {
                     btn.style.display = 'none';
@@ -84,11 +88,19 @@ export function openPedidoModal(mesaId) {
     function mostrarModal(modal) {
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
-        document.getElementById('closePedidoModalCustom').onclick =
-        document.getElementById('cancelarPedidoBtnCustom').onclick = function() {
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-        };
+    }
+    
+    // Función para cerrar el modal y limpiar datos (definida una sola vez)
+    function cerrarModal() {
+        const modal = document.getElementById('pedidoModalCustom');
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        // Limpiar productos seleccionados para evitar bugs
+        productosPedidaActual = [];
+        renderProductosAgregados();
+        // Limpiar el selector de categoría
+        document.getElementById('categoriaPedido').value = 'bebidas';
+        renderProductosCards('bebidas');
     }
 
     function fetchProductos() {
@@ -282,7 +294,7 @@ export function openPedidoModal(mesaId) {
         renderProductosCards(document.getElementById('categoriaPedido').value);
     }
     // NUEVO: Botón para repetir última pedida (desde backend)
-    function crearBotonRepetirPedida() {
+    function crearBotonRepetirPedida(mesaId) {
         let btn = document.getElementById('btnRepetirUltimaPedida');
         if (!btn) {
             btn = document.createElement('button');
@@ -378,6 +390,10 @@ export function openPedidoModal(mesaId) {
             });
             const data = await res.json();
             if (res.ok && (data.success || data.ok)) {
+                // Limpiar productos antes de mostrar notificación
+                productosPedidaActual = [];
+                renderProductosAgregados();
+                
                 // Notificación visual tipo snackbar, no alert ni confirm
                 if (typeof showNotification === 'function') {
                     showNotification(`
@@ -454,6 +470,10 @@ export function openPedidoModal(mesaId) {
                         window.location.reload();
                     }, 2200);
                 }
+                
+                // Cerrar modal solo en caso de éxito
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
             } else {
                 let msg = (data && data.message) ? data.message : 'No se pudo guardar la pedida';
                 if (typeof showNotification === 'function') showNotification('Error: ' + msg);
@@ -463,10 +483,11 @@ export function openPedidoModal(mesaId) {
             if (typeof showNotification === 'function') showNotification('Error al guardar la pedida: ' + (err.message || err));
             else alert('Error al guardar la pedida: ' + (err.message || err));
         }
-
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
     };
 
+    // Configurar event listeners para cerrar modal (una sola vez)
+    document.getElementById('closePedidoModalCustom').onclick = cerrarModal;
+    document.getElementById('cancelarPedidoBtnCustom').onclick = cerrarModal;
+    
     document.getElementById('agregarProductoPedido').style.display = 'none';
-}
+};

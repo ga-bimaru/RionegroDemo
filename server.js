@@ -994,6 +994,92 @@ app.post('/api/pedidos/marcar-pedida-pagada', async (req, res) => {
     }
 });
 
+// API para obtener la última pedida de una mesa
+app.get('/api/pedidas/ultima', async (req, res) => {
+    try {
+        const { mesaId } = req.query;
+        
+        console.log('[API][pedidas/ultima] mesaId recibido:', mesaId, 'tipo:', typeof mesaId);
+        
+        if (!mesaId) {
+            return res.status(400).json({ error: 'Se requiere el ID de la mesa' });
+        }
+
+        // 1. Buscar el alquiler activo para la mesa
+        console.log('[API][pedidas/ultima] Buscando alquiler activo para mesa:', mesaId);
+        const [alquilerRows] = await pool.query(
+            'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
+            [mesaId]
+        );
+        
+        if (alquilerRows.length === 0) {
+            console.log('[API][pedidas/ultima] No hay alquiler activo para mesa:', mesaId);
+            return res.status(404).json({ error: 'No hay alquiler activo para esta mesa' });
+        }
+        
+        const id_alquiler = alquilerRows[0].id_alquiler;
+        console.log('[API][pedidas/ultima] Alquiler encontrado:', id_alquiler);
+
+        // 2. Buscar la última pedida (agrupada por hora_pedido redondeada a minutos)
+        const [ultimaPedidaRows] = await pool.query(
+            `SELECT 
+                LEFT(p.hora_pedido, 16) as hora_pedida_grupo,
+                MAX(p.hora_pedido) as ultima_hora
+             FROM pedido p 
+             WHERE p.id_alquiler = ? 
+             GROUP BY LEFT(p.hora_pedido, 16)
+             ORDER BY MAX(p.hora_pedido) DESC 
+             LIMIT 1`,
+            [id_alquiler]
+        );
+
+        if (ultimaPedidaRows.length === 0) {
+            return res.status(404).json({ error: 'No hay pedidas previas para esta mesa' });
+        }
+
+        const hora_pedida_grupo = ultimaPedidaRows[0].hora_pedida_grupo;
+
+        // 3. Obtener todos los productos de esa pedida
+        const [productosRows] = await pool.query(
+            `SELECT 
+                p.id_producto,
+                p.cantidad,
+                p.subtotal,
+                prod.nombre,
+                prod.precio,
+                prod.categoria
+             FROM pedido p
+             JOIN producto prod ON p.id_producto = prod.id_producto
+             WHERE p.id_alquiler = ? AND LEFT(p.hora_pedido, 16) = ?
+             ORDER BY p.hora_pedido ASC`,
+            [id_alquiler, hora_pedida_grupo]
+        );
+
+        if (productosRows.length === 0) {
+            return res.status(404).json({ error: 'No se encontraron productos en la última pedida' });
+        }
+
+        // 4. Formatear la respuesta
+        const ultimaPedida = {
+            hora_pedida: hora_pedida_grupo,
+            productos: productosRows.map(producto => ({
+                id_producto: producto.id_producto,
+                nombre: producto.nombre,
+                precio: producto.precio,
+                categoria: producto.categoria,
+                cantidad: producto.cantidad,
+                subtotal: producto.subtotal
+            }))
+        };
+
+        res.json(ultimaPedida);
+        
+    } catch (err) {
+        console.error('Error en /api/pedidas/ultima:', err);
+        res.status(500).json({ error: 'Error interno del servidor', detalle: err.message });
+    }
+});
+
 // --- RUTAS DE ESTADÍSTICAS PARA DASHBOARD ---
 
 // Ventas del día
