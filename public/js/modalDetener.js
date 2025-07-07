@@ -660,7 +660,34 @@ export async function mostrarModalDetener(mesaId, totalAPagar, onConfirm) {
         // Obtiene métodos de pago seleccionados y sus recibidos
         const metodosSeleccionados = Array.from(metodosPagoContainer.querySelectorAll('.metodo-pago-checkbox:checked')).map(cb => cb.value);
         if (!metodosSeleccionados.length) {
-            alert('Selecciona al menos un método de pago.');
+            // Mostrar snackbar flotante dentro del modal
+            let snackbar = modal.querySelector('.snackbar-modal');
+            if (!snackbar) {
+                snackbar = document.createElement('div');
+                snackbar.className = 'snackbar-modal';
+                snackbar.style.position = 'absolute';
+                snackbar.style.left = '50%';
+                snackbar.style.bottom = '32px';
+                snackbar.style.transform = 'translateX(-50%)';
+                snackbar.style.background = '#e74c3c';
+                snackbar.style.color = '#fff';
+                snackbar.style.padding = '0.8rem 1.8rem';
+                snackbar.style.borderRadius = '1rem';
+                snackbar.style.fontWeight = 'bold';
+                snackbar.style.fontSize = '1.05rem';
+                snackbar.style.boxShadow = '0 2px 12px #0003';
+                snackbar.style.zIndex = 10001;
+                snackbar.style.opacity = '0';
+                snackbar.style.transition = 'opacity 0.3s, bottom 0.3s';
+                modal.appendChild(snackbar);
+            }
+            snackbar.textContent = 'Selecciona al menos un método de pago.';
+            snackbar.style.opacity = '1';
+            snackbar.style.bottom = '48px';
+            setTimeout(() => {
+                snackbar.style.opacity = '0';
+                snackbar.style.bottom = '32px';
+            }, 3000);
             return;
         }
         const recibidos = {};

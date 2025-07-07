@@ -1,3 +1,37 @@
+/* Botón cerrar sesión moderno */
+.cerrar-sesion-btn {
+    background: linear-gradient(90deg,#e74c3c 0%,#ff7675 100%);
+    color: #fff;
+    font-weight: 700;
+    border-radius: 1.1rem;
+    padding: 0.7rem 1.7rem;
+    font-size: 1.08rem;
+    border: none;
+    box-shadow: 0 2px 8px #e74c3c33;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    margin-left: 1.2rem;
+    transition: background 0.18s, box-shadow 0.18s;
+    white-space: nowrap;
+}
+.cerrar-sesion-btn:hover {
+    background: linear-gradient(90deg,#ff7675 0%,#e74c3c 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px #e74c3c33;
+}
+header .admin-btn-header {
+    min-width: 170px;
+    max-width: 220px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-size: 1.08rem;
+    padding: 0.7rem 1.7rem;
+    white-space: nowrap;
+}
 /* Fuente moderna y elegante */
 @import url("https://fonts.googleapis.com/css?family=DM+Sans:400,500,700&display=swap");
 

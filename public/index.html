@@ -16,10 +16,14 @@
     <header>
         <h1>Gestión de Mesas de Pool</h1>
         <div>
-            <a href="admin-acceso.html" class="admin-btn" style="margin-left:0.7rem;">administrador</a>
-            <a href="supervisor-acceso.html" class="admin-btn" style="margin-left:0.7rem;">Supervisor</a>
+            <a href="admin-acceso.html" class="admin-btn admin-btn-header" style="margin-left:0.7rem;">
+                <span style="font-size:1.2rem;vertical-align:middle;">🛡️</span> <span style="font-weight:700;letter-spacing:0.01em;">Administrador</span>
+            </a>
+            <a href="supervisor-acceso.html" class="admin-btn admin-btn-header" style="margin-left:0.7rem;">
+                <span style="font-size:1.2rem;vertical-align:middle;">🧑‍💼</span> <span style="font-weight:700;letter-spacing:0.01em;">Supervisor</span>
+            </a>
             <!-- Botón cerrar sesión -->
-            <button id="btnCerrarSesion" title="Cerrar sesión" style="margin-left:1.2rem; background:none; border:none; cursor:pointer; vertical-align:middle;">
+            <button id="btnCerrarSesion" class="cerrar-sesion-btn" title="Cerrar sesión">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="vertical-align:middle;">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"/>
                 </svg>
@@ -92,6 +96,7 @@
         </div>
     </div>
 
+    <script src="js/snackbar.js"></script>
     <script src="js/index.js" type="module"></script>
     <script src="js/estado-pedida.js"></script>
     <script>

@@ -256,9 +256,46 @@ export async function mostrarFacturaAlDetener(mesaId, totalTiempo, callback) {
     };
     // Botón confirmar
     modal.querySelector('.confirmar').onclick = () => {
+        // Validar método de pago seleccionado (ejemplo: radio con name="metodoPago")
+        const metodoSeleccionado = modal.querySelector('input[name="metodoPago"]:checked');
+        if (!metodoSeleccionado) {
+            mostrarSnackbarEnModal(modal, 'Selecciona al menos un método de pago.');
+            return;
+        }
         modal.remove();
         if (typeof callback === 'function') callback();
     };
+
+    // Función para mostrar snackbar dentro del modal
+    function mostrarSnackbarEnModal(modal, mensaje) {
+        let snackbar = modal.querySelector('.snackbar-modal');
+        if (!snackbar) {
+            snackbar = document.createElement('div');
+            snackbar.className = 'snackbar-modal';
+            snackbar.style.position = 'absolute';
+            snackbar.style.left = '50%';
+            snackbar.style.bottom = '32px';
+            snackbar.style.transform = 'translateX(-50%)';
+            snackbar.style.background = '#e74c3c';
+            snackbar.style.color = '#fff';
+            snackbar.style.padding = '0.8rem 1.8rem';
+            snackbar.style.borderRadius = '1rem';
+            snackbar.style.fontWeight = 'bold';
+            snackbar.style.fontSize = '1.05rem';
+            snackbar.style.boxShadow = '0 2px 12px #0003';
+            snackbar.style.zIndex = 10001;
+            snackbar.style.opacity = '0';
+            snackbar.style.transition = 'opacity 0.3s, bottom 0.3s';
+            modal.appendChild(snackbar);
+        }
+        snackbar.textContent = mensaje;
+        snackbar.style.opacity = '1';
+        snackbar.style.bottom = '48px';
+        setTimeout(() => {
+            snackbar.style.opacity = '0';
+            snackbar.style.bottom = '32px';
+        }, 3000);
+    }
     // Cerrar al hacer clic fuera del contenido
     modal.addEventListener('mousedown', function(e) {
         if (e.target === modal) {

@@ -2312,23 +2312,34 @@ app.post('/api/facturas', (req, res) => {
 });
 
 // API para obtener el empleado que más ha vendido
+// NUEVO: Top 10 empleados por ventas (día, semana, mes)
 app.get('/api/estadisticas/empleado-top', async (req, res) => {
     try {
-        // Consulta el empleado con mayor total vendido en el mes actual
+        const periodo = req.query.periodo || 'mes';
+        let where = "WHERE 1=1 ";
+        let params = [];
+        if (periodo === 'dia') {
+            where += ' AND DATE(f.fecha) = CURDATE()';
+        } else if (periodo === 'semana') {
+            where += ' AND YEARWEEK(f.fecha, 1) = YEARWEEK(CURDATE(), 1)';
+        } else { // mes
+            where += ' AND MONTH(f.fecha) = MONTH(CURDATE()) AND YEAR(f.fecha) = YEAR(CURDATE())';
+        }
         const [rows] = await pool.query(`
-            SELECT u.nombre, u.rol, SUM(f.total) AS total_ventas
+            SELECT 
+                COALESCE(u.nombre, CONCAT('Usuario ID ', f.id_usuario)) AS nombre,
+                u.documento,
+                u.rol,
+                f.id_usuario,
+                SUM(f.total) AS total
             FROM factura f
             LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
-            WHERE MONTH(f.fecha) = MONTH(CURRENT_DATE()) AND YEAR(f.fecha) = YEAR(CURRENT_DATE())
+            ${where}
             GROUP BY f.id_usuario
-            ORDER BY total_ventas DESC
-            LIMIT 1
-        `);
-        if (!rows.length) return res.json({});
-        res.json({
-            nombre: rows[0].nombre,
-            total: rows[0].total_ventas
-        });
+            ORDER BY total DESC
+            LIMIT 10
+        `, params);
+        res.json({ top: rows });
     } catch (e) {
         res.status(500).json({ error: 'Error al calcular el top vendedor' });
     }

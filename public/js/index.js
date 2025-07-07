@@ -68,3 +68,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// --- Snackbar simple sin dependencias externas ---
+function showSimpleSnackbar(message, color = '#e74c3c') {
+    let snackbar = document.getElementById('simple-snackbar');
+    if (!snackbar) {
+        snackbar = document.createElement('div');
+        snackbar.id = 'simple-snackbar';
+        snackbar.style.position = 'fixed';
+        snackbar.style.left = '50%';
+        snackbar.style.top = '40px';
+        snackbar.style.transform = 'translateX(-50%)';
+        snackbar.style.background = color;
+        snackbar.style.color = '#fff';
+        snackbar.style.padding = '1rem 2rem';
+        snackbar.style.borderRadius = '1rem';
+        snackbar.style.fontWeight = 'bold';
+        snackbar.style.fontSize = '1.1rem';
+        snackbar.style.boxShadow = '0 2px 12px #0003';
+        snackbar.style.zIndex = 99999;
+        snackbar.style.opacity = '0';
+        snackbar.style.transition = 'opacity 0.3s, top 0.3s';
+        document.body.appendChild(snackbar);
+    }
+    snackbar.textContent = message;
+    snackbar.style.opacity = '1';
+    snackbar.style.top = '48px';
+    setTimeout(() => {
+        snackbar.style.opacity = '0';
+        snackbar.style.top = '40px';
+    }, 3500);
+}
+

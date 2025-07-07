@@ -1,5 +1,5 @@
 // Snackbar reutilizable para el modal de factura
-function showSnackbar(message, options = {}) {
+window.showSnackbar = function showSnackbar(message, options = {}) {
     let snackbar = document.getElementById('snackbar');
     if (!snackbar) {
         snackbar = document.createElement('div');

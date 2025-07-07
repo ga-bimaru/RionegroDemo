@@ -16,7 +16,7 @@
         </div>
         <div style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem;">
             <div style="width: 60px; height: 4px; background: #00cfff; border-radius: 2px; opacity: 0.7;"></div>
-        </div>
+         </div>
         <div style="display: flex; flex-direction: column; gap: 0.7rem; align-items: center; padding: 1rem 0; overflow-y: auto; max-height: calc(100vh - 170px);">
             <a href="supervisor-edicion.html" class="btn-volver sidebar-btn">
                 <span style="font-size:1.3rem;">✏️</span> Editar Pedidas
@@ -24,11 +24,14 @@
             <a href="finanzas.html" class="btn-volver sidebar-btn">
                 <span style="font-size:1.3rem;">💸</span> Finanzas
             </a>
-            <a href="top-productos.html" class="btn-volver sidebar-btn active">
+            <a href="top-productos.html" class="btn-volver sidebar-btn">
                 <span style="font-size:1.3rem;">🍺</span> Top Productos
             </a>
-             <a href="empleado-top.html" class="btn-volver sidebar-btn active">
-                <span style="font-size:1.3rem;">👷🏻‍♂️</span> Top Empleado
+            <a href="empleado-top.html" class="btn-volver sidebar-btn">
+                <span style="font-size:1.3rem;">👷🏻‍♂️</span> Top Empleados
+            </a>
+            <a href="seguimiento-facturas.html" class="btn-volver sidebar-btn active">
+                <span style="font-size:1.3rem;">📋</span> Facturas
             </a>
         </div>
     </aside>
@@ -39,13 +42,34 @@
     </header>
     <main>
         <section class="empleado-top-section">
-            <h2>Top Vendedor</h2>
+            <h2>Top 10 Empleados por Ventas</h2>
+            <div class="top-empleado-filtros">
+                <button class="filtro-btn" data-filtro="dia">Hoy</button>
+                <button class="filtro-btn" data-filtro="semana">Semana</button>
+                <button class="filtro-btn active" data-filtro="mes">Mes</button>
+            </div>
             <div id="empleadoTop" class="empleado-top-card">
                 <span>Cargando...</span>
+            </div>
+            <div class="top-empleado-table-wrap">
+                <table class="top-empleado-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre</th>
+                            <th>Documento</th>
+                            <th>Total Vendido</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topEmpleadosTbody">
+                        <tr><td colspan="4">Cargando...</td></tr>
+                    </tbody>
+                </table>
             </div>
             <canvas id="graficaTopEmpleados" style="max-width:600px;margin:2rem auto 0;display:block;"></canvas>
         </section>
     </main>
+    <script src="js/snackbar.js"></script>
     <script src="js/empleado-top.js"></script>
 </body>
 </html>

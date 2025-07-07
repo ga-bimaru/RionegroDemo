@@ -10,13 +10,16 @@ DROP TABLE IF EXISTS factura;
 DROP TABLE IF EXISTS alquiler;
 DROP TABLE IF EXISTS mesa;
 DROP TABLE IF EXISTS usuario;
-DROP TABLE IF EXISTS gasto;
+-- DROP TABLE IF EXISTS producto;
+
+
 
 
 
 -- Tabla Usuarios
 CREATE TABLE IF NOT EXISTS usuario (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    
     nombre VARCHAR(50),
     correo VARCHAR(50) UNIQUE,
     telefono VARCHAR(20),
@@ -124,6 +127,115 @@ VALUES
     ('Empleado', 'empleado@demo.com', '3000000002', 'empleado123', 'Empleado', '1098623823')
 ON DUPLICATE KEY UPDATE nombre=VALUES(nombre), rol=VALUES(rol);
 
+-- ===================== DATOS SIMULADOS DE USUARIOS =====================
+INSERT INTO usuario (nombre, correo, telefono, password, rol, documento) VALUES
+('Administrador Demo', 'admin1@demo.com', '3000000003', 'admin123', 'Administrador', '1000000001'),
+('Supervisor Uno', 'supervisor1@demo.com', '3000000004', 'supervisor123', 'Supervisor', '1000000002'),
+('Supervisor Dos', 'supervisor2@demo.com', '3000000005', 'supervisor123', 'Supervisor', '1000000003'),
+('Empleado Uno', 'empleado1@demo.com', '3000000006', 'empleado123', 'Empleado', '1000000004'),
+('Empleado Dos', 'empleado2@demo.com', '3000000007', 'empleado123', 'Empleado', '1000000005'),
+('Empleado Tres', 'empleado3@demo.com', '3000000008', 'empleado123', 'Empleado', '1000000006'),
+('Empleado Cuatro', 'empleado4@demo.com', '3000000009', 'empleado123', 'Empleado', '1000000007'),
+('Empleado Cinco', 'empleado5@demo.com', '3000000010', 'empleado123', 'Empleado', '1000000008'),
+('Empleado Seis', 'empleado6@demo.com', '3000000011', 'empleado123', 'Empleado', '1000000009'),
+('Empleado Siete', 'empleado7@demo.com', '3000000012', 'empleado123', 'Empleado', '1000000010'),
+('Empleado Ocho', 'empleado8@demo.com', '3000000013', 'empleado123', 'Empleado', '1000000011'),
+('Empleado Nueve', 'empleado9@demo.com', '3000000014', 'empleado123', 'Empleado', '1000000012'),
+('Empleado Diez', 'empleado10@demo.com', '3000000015', 'empleado123', 'Empleado', '1000000013');
+
+-- ===================== DATOS SIMULADOS DE MESAS =====================
+INSERT INTO mesa (numero_mesa, estado, precio_hora) VALUES
+(1, 'Disponible', 6000.00),
+(2, 'Disponible', 6000.00),
+(3, 'Disponible', 6000.00),
+(4, 'Disponible', 6000.00),
+(5, 'Disponible', 6000.00),
+(6, 'Disponible', 6000.00);
+
+-- ===================== DATOS SIMULADOS DE ALQUILERES Y FACTURAS =====================
+-- Simulación de 20 ventas reales, distribuidas entre empleados, supervisores y administrador, con fechas desde hoy hasta hace 30 días
+-- Incluye variedad de métodos de pago, montos y mesas
+
+INSERT INTO alquiler (id_mesa, id_usuario, hora_inicio, hora_fin, total_tiempo, total_a_pagar, estado, metodo_pago, total_recibido, total_vuelto, id_usuario_cierre, fecha_cierre) VALUES
+-- Hoy
+(1, 4, DATE_SUB(NOW(), INTERVAL 0 DAY), DATE_SUB(NOW(), INTERVAL 0 DAY) + INTERVAL 1.5 HOUR, 1.5, 9000.00, 'Finalizado', 'Efectivo', 10000.00, 1000.00, 2, DATE_SUB(NOW(), INTERVAL 0 DAY) + INTERVAL 1.5 HOUR),
+(2, 5, DATE_SUB(NOW(), INTERVAL 0 DAY) + INTERVAL 2 HOUR, DATE_SUB(NOW(), INTERVAL 0 DAY) + INTERVAL 3.5 HOUR, 1.5, 9000.00, 'Finalizado', 'Nequi', 9000.00, 0.00, 3, DATE_SUB(NOW(), INTERVAL 0 DAY) + INTERVAL 3.5 HOUR),
+-- Hace 2 días
+(3, 6, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 2 HOUR, 2.0, 12000.00, 'Finalizado', 'Tarjeta', 12000.00, 0.00, 1, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 2 HOUR),
+(4, 7, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 1 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 2.5 HOUR, 1.5, 9000.00, 'Finalizado', 'Efectivo', 10000.00, 1000.00, 2, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 2.5 HOUR),
+-- Hace 5 días
+(5, 8, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 3 HOUR, 3.0, 18000.00, 'Finalizado', 'Nequi', 18000.00, 0.00, 3, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 3 HOUR),
+(6, 9, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 2 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 4 HOUR, 2.0, 12000.00, 'Finalizado', 'Tarjeta', 12000.00, 0.00, 1, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 4 HOUR),
+-- Hace 8 días
+(1, 10, DATE_SUB(NOW(), INTERVAL 8 DAY), DATE_SUB(NOW(), INTERVAL 8 DAY) + INTERVAL 2.5 HOUR, 2.5, 15000.00, 'Finalizado', 'Efectivo', 15000.00, 0.00, 2, DATE_SUB(NOW(), INTERVAL 8 DAY) + INTERVAL 2.5 HOUR),
+(2, 11, DATE_SUB(NOW(), INTERVAL 8 DAY) + INTERVAL 1 HOUR, DATE_SUB(NOW(), INTERVAL 8 DAY) + INTERVAL 2.5 HOUR, 1.5, 9000.00, 'Finalizado', 'Nequi', 10000.00, 1000.00, 3, DATE_SUB(NOW(), INTERVAL 8 DAY) + INTERVAL 2.5 HOUR),
+-- Hace 12 días
+(3, 12, DATE_SUB(NOW(), INTERVAL 12 DAY), DATE_SUB(NOW(), INTERVAL 12 DAY) + INTERVAL 3 HOUR, 3.0, 18000.00, 'Finalizado', 'Tarjeta', 18000.00, 0.00, 1, DATE_SUB(NOW(), INTERVAL 12 DAY) + INTERVAL 3 HOUR),
+(4, 13, DATE_SUB(NOW(), INTERVAL 12 DAY) + INTERVAL 2 HOUR, DATE_SUB(NOW(), INTERVAL 12 DAY) + INTERVAL 4 HOUR, 2.0, 12000.00, 'Finalizado', 'Efectivo', 12000.00, 0.00, 2, DATE_SUB(NOW(), INTERVAL 12 DAY) + INTERVAL 4 HOUR),
+-- Hace 15 días
+(5, 4, DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 15 DAY) + INTERVAL 1.5 HOUR, 1.5, 9000.00, 'Finalizado', 'Nequi', 9000.00, 0.00, 3, DATE_SUB(NOW(), INTERVAL 15 DAY) + INTERVAL 1.5 HOUR),
+(6, 5, DATE_SUB(NOW(), INTERVAL 15 DAY) + INTERVAL 2 HOUR, DATE_SUB(NOW(), INTERVAL 15 DAY) + INTERVAL 3.5 HOUR, 1.5, 9000.00, 'Finalizado', 'Tarjeta', 9000.00, 0.00, 1, DATE_SUB(NOW(), INTERVAL 15 DAY) + INTERVAL 3.5 HOUR),
+-- Hace 18 días
+(1, 6, DATE_SUB(NOW(), INTERVAL 18 DAY), DATE_SUB(NOW(), INTERVAL 18 DAY) + INTERVAL 2 HOUR, 2.0, 12000.00, 'Finalizado', 'Efectivo', 13000.00, 1000.00, 2, DATE_SUB(NOW(), INTERVAL 18 DAY) + INTERVAL 2 HOUR),
+(2, 7, DATE_SUB(NOW(), INTERVAL 18 DAY) + INTERVAL 1 HOUR, DATE_SUB(NOW(), INTERVAL 18 DAY) + INTERVAL 2.5 HOUR, 1.5, 9000.00, 'Finalizado', 'Nequi', 9000.00, 0.00, 3, DATE_SUB(NOW(), INTERVAL 18 DAY) + INTERVAL 2.5 HOUR),
+-- Hace 21 días
+(3, 8, DATE_SUB(NOW(), INTERVAL 21 DAY), DATE_SUB(NOW(), INTERVAL 21 DAY) + INTERVAL 3 HOUR, 3.0, 18000.00, 'Finalizado', 'Tarjeta', 18000.00, 0.00, 1, DATE_SUB(NOW(), INTERVAL 21 DAY) + INTERVAL 3 HOUR),
+(4, 9, DATE_SUB(NOW(), INTERVAL 21 DAY) + INTERVAL 2 HOUR, DATE_SUB(NOW(), INTERVAL 21 DAY) + INTERVAL 4 HOUR, 2.0, 12000.00, 'Finalizado', 'Efectivo', 12000.00, 0.00, 2, DATE_SUB(NOW(), INTERVAL 21 DAY) + INTERVAL 4 HOUR),
+-- Hace 25 días
+(5, 10, DATE_SUB(NOW(), INTERVAL 25 DAY), DATE_SUB(NOW(), INTERVAL 25 DAY) + INTERVAL 2.5 HOUR, 2.5, 15000.00, 'Finalizado', 'Nequi', 15000.00, 0.00, 3, DATE_SUB(NOW(), INTERVAL 25 DAY) + INTERVAL 2.5 HOUR),
+(6, 11, DATE_SUB(NOW(), INTERVAL 25 DAY) + INTERVAL 1 HOUR, DATE_SUB(NOW(), INTERVAL 25 DAY) + INTERVAL 2.5 HOUR, 1.5, 9000.00, 'Finalizado', 'Tarjeta', 9000.00, 0.00, 1, DATE_SUB(NOW(), INTERVAL 25 DAY) + INTERVAL 2.5 HOUR),
+-- Hace 28 días
+(1, 12, DATE_SUB(NOW(), INTERVAL 28 DAY), DATE_SUB(NOW(), INTERVAL 28 DAY) + INTERVAL 2 HOUR, 2.0, 12000.00, 'Finalizado', 'Efectivo', 12000.00, 0.00, 2, DATE_SUB(NOW(), INTERVAL 28 DAY) + INTERVAL 2 HOUR),
+(2, 13, DATE_SUB(NOW(), INTERVAL 28 DAY) + INTERVAL 1 HOUR, DATE_SUB(NOW(), INTERVAL 28 DAY) + INTERVAL 2.5 HOUR, 1.5, 9000.00, 'Finalizado', 'Nequi', 10000.00, 1000.00, 3, DATE_SUB(NOW(), INTERVAL 28 DAY) + INTERVAL 2.5 HOUR);
+
+-- ===================== DATOS SIMULADOS DE FACTURAS =====================
+INSERT INTO factura (id_alquiler, id_usuario, fecha, metodo_pago, total, total_recibido, total_vuelto, numero_mesa) VALUES
+(1, 2, DATE_SUB(NOW(), INTERVAL 0 DAY) + INTERVAL 1.5 HOUR, 'Efectivo', 9000.00, 10000.00, 1000.00, 1),
+(2, 3, DATE_SUB(NOW(), INTERVAL 0 DAY) + INTERVAL 3.5 HOUR, 'Nequi', 9000.00, 9000.00, 0.00, 2),
+(3, 1, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 2 HOUR, 'Tarjeta', 12000.00, 12000.00, 0.00, 3),
+(4, 2, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 2.5 HOUR, 'Efectivo', 9000.00, 10000.00, 1000.00, 4),
+(5, 3, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 3 HOUR, 'Nequi', 18000.00, 18000.00, 0.00, 5),
+(6, 1, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 4 HOUR, 'Tarjeta', 12000.00, 12000.00, 0.00, 6),
+(7, 2, DATE_SUB(NOW(), INTERVAL 8 DAY) + INTERVAL 2.5 HOUR, 'Efectivo', 15000.00, 15000.00, 0.00, 1),
+(8, 3, DATE_SUB(NOW(), INTERVAL 8 DAY) + INTERVAL 2.5 HOUR, 'Nequi', 9000.00, 10000.00, 1000.00, 2),
+(9, 1, DATE_SUB(NOW(), INTERVAL 12 DAY) + INTERVAL 3 HOUR, 'Tarjeta', 18000.00, 18000.00, 0.00, 3),
+(10, 2, DATE_SUB(NOW(), INTERVAL 12 DAY) + INTERVAL 4 HOUR, 'Efectivo', 12000.00, 12000.00, 0.00, 4),
+(11, 3, DATE_SUB(NOW(), INTERVAL 15 DAY) + INTERVAL 1.5 HOUR, 'Nequi', 9000.00, 9000.00, 0.00, 5),
+(12, 1, DATE_SUB(NOW(), INTERVAL 15 DAY) + INTERVAL 3.5 HOUR, 'Tarjeta', 9000.00, 9000.00, 0.00, 6),
+(13, 2, DATE_SUB(NOW(), INTERVAL 18 DAY) + INTERVAL 2 HOUR, 'Efectivo', 12000.00, 13000.00, 1000.00, 1),
+(14, 3, DATE_SUB(NOW(), INTERVAL 18 DAY) + INTERVAL 2.5 HOUR, 'Nequi', 9000.00, 9000.00, 0.00, 2),
+(15, 1, DATE_SUB(NOW(), INTERVAL 21 DAY) + INTERVAL 3 HOUR, 'Tarjeta', 18000.00, 18000.00, 0.00, 3),
+(16, 2, DATE_SUB(NOW(), INTERVAL 21 DAY) + INTERVAL 4 HOUR, 'Efectivo', 12000.00, 12000.00, 0.00, 4),
+(17, 3, DATE_SUB(NOW(), INTERVAL 25 DAY) + INTERVAL 2.5 HOUR, 'Nequi', 15000.00, 15000.00, 0.00, 5),
+(18, 1, DATE_SUB(NOW(), INTERVAL 25 DAY) + INTERVAL 2.5 HOUR, 'Tarjeta', 9000.00, 9000.00, 0.00, 6),
+(19, 2, DATE_SUB(NOW(), INTERVAL 28 DAY) + INTERVAL 2 HOUR, 'Efectivo', 12000.00, 12000.00, 0.00, 1),
+(20, 3, DATE_SUB(NOW(), INTERVAL 28 DAY) + INTERVAL 2.5 HOUR, 'Nequi', 9000.00, 10000.00, 1000.00, 2);
+
+-- ===================== DATOS SIMULADOS DE FACTURA_METODO_PAGO =====================
+INSERT INTO factura_metodo_pago (id_factura, metodo_pago, valor) VALUES
+(1, 'Efectivo', 9000.00),
+(2, 'Nequi', 9000.00),
+(3, 'Tarjeta', 12000.00),
+(4, 'Efectivo', 9000.00),
+(5, 'Nequi', 18000.00),
+(6, 'Tarjeta', 12000.00),
+(7, 'Efectivo', 15000.00),
+(8, 'Nequi', 9000.00),
+(9, 'Tarjeta', 18000.00),
+(10, 'Efectivo', 12000.00),
+(11, 'Nequi', 9000.00),
+(12, 'Tarjeta', 9000.00),
+(13, 'Efectivo', 12000.00),
+(14, 'Nequi', 9000.00),
+(15, 'Tarjeta', 18000.00),
+(16, 'Efectivo', 12000.00),
+(17, 'Nequi', 15000.00),
+(18, 'Tarjeta', 9000.00),
+(19, 'Efectivo', 12000.00),
+(20, 'Nequi', 9000.00);
+
+-- ===================== FIN DE DATOS SIMULADOS =====================
+
 -- Triggers para actualizar automáticamente el estado de la mesa cuando cambia un alquiler
 DELIMITER //
 CREATE TRIGGER after_alquiler_update 
@@ -173,17 +285,6 @@ BEGIN
     WHERE id_alquiler = p_id_alquiler;
 END//
 DELIMITER ;
-
-
-
--- Si tienes el error 1175 por "safe update mode", puedes:
--- 1. Desactivar el modo seguro temporalmente:
-SET SQL_SAFE_UPDATES = 0;
-
--- 2. Ahora puedes ejecutar el borrado sin error:
-DELETE FROM alquiler;
-
--- 3. (Opcional) Vuelve a activar el modo seguro si lo deseas:
-SET SQL_SAFE_UPDATES = 1;
-
-UPDATE alquiler SET estado = 'Finalizado', hora_fin = NOW() WHERE estado = 'Activo';
+select * from alquiler;
+select * from factura;
+select * from factura_metodo_pago

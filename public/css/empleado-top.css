@@ -1,3 +1,77 @@
+/* Filtros de periodo */
+.top-empleado-filtros {
+    display: flex;
+    justify-content: center;
+    gap: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+.filtro-btn {
+    background: #232946;
+    color: #00cfff;
+    border: 2px solid #00cfff;
+    border-radius: 1.2rem;
+    padding: 0.5rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.filtro-btn.active, .filtro-btn:hover {
+    background: #00cfff;
+    color: #232946;
+    border-color: #FFD600;
+}
+
+/* Tabla top empleados */
+.top-empleado-table-wrap {
+    margin: 2rem auto 0 auto;
+    max-width: 600px;
+    background: #181c2f;
+    border-radius: 1.2rem;
+    box-shadow: 0 0 8px #00cfff33;
+    overflow-x: auto;
+}
+.top-empleado-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #fff;
+    font-size: 1.1rem;
+}
+.top-empleado-table th, .top-empleado-table td {
+    padding: 0.7rem 1rem;
+    text-align: center;
+}
+.top-empleado-table th {
+    background: #232946;
+    color: #FFD600;
+    font-size: 1.1rem;
+    font-family: 'Orbitron', 'DM Sans', Arial, sans-serif;
+    border-bottom: 2px solid #00cfff;
+}
+.top-empleado-table tbody tr:nth-child(odd) {
+    background: #232946;
+}
+.top-empleado-table tbody tr:nth-child(even) {
+    background: #181c2f;
+}
+.top-empleado-table td {
+    border-bottom: 1px solid #232946;
+}
+.top-empleado-table tbody tr:first-child td {
+    font-weight: bold;
+    color: #FFD600;
+    background: #232946;
+    font-size: 1.15rem;
+}
+@media (max-width: 700px) {
+    .top-empleado-table th, .top-empleado-table td {
+        padding: 0.4rem 0.3rem;
+        font-size: 0.95rem;
+    }
+    .top-empleado-table-wrap {
+        max-width: 99vw;
+    }
+}
 body {
     background: #181c2f;
     color: #fff;
