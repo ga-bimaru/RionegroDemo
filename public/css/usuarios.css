@@ -1,0 +1,348 @@
+/* MODAL USUARIOS */
+.usuarios-modal-content {
+    background: #fff;
+    border-radius: 1.1rem;
+    box-shadow: 0 2px 16px #23294618, 0 8px 32px #00cfff22;
+    padding: 2.2rem 2.5rem 2.5rem 2.5rem;
+    position: relative;
+    min-width: 320px;
+    max-width: 420px;
+    width: 100%;
+    color: #232946;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    border: 2.5px solid #00cfff;
+}
+.usuarios-modal-title {
+    color: #007bff;
+    font-size: 1.35rem;
+    margin-bottom: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-align: center;
+}
+.usuarios-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.7rem;
+    background: none;
+    border: none;
+    color: #00cfff;
+    cursor: pointer;
+    transition: color 0.2s;
+    z-index: 10;
+}
+.usuarios-modal-close:hover {
+    color: #007bff;
+}
+.usuarios-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+.usuarios-modal-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+.usuarios-modal-group label {
+    color: #007bff;
+    font-weight: 700;
+    font-size: 1.01rem;
+    margin-bottom: 0.1rem;
+}
+.usuarios-modal-group input,
+.usuarios-modal-group select {
+    padding: 0.6rem 1rem;
+    border-radius: 0.7rem;
+    border: 1.5px solid #e3e8f0;
+    background: #fff;
+    color: #232946;
+    font-size: 1.08rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    outline: none;
+    box-shadow: 0 1px 8px #00cfff11;
+}
+.usuarios-modal-group input:focus,
+.usuarios-modal-group select:focus {
+    border-color: #00cfff;
+    box-shadow: 0 0 8px #00cfff33;
+}
+.usuarios-modal-actions {
+    display: flex;
+    gap: 1.2rem;
+    justify-content: flex-end;
+    margin-top: 0.7rem;
+}
+.usuarios-modal-actions .cancel-btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.5rem 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1.05rem;
+    transition: background 0.2s;
+}
+.usuarios-modal-actions .cancel-btn:hover {
+    background: #c0392b;
+}
+.usuarios-modal-actions .confirm-btn {
+    background: linear-gradient(90deg,#00cfff 0%,#43e97b 100%);
+    color: #fff;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.5rem 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1.05rem;
+    box-shadow: 0 2px 8px #00cfff33;
+    transition: background 0.2s;
+}
+.usuarios-modal-actions .confirm-btn:hover {
+    background: linear-gradient(90deg,#43e97b 0%,#00cfff 100%);
+}
+.rol-label {
+    display: inline-block;
+    padding: 0.35em 1.1em;
+    border-radius: 1.2em;
+    font-weight: 700;
+    font-size: 1.01rem;
+    background: #eaf6ff;
+    color: #007bff;
+    border: 1.5px solid #b3e0ff;
+    letter-spacing: 0.01em;
+    min-width: 110px;
+    text-align: center;
+    box-shadow: 0 1px 4px #b3e0ff33;
+}
+.rol-label.rol-administrador {
+    background: #eaf6ff;
+    color: #007bff;
+    border-color: #b3e0ff;
+}
+.rol-label.rol-supervisor {
+    background: #fffbe6;
+    color: #bfa100;
+    border-color: #ffe066;
+}
+.rol-label.rol-empleado {
+    background: #eaffea;
+    color: #1e8c1e;
+    border-color: #b3ffb3;
+}
+/* Estilos exclusivos para usuarios.html */
+.usuarios-header {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    border-bottom: 2.5px solid var(--accent);
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.04em;
+    padding: 1.2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.usuarios-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+.usuarios-header h2 {
+    color: #fff;
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin: 0;
+}
+.usuarios-header .icono-usuarios {
+    font-size: 2.2rem;
+    color: #43e97b;
+}
+.usuarios-main {
+    max-width: 1100px;
+    margin: 2.5rem auto 0 auto;
+}
+.usuarios-search-bar {
+    margin-bottom: 2.2rem;
+}
+.usuarios-filtros-section {
+    background: #fff;
+    border-radius: 1.1rem;
+    padding: 1.5rem;
+    border: 2.5px solid #00cfff;
+    box-shadow: 0 2px 16px #23294618;
+    max-width: 520px;
+    margin: 0 auto 2rem auto;
+}
+.usuarios-filtros-titulo {
+    color: #007bff;
+    font-size: 1.25rem;
+    margin-bottom: 1.1rem;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+.usuarios-filtros-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
+    align-items: end;
+}
+.usuarios-filtro-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.usuarios-filtro-grupo label {
+    color: #007bff;
+    font-weight: 700;
+    font-size: 0.97rem;
+    margin-bottom: 0.1rem;
+}
+.usuarios-filtro-input {
+    padding: 0.7rem 1.1rem;
+    border-radius: 0.7rem;
+    border: 1.5px solid #e3e8f0;
+    background: #fff;
+    color: #232946;
+    font-size: 1.08rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    outline: none;
+    box-shadow: 0 1px 8px #00cfff11;
+}
+.usuarios-filtro-input:focus {
+    border-color: #00cfff;
+    box-shadow: 0 0 8px #00cfff33;
+}
+.usuarios-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+    background: none;
+    font-family: 'DM Sans','Segoe UI',Arial,sans-serif;
+}
+.usuarios-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+    margin-bottom: 2rem;
+    background: #fff;
+    box-shadow: 0 2px 16px #23294618;
+    border-radius: 1.1rem;
+    overflow: hidden;
+}
+.usuarios-table th, .usuarios-table td {
+    border: 1.5px solid #e3e8f0;
+    padding: 1rem 0.7rem;
+    text-align: left;
+    font-size: 1.07rem;
+    background: #fff;
+    color: #232946;
+    transition: background 0.18s, color 0.18s;
+}
+.usuarios-table th {
+    background: #f4f6fb;
+    color: #007bff;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-top: 2.5px solid #00cfff;
+    border-bottom: 2px solid #e3e8f0;
+}
+.usuarios-table tr:hover td {
+    background: #eaf6ff;
+    color: #007bff;
+}
+.usuarios-table th:first-child, .usuarios-table td:first-child {
+    border-left: 2.5px solid #00cfff;
+}
+.usuarios-table th:last-child, .usuarios-table td:last-child {
+    border-right: 2.5px solid #00cfff;
+}
+.usuarios-table tr:last-child td {
+    border-bottom: 2.5px solid #00cfff;
+}
+.rol-select {
+    border-radius: 0.5rem;
+    border: 1.5px solid #007bff;
+    background: #f4f6fb;
+    color: #232946;
+    font-weight: 600;
+    padding: 0.3rem 0.7rem;
+    font-size: 1.01rem;
+    min-width: 120px;
+    outline: none;
+    transition: border 0.18s, background 0.18s;
+}
+.rol-select:focus {
+    border: 2px solid #00cfff;
+    background: #eaf6ff;
+}
+.btn-guardar-rol {
+    background: #00cfff;
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.4rem 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #00cfff33;
+    transition: background 0.2s, transform 0.15s;
+    font-size: 1.01rem;
+    margin-right: 0.5rem;
+}
+.btn-guardar-rol:hover {
+    background: #007bff;
+    transform: translateY(-2px) scale(1.04);
+}
+.btn-editar-usuario {
+    background: linear-gradient(90deg, #eebbc3 0%, #ffd6e0 100%);
+    color: #232946;
+    font-size: 1.13rem;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.55rem 1.3rem 0.55rem 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #eebbc355;
+    transition: background 0.2s, transform 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0 auto;
+    font-weight: 700;
+}
+.btn-editar-usuario:hover {
+    background: linear-gradient(90deg, #ffd6e0 0%, #eebbc3 100%);
+    color: #007bff;
+    transform: translateY(-2px) scale(1.04);
+}
+.usuarios-table td:last-child {
+    text-align: center;
+    vertical-align: middle;
+}
+.rol-select {
+    border-radius: 0.5rem;
+    border: 1.5px solid #43e97b;
+    background: #181c2f;
+    color: #43e97b;
+    font-weight: 700;
+    padding: 0.3rem 0.7rem;
+}
+.btn-guardar-rol {
+    background: linear-gradient(90deg,#00cfff 0%,#43e97b 100%);
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.4rem 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #00cfff33;
+    transition: background 0.2s;
+}

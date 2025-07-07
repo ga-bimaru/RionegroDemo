@@ -1005,7 +1005,7 @@ app.get('/api/pedidas/ultima', async (req, res) => {
             return res.status(400).json({ error: 'Se requiere el ID de la mesa' });
         }
 
-        // 1. Buscar el alquiler activo para la mesa
+        // 1. Buscar el alquiler activo para mesa:
         console.log('[API][pedidas/ultima] Buscando alquiler activo para mesa:', mesaId);
         const [alquilerRows] = await pool.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
@@ -1093,14 +1093,13 @@ app.get('/api/estadisticas/ventas-dia', async (req, res) => {
             const dd = String(hoy.getDate()).padStart(2, '0');
             fechaHoy = `${yyyy}-${mm}-${dd}`;
         }
-        // SIN CONVERT_TZ si ya está en hora local
+        // Ahora suma el total de la factura (productos + tiempo)
         const [rows] = await pool.query(
-            `SELECT SUM(subtotal) AS ventas FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaHoy]
+            `SELECT SUM(total) AS ventas FROM factura WHERE DATE(fecha) = ?`, [fechaHoy]
         );
         console.log(`[API][ventas-dia] Fecha consultada: ${fechaHoy}`);
         console.log(`[API][ventas-dia] Resultado SQL:`, rows);
         if (!rows || !rows.length) {
-            console.error('[API][ventas-dia] No se obtuvo ningún resultado de la consulta SQL.');
             return res.json({ ventas: 0 });
         }
         res.json({ ventas: rows[0].ventas || 0 });
@@ -1130,10 +1129,10 @@ app.get('/api/estadisticas/ganancia-neta', async (req, res) => {
         const mm = String(fechaInicio.getMonth() + 1).padStart(2, '0');
         const dd = String(fechaInicio.getDate()).padStart(2, '0');
         const fechaIniStr = `${yyyy}-${mm}-${dd}`;
-        // Suma de ventas y costos desde la fecha de inicio
-        // Suponiendo que tienes una columna "costos" en la tabla pedido (si no, pon 0)
+        // Suma de ventas y costos desde la fecha de inicio (ventas = total de factura)
+        // Si tienes columna costos en factura, cámbiala aquí. Si no, pon 0
         const [rows] = await pool.query(
-            `SELECT SUM(subtotal) AS ventas, SUM(0) AS costos FROM pedido WHERE DATE(hora_pedido) >= ?`, [fechaIniStr]
+            `SELECT SUM(total) AS ventas, SUM(0) AS costos FROM factura WHERE DATE(fecha) >= ?`, [fechaIniStr]
         );
         const ventas = rows[0].ventas || 0;
         const costos = rows[0].costos || 0;
@@ -1146,11 +1145,11 @@ app.get('/api/estadisticas/ganancia-neta', async (req, res) => {
 // Ventas por mes (últimos 6 meses)
 app.get('/api/estadisticas/ventas-mes', async (req, res) => {
     try {
-        // Suma de ventas agrupadas por mes (últimos 6 meses)
+        // Suma de ventas agrupadas por mes (últimos 6 meses) usando total de factura
         const [rows] = await pool.query(`
-            SELECT DATE_FORMAT(hora_pedido, '%Y-%m') AS mes, SUM(subtotal) AS ventas
-            FROM pedido
-            WHERE hora_pedido >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes, SUM(total) AS ventas
+            FROM factura
+            WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
             GROUP BY mes
             ORDER BY mes ASC
         `);
@@ -1583,7 +1582,7 @@ app.get('/api/dias-mas-ventas', async (req, res) => {
                 DAY(hora_pedido) AS dia,
                 SUM(subtotal - descuento) AS total
             FROM pedido
-            WHERE MONTH(hora_pedido) = MONTH(CURRENT_DATE())
+            WHERE MONTH(hora_p
               AND YEAR(hora_pedido) = YEAR(CURRENT_DATE())
             GROUP BY dia
         `);
@@ -1852,7 +1851,191 @@ app.get('/api/facturas', async (req, res) => {
         const [rows] = await pool.query(sql, params);
         res.json(rows);
     } catch (err) {
+        console.error('Error al obtener facturas:', err);
         res.status(500).json({ error: 'Error al obtener facturas.' });
+    }
+});
+
+// API: Detalle completo de una factura con productos
+app.get('/api/facturas/:id/detalle', async (req, res) => {
+    try {
+        const id_factura = req.params.id;
+        
+        // Info de la factura
+        const [facturaRows] = await pool.query(`
+            SELECT f.*, u.nombre AS nombre_usuario
+            FROM factura f
+            LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
+            WHERE f.id_factura = ?
+        `, [id_factura]);
+        
+        if (!facturaRows.length) {
+            return res.status(404).json({ error: 'Factura no encontrada' });
+        }
+        
+        const factura = facturaRows[0];
+
+        // Productos de la factura (de los pedidos asociados al alquiler)
+        // Además, obtener el total del tiempo y las pedidas marcadas como "Ya Pagada"
+        const [productos] = await pool.query(`
+            SELECT p.nombre, pd.cantidad, pd.subtotal, pd.id_producto, pd.estado, pd.hora_pedido
+            FROM pedido pd
+            INNER JOIN producto p ON pd.id_producto = p.id_producto
+            WHERE pd.id_alquiler = ?
+        `, [factura.id_alquiler]);
+
+        // Obtener el valor del tiempo (total_tiempo) del alquiler asociado
+        let total_tiempo = 0;
+        let tiempo_horas = 0;
+        let tiempo_legible = '';
+        try {
+            const [alquilerRows] = await pool.query('SELECT total_tiempo FROM alquiler WHERE id_alquiler = ?', [factura.id_alquiler]);
+            if (alquilerRows.length > 0) {
+                total_tiempo = Number(alquilerRows[0].total_tiempo) || 0;
+                // Si quieres mostrar las horas, puedes calcularlo así:
+                tiempo_horas = +(total_tiempo / (factura.precio_hora || 6000)).toFixed(2);
+                // Mostrar tiempo legible (horas, minutos, segundos)
+                let segundos = Math.round(total_tiempo / ((factura.precio_hora || 6000) / 3600));
+                let horas = Math.floor(segundos / 3600);
+                let minutos = Math.floor((segundos % 3600) / 60);
+                let segs = segundos % 60;
+                if (horas > 0) {
+                    tiempo_legible = horas + ' hora' + (horas > 1 ? 's' : '');
+                    if (minutos > 0) tiempo_legible += ' y ' + minutos + ' min';
+                } else if (minutos > 0) {
+                    tiempo_legible = minutos + ' min';
+                    if (segs > 0) tiempo_legible += ' ' + segs + ' seg';
+                } else {
+                    tiempo_legible = segs + ' seg';
+                }
+            }
+        } catch (e) {
+            total_tiempo = 0;
+            tiempo_legible = '';
+        }
+
+        // Pedidas marcadas como "Ya Pagada" (con detalles de productos)
+        let pedidas_ya_pagadas = [];
+        try {
+            // 1. Obtener todas las horas de pedidas ya pagadas
+            const [pedidas] = await pool.query(`
+                SELECT DISTINCT LEFT(hora_pedido, 16) AS hora_pedida
+                FROM pedido
+                WHERE id_alquiler = ? AND estado = 'Ya Pagada'
+                ORDER BY hora_pedida ASC
+            `, [factura.id_alquiler]);
+            // 2. Para cada hora, obtener productos y totales
+            for (const pedida of pedidas) {
+                // Productos de la pedida (sin id_producto)
+                const [productosPedida] = await pool.query(`
+                    SELECT p.nombre, pd.cantidad, pd.subtotal
+                    FROM pedido pd
+                    INNER JOIN producto p ON pd.id_producto = p.id_producto
+                    WHERE pd.id_alquiler = ? AND LEFT(pd.hora_pedido, 16) = ? AND pd.estado = 'Ya Pagada'
+                `, [factura.id_alquiler, pedida.hora_pedida]);
+                // Normalizar datos: asegurar que cantidad y subtotal sean números
+                const productosNormalizados = productosPedida.map(prod => ({
+                    nombre: prod.nombre,
+                    cantidad: Number(prod.cantidad) || 0,
+                    subtotal: Number(prod.subtotal) || 0
+                }));
+                // Total de la pedida
+                const total_pedida = productosNormalizados.reduce((sum, prod) => sum + prod.subtotal, 0);
+                pedidas_ya_pagadas.push({
+                    hora_pedida: pedida.hora_pedida,
+                    cantidad_productos: productosNormalizados.reduce((sum, prod) => sum + prod.cantidad, 0),
+                    total_pedida: total_pedida,
+                    productos: productosNormalizados
+                });
+            }
+        } catch (e) {
+            pedidas_ya_pagadas = [];
+        }
+
+        // Consultar métodos de pago desglosados y validar exhaustivamente
+        let metodos_pago = [];
+        let suma_metodos_pago = 0;
+        let metodos_pago_validos = true;
+        let error_validacion = '';
+        try {
+            const [metodos] = await pool.query(`
+                SELECT metodo_pago, valor
+                FROM factura_metodo_pago
+                WHERE id_factura = ?
+            `, [id_factura]);
+            metodos_pago = metodos.map(m => ({
+                metodo_pago: m.metodo_pago,
+                valor: Number(m.valor)
+            }));
+            for (const m of metodos_pago) {
+                if (
+                    typeof m.valor !== 'number' ||
+                    !Number.isInteger(m.valor) ||
+                    m.valor <= 0 ||
+                    m.valor === null ||
+                    m.valor === undefined ||
+                    isNaN(m.valor)
+                ) {
+                    metodos_pago_validos = false;
+                    error_validacion = 'Valor inválido en métodos de pago: deben ser enteros positivos.';
+                    break;
+                }
+                suma_metodos_pago += m.valor;
+            }
+            // La suma debe coincidir con el total_recibido y no ser menor al total
+            let total_recibido_bd = Number(factura.total_recibido) || 0;
+            // Permitir tolerancia de hasta 50 pesos para datos históricos
+            if (metodos_pago.length > 0 && (Math.abs(suma_metodos_pago - total_recibido_bd) > 50 || suma_metodos_pago < factura.total - 50)) {
+                metodos_pago_validos = false;
+                error_validacion = 'La suma de los métodos de pago no coincide con el total recibido o es menor al total de la factura (tolerancia 50).' ;
+            }
+        } catch (e) {
+            metodos_pago_validos = false;
+            error_validacion = 'Error al consultar los métodos de pago.';
+        }
+
+        if (!metodos_pago_validos) {
+            console.warn('[API][GET /api/facturas/:id/detalle] Inconsistencia en metodos_pago para factura', id_factura, 'metodos_pago:', metodos_pago, 'total_recibido:', factura.total_recibido, 'total:', factura.total, 'Error:', error_validacion);
+            // No retornar error, solo incluir advertencia en la respuesta
+            // Se agrega un campo warning para que el frontend pueda mostrar la advertencia
+        }
+
+        // Validar y corregir total_recibido si es necesario
+        let total_recibido = Number(factura.total_recibido) || 0;
+        if (metodos_pago.length > 0 && Math.abs(total_recibido - suma_metodos_pago) > 0.01) {
+            // Si hay inconsistencia, forzar el valor correcto
+            total_recibido = suma_metodos_pago;
+        }
+
+        // Retornar todos los datos necesarios para el modal de detalle
+        res.json({
+            id_factura: factura.id_factura,
+            fecha: factura.fecha,
+            numero_mesa: factura.numero_mesa,
+            nombre_usuario: factura.nombre_usuario,
+            metodo_pago: factura.metodo_pago,
+            metodos_pago: metodos_pago,
+            total: factura.total,
+            total_recibido: total_recibido,
+            total_vuelto: factura.total_vuelto,
+            productos: productos,
+            total_tiempo,
+            tiempo_horas,
+            tiempo_legible,
+            pedidas_ya_pagadas,
+            warning: !metodos_pago_validos ? {
+                mensaje: 'Inconsistencia en el desglose de métodos de pago de la factura. Por favor, revise los datos históricos.',
+                detalle: {
+                    metodos_pago,
+                    total_recibido: factura.total_recibido,
+                    total: factura.total,
+                    error_validacion
+                }
+            } : undefined
+        });
+    } catch (err) {
+        console.error('Error al obtener detalle de factura:', err);
+        res.status(500).json({ error: 'Error al obtener detalle de factura.' });
     }
 });
 
@@ -1867,33 +2050,223 @@ app.get('/api/facturas/:id', async (req, res) => {
             LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
             WHERE f.id_factura = ?
         `, [id_factura]);
-        if (!facturaRows.length) return res.status(404).json({ error: 'Factura no encontrada' });
+        if (!facturaRows.length) {
+            return res.status(404).json({ error: 'Factura no encontrada' });
+        }
         const factura = facturaRows[0];
 
         // Productos de la factura (de los pedidos asociados al alquiler)
         const [productos] = await pool.query(`
-            SELECT p.nombre AS nombre_producto, pd.cantidad, pd.subtotal
+            SELECT p.nombre, pd.cantidad, pd.subtotal, pd.id_producto
             FROM pedido pd
             INNER JOIN producto p ON pd.id_producto = p.id_producto
             WHERE pd.id_alquiler = ?
         `, [factura.id_alquiler]);
 
-        // Métodos de pago (si hay tabla de desglose)
+        // Consultar métodos de pago desglosados y validar exhaustivamente
         let metodos_pago = [];
+        let suma_metodos_pago = 0;
+        let metodos_pago_validos = true;
+        let error_validacion = '';
         try {
             const [metodos] = await pool.query(`
                 SELECT metodo_pago, valor
                 FROM factura_metodo_pago
                 WHERE id_factura = ?
             `, [id_factura]);
-            metodos_pago = metodos;
-        } catch { /* tabla puede no existir */ }
+            metodos_pago = metodos.map(m => ({
+                metodo_pago: m.metodo_pago,
+                valor: Number(m.valor)
+            }));
+            for (const m of metodos_pago) {
+                if (
+                    typeof m.valor !== 'number' ||
+                    !Number.isInteger(m.valor) ||
+                    m.valor <= 0 ||
+                    m.valor === null ||
+                    m.valor === undefined ||
+                    isNaN(m.valor)
+                ) {
+                    metodos_pago_validos = false;
+                    error_validacion = 'Valor inválido en métodos de pago: deben ser enteros positivos.';
+                    break;
+                }
+                suma_metodos_pago += m.valor;
+            }
+            // La suma debe coincidir con el total_recibido y no ser menor al total
+            let total_recibido_bd = Number(factura.total_recibido) || 0;
+            // Permitir tolerancia de hasta 50 pesos para datos históricos
+            if (metodos_pago.length > 0 && (Math.abs(suma_metodos_pago - total_recibido_bd) > 50 || suma_metodos_pago < factura.total - 50)) {
+                metodos_pago_validos = false;
+                error_validacion = 'La suma de los métodos de pago no coincide con el total recibido o es menor al total de la factura (tolerancia 50).' ;
+            }
+        } catch (e) {
+            metodos_pago_validos = false;
+            error_validacion = 'Error al consultar los métodos de pago.';
+        }
 
-        res.json({ factura, productos, metodos_pago });
+        if (!metodos_pago_validos) {
+            console.warn('[API][GET /api/facturas/:id] Inconsistencia en metodos_pago para factura', id_factura, 'metodos_pago:', metodos_pago, 'total_recibido:', factura.total_recibido, 'total:', factura.total, 'Error:', error_validacion);
+            // No retornar error, solo incluir advertencia en la respuesta
+        }
+
+        // Validar y corregir total_recibido si es necesario
+        let total_recibido = Number(factura.total_recibido) || 0;
+        if (metodos_pago.length > 0 && Math.abs(total_recibido - suma_metodos_pago) > 0.01) {
+            // Si hay inconsistencia, forzar el valor correcto
+            total_recibido = suma_metodos_pago;
+        }
+
+        // Retornar todos los datos necesarios para el modal de detalle (misma estructura que /detalle)
+        res.json({
+            id_factura: factura.id_factura,
+            fecha: factura.fecha,
+            numero_mesa: factura.numero_mesa,
+            nombre_usuario: factura.nombre_usuario,
+            metodo_pago: factura.metodo_pago,
+            metodos_pago: metodos_pago,
+            total: factura.total,
+            total_recibido: total_recibido,
+            total_vuelto: factura.total_vuelto,
+            productos: productos,
+            warning: !metodos_pago_validos ? {
+                mensaje: 'Inconsistencia en el desglose de métodos de pago de la factura. Por favor, revise los datos históricos.',
+                detalle: {
+                    metodos_pago,
+                    total_recibido: factura.total_recibido,
+                    total: factura.total,
+                    error_validacion
+                }
+            } : undefined
+        });
     } catch (err) {
+        console.error('Error al obtener detalle de factura:', err);
         res.status(500).json({ error: 'Error al obtener detalle de factura.' });
     }
 });
+
+// API: Actualizar factura
+app.put('/api/facturas/:id', async (req, res) => {
+    try {
+        const id_factura = req.params.id;
+        const { metodo_pago, total, total_recibido, total_vuelto, metodos_pago, productos } = req.body;
+
+        // Validar datos obligatorios
+        if (!metodo_pago || total === undefined || total_recibido === undefined || total_vuelto === undefined) {
+            return res.status(400).json({ error: 'Faltan datos obligatorios' });
+        }
+        if (!Array.isArray(metodos_pago) || metodos_pago.length === 0) {
+            return res.status(400).json({ error: 'Debe enviar el desglose de métodos de pago' });
+        }
+        if (!Array.isArray(productos) || productos.length === 0) {
+            return res.status(400).json({ error: 'Debe enviar la lista de productos de la factura' });
+        }
+
+        // Validar métodos de pago
+        let suma_metodos = 0;
+        for (const m of metodos_pago) {
+            if (!m.metodo_pago || typeof m.valor !== 'number' || !Number.isFinite(m.valor) || m.valor <= 0 || !Number.isInteger(m.valor)) {
+                return res.status(400).json({ error: 'Valores de métodos de pago inválidos' });
+            }
+            suma_metodos += m.valor;
+        }
+        if (Math.abs(suma_metodos - total_recibido) > 0.01) {
+            return res.status(400).json({ error: 'El total recibido no coincide con la suma de los métodos de pago' });
+        }
+        if (total_recibido < total) {
+            return res.status(400).json({ error: 'El total recibido no puede ser menor al total a pagar' });
+        }
+
+        // Validar productos
+        let suma_productos = 0;
+        for (const p of productos) {
+            if (!p.id_producto || typeof p.cantidad !== 'number' || !Number.isInteger(p.cantidad) || p.cantidad <= 0 || typeof p.subtotal !== 'number' || p.subtotal < 0) {
+                return res.status(400).json({ error: 'Valores de productos inválidos' });
+            }
+            suma_productos += p.subtotal;
+        }
+        if (Math.abs(suma_productos - total) > 0.01) {
+            return res.status(400).json({ error: 'El total de productos no coincide con el total de la factura' });
+        }
+
+        // Iniciar transacción para evitar inconsistencias
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+
+            // Obtener id_alquiler y hora_pedido de la factura
+            const [facturaRows] = await conn.query('SELECT id_alquiler FROM factura WHERE id_factura = ?', [id_factura]);
+            if (!facturaRows.length) {
+                await conn.rollback();
+                return res.status(404).json({ error: 'Factura no encontrada' });
+            }
+            const id_alquiler = facturaRows[0].id_alquiler;
+
+            // Obtener todas las pedidas (hora_pedido) de ese alquiler
+            const [pedidas] = await conn.query('SELECT DISTINCT hora_pedido FROM pedido WHERE id_alquiler = ? ORDER BY hora_pedido ASC', [id_alquiler]);
+            // Usar la hora_pedido más antigua como referencia para la edición (asume una sola pedida por factura)
+            const hora_pedido = pedidas.length > 0 ? pedidas[0].hora_pedido : null;
+            if (!hora_pedido) {
+                await conn.rollback();
+                return res.status(400).json({ error: 'No se encontró la pedida asociada a la factura' });
+            }
+
+            // Obtener productos actuales de la pedida
+            const [productosActuales] = await conn.query('SELECT id_pedido, id_producto, cantidad FROM pedido WHERE id_alquiler = ? AND hora_pedido = ?', [id_alquiler, hora_pedido]);
+
+            // Eliminar productos que ya no están
+            for (const prodActual of productosActuales) {
+                if (!productos.some(p => p.id_producto === prodActual.id_producto)) {
+                    await conn.query('DELETE FROM pedido WHERE id_pedido = ?', [prodActual.id_pedido]);
+                }
+            }
+
+            // Insertar o actualizar productos
+            for (const prod of productos) {
+                const existe = productosActuales.find(p => p.id_producto === prod.id_producto);
+                if (existe) {
+                    // Si cambió cantidad o subtotal, actualizar
+                    if (existe.cantidad !== prod.cantidad) {
+                        await conn.query('UPDATE pedido SET cantidad = ?, subtotal = ? WHERE id_pedido = ?', [prod.cantidad, prod.subtotal, existe.id_pedido]);
+                    } else {
+                        // Siempre actualizar subtotal por seguridad
+                        await conn.query('UPDATE pedido SET subtotal = ? WHERE id_pedido = ?', [prod.subtotal, existe.id_pedido]);
+                    }
+                } else {
+                    // Insertar nuevo producto
+                    await conn.query('INSERT INTO pedido (id_alquiler, id_producto, cantidad, subtotal, hora_pedido) VALUES (?, ?, ?, ?, ?)', [id_alquiler, prod.id_producto, prod.cantidad, prod.subtotal, hora_pedido]);
+                }
+            }
+
+            // Actualizar factura
+            await conn.query(`
+                UPDATE factura 
+                SET metodo_pago = ?, total = ?, total_recibido = ?, total_vuelto = ?
+                WHERE id_factura = ?
+            `, [metodo_pago, total, total_recibido, total_vuelto, id_factura]);
+
+            // Actualizar tabla factura_metodo_pago (eliminar y volver a insertar para evitar inconsistencias)
+            await conn.query('DELETE FROM factura_metodo_pago WHERE id_factura = ?', [id_factura]);
+            for (const m of metodos_pago) {
+                await conn.query('INSERT INTO factura_metodo_pago (id_factura, metodo_pago, valor) VALUES (?, ?, ?)', [id_factura, m.metodo_pago, m.valor]);
+            }
+
+            await conn.commit();
+            res.json({ success: true, message: 'Factura actualizada correctamente' });
+        } catch (err) {
+            await conn.rollback();
+            console.error('Error al actualizar factura:', err);
+            res.status(500).json({ error: 'Error al actualizar factura' });
+        } finally {
+            conn.release();
+        }
+    } catch (err) {
+        console.error('Error al actualizar factura:', err);
+        res.status(500).json({ error: 'Error al actualizar factura' });
+    }
+});
+
+
 
 // API: Ranking de empleados que más venden en el mes actual
 app.get('/api/estadisticas/empleados-mas-venden', async (req, res) => {
@@ -1989,6 +2362,41 @@ app.put('/api/productos/:id', async (req, res) => {
     } catch (err) {
         console.error(`[API][PUT /api/productos/${id}] Error al actualizar:`, err);
         res.status(500).json({ success: false, message: 'Error al actualizar el producto.', error: err.message, debug: req.body });
+    }
+});
+app.get('/api/usuarios', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT id_usuario, nombre, correo AS email, documento, rol FROM usuario');
+        res.json(rows);
+    } catch (err) {
+        console.error('[API][GET /api/usuarios] Error:', err);
+        res.status(500).json({ error: 'Error al obtener los usuarios.' });
+    }
+});
+
+app.put('/api/usuarios/:id', async (req, res) => {
+    const id = req.params.id;
+    const { nombre, email, rol } = req.body;
+    if (!rol) return res.status(400).json({ error: 'El rol es obligatorio.' });
+    try {
+        await pool.query('UPDATE usuario SET nombre = ?, correo = ?, rol = ? WHERE id_usuario = ?', [nombre, email, rol, id]);
+        res.json({ success: true, message: 'Usuario actualizado correctamente.' });
+    } catch (err) {
+        console.error('[API][PUT /api/usuarios/:id] Error:', err);
+        res.status(500).json({ error: 'Error al actualizar el usuario.' });
+    }
+});
+
+app.put('/api/usuarios/:id/rol', async (req, res) => {
+    const id = req.params.id;
+    const { rol } = req.body;
+    if (!rol) return res.status(400).json({ error: 'El rol es obligatorio.' });
+    try {
+        await pool.query('UPDATE usuario SET rol = ? WHERE id_usuario = ?', [rol, id]);
+        res.json({ success: true, message: 'Rol actualizado correctamente.' });
+    } catch (err) {
+        console.error('[API][PUT /api/usuarios/:id/rol] Error:', err);
+        res.status(500).json({ error: 'Error al actualizar el rol.' });
     }
 });
 

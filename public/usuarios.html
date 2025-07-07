@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <link rel="stylesheet" href="css/administrador.css">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/usuarios.css">
+    <link rel="icon" href="images/imagen%20login.png">
+</head>
+<body style="background:#f5f7fa;min-height:100vh;">
+    <header class="usuarios-header">
+        <div class="usuarios-header-left">
+            <span class="icono-usuarios">👥</span>
+            <h2>Gestión de Usuarios</h2>
+        </div>
+        <a href="administrador.html" class="admin-btn">⬅ Volver</a>
+    </header>
+    <main class="usuarios-main">
+        <section class="usuarios-search-bar">
+            <div class="usuarios-filtros-section">
+                <h2 class="usuarios-filtros-titulo">🔎 Filtro de Búsqueda</h2>
+                <div class="usuarios-filtros-container">
+                    <div class="usuarios-filtro-grupo">
+                        <label for="buscarUsuario">Nombre, Email o Documento:</label>
+                        <input type="text" id="buscarUsuario" class="usuarios-filtro-input" placeholder="Buscar por nombre, email o documento..." />
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section>
+            <table class="usuarios-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Documento</th>
+                        <th>Rol</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="usuariosTbody">
+                    <!-- Usuarios se llenan por JS -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <script src="js/usuarios.js"></script>
+</body>
+</html>

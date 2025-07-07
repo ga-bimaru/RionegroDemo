@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Seguimiento de Facturas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/seguimiento-facturas.css">
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebarNav">
+        <div class="sidebar-header" style="justify-content: center;">
+            <span class="sidebar-logo">📊</span>
+            <span style="color:#00cfff; font-weight:600; font-size:1.15rem; margin-left:0.7rem; letter-spacing:1px;">Menú</span>
+        </div>
+        <div style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem;">
+            <div style="width: 60px; height: 4px; background: #00cfff; border-radius: 2px; opacity: 0.7;"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.7rem; align-items: center; padding: 1rem 0; overflow-y: auto; max-height: calc(100vh - 170px);">
+            <a href="supervisor-edicion.html" class="btn-volver sidebar-btn">
+                <span style="font-size:1.3rem;">✏️</span> Editar Pedidas
+            </a>
+            <a href="finanzas.html" class="btn-volver sidebar-btn">
+                <span style="font-size:1.3rem;">💸</span> Finanzas
+            </a>
+            <a href="top-productos.html" class="btn-volver sidebar-btn">
+                <span style="font-size:1.3rem;">🍺</span> Top Productos
+            </a>
+            <a href="empleado-top.html" class="btn-volver sidebar-btn">
+                <span style="font-size:1.3rem;">👷🏻‍♂️</span> Top Empleados
+            </a>
+            <a href="seguimiento-facturas.html" class="btn-volver sidebar-btn active">
+                <span style="font-size:1.3rem;">📋</span> Facturas
+            </a>
+        </div>
+    </aside>
+    <header>
+        <button class="menu-btn" id="menuBtn" title="Abrir menú" aria-label="Abrir menú">&#9776;</button>
+        <h1>Seguimiento de Facturas</h1>
+        <a href="index.html" class="btn-volver">Volver al Inicio</a>
+    </header>
+    <main>
+        <section class="facturas-section">
+            <div class="filtros-section">
+                <h2>🧾 Filtros de Búsqueda</h2>
+                <div class="filtros-container">
+                    <div class="filtro-grupo">
+                        <label for="filtroFecha">Fecha:</label>
+                        <input type="date" id="filtroFecha" class="filtro-input">
+                    </div>
+                    <div class="filtro-grupo">
+                        <label for="filtroMetodoPago">Método de Pago:</label>
+                        <select id="filtroMetodoPago" class="filtro-input">
+                            <option value="">Todos</option>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="nequi">Nequi</option>
+                            <option value="transferencia">Transferencia</option>
+                        </select>
+                    </div>
+                    <div class="filtro-grupo">
+                        <label for="filtroMesa">Mesa:</label>
+                        <input type="number" id="filtroMesa" placeholder="Número de mesa" class="filtro-input">
+                    </div>
+                    <div class="filtro-grupo">
+                        <button id="btnFiltrar" class="btn-filtrar">🔍 Buscar</button>
+                        <button id="btnLimpiarFiltros" class="btn-limpiar">🧹 Limpiar</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="facturas-resumen">
+                <h2>💰 Resumen del Día</h2>
+                <div class="resumen-cards">
+                    <div class="resumen-card">
+                        <div class="resumen-icon">📊</div>
+                        <div class="resumen-info">
+                            <div class="resumen-label">Total Facturas</div>
+                            <div class="resumen-valor" id="totalFacturas">0</div>
+                        </div>
+                    </div>
+                    <div class="resumen-card">
+                        <div class="resumen-icon">💵</div>
+                        <div class="resumen-info">
+                            <div class="resumen-label">Total Ventas</div>
+                            <div class="resumen-valor" id="totalVentas">$0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h2>📋 Listado de Facturas</h2>
+            <div id="facturasContainer" class="facturas-container">
+                <div class="loading">Cargando facturas...</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal para editar factura -->
+    <div id="modalEditarFactura" class="modal">
+        <div class="modal-content modal-detalle">
+            <div class="modal-header">
+                <h3>✏️ Editar Factura</h3>
+                <button class="modal-close" id="cerrarModalEditar">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarFactura">
+                    <input type="hidden" id="editFacturaId">
+                    <div style="background: #181c2f; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem;">
+                        <h4 style="color: #00cfff; margin-bottom: 1rem;">� Productos de la Factura</h4>
+                        <div id="editProductosContainer">
+                            <!-- Aquí se insertará la tabla editable de productos -->
+                        </div>
+                        <button type="button" id="btnAgregarProductoEdit" style="margin-top:1rem; background:#43e97b; color:#232946; border:none; border-radius:6px; padding:0.5rem 1.2rem; font-weight:600; cursor:pointer;">+ Agregar Producto</button>
+                    </div>
+                    <div style="background: #181c2f; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem;">
+                        <h4 style="color: #00cfff; margin-bottom: 1rem;">�💳 Métodos de Pago</h4>
+                        <div id="editMetodosPagoContainer">
+                            <!-- Aquí se insertan dinámicamente los métodos de pago -->
+                        </div>
+                        <button type="button" id="btnAgregarMetodoPago" style="margin-top:1rem; background:#00cfff; color:#232946; border:none; border-radius:6px; padding:0.5rem 1.2rem; font-weight:600; cursor:pointer;">Modificar</button>
+                    </div>
+                    <div style="background: #181c2f; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem;">
+                        <h4 style="color: #00cfff; margin-bottom: 1rem;">💰 Información de Pago</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                            <div><label for="editTotal"><strong>Total:</strong></label><input type="number" id="editTotal" class="form-input" step="0.01" min="0" required readonly></div>
+                            <div><label for="editTotalRecibido"><strong>Recibido:</strong></label><input type="number" id="editTotalRecibido" class="form-input" step="0.01" min="0" required readonly></div>
+                            <div><label for="editTotalVuelto"><strong>Vuelto:</strong></label><input type="number" id="editTotalVuelto" class="form-input" step="0.01" min="0" readonly></div>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="btnCancelarEdicion" class="btn-cancelar">Cancelar</button>
+                        <button type="submit" class="btn-guardar">💾 Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver detalles de la factura -->
+    <div id="modalDetalleFactura" class="modal">
+        <div class="modal-content modal-detalle">
+            <div class="modal-header">
+                <h3>👁️ Detalle de Factura</h3>
+                <button class="modal-close" id="cerrarModalDetalle">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="detalleFacturaContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="css/snackbar.css">
+    <script src="js/snackbar.js"></script>
+    <script src="js/seguimiento-facturas.js"></script>
+</body>
+</html>
