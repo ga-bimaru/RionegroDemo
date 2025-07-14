@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: rionegro-demo
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_PORT
+        value: 3306
+
+  - type: pserv
+    name: rionegro-db
+    plan: free
+    env: docker
+    dockerfilePath: ./Dockerfile.db
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+      - key: MYSQL_DATABASE
+        value: rionegro_demo
+      - key: MYSQL_USER
+        value: rionegro_user
+      - key: MYSQL_PASSWORD
+        generateValue: true

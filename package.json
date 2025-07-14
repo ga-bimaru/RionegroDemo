@@ -1,13 +1,15 @@
 {
   "name": "rionegro-demo",
   "version": "1.0.0",
-  "description": "Sistema de gestión para billar/pool con pedidos y facturación",
+  "description": "Sistema de gestión para billar/pool con pedidos y facturación - Compatible con Render",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "echo \"Tests not implemented yet\" && exit 0",
+    "build": "echo \"No build step required\" && exit 0"
   },
-  "keywords": ["billar", "pool", "gestion", "pedidos", "facturas"],
+  "keywords": ["billar", "pool", "gestion", "pedidos", "facturas", "render"],
   "author": "Tu Nombre",
   "license": "MIT",
   "engines": {

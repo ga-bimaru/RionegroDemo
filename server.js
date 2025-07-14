@@ -1,26 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const pool = require('./conexion'); // Importar el pool de conexión a la base de datos
+const db = require('./conexion'); // Importar el pool de conexión a la base de datos
 const session = require('express-session');
-const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 
 const app = express();
 const port = process.env.PORT || 3000;
-
-// Configuración de conexión usando variables de entorno
-const db = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'andres123',
-    database: process.env.DB_NAME || 'negocio_pool',
-    port: process.env.DB_PORT || 3306,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    connectionLimit: 10,
-    acquireTimeout: 60000,
-    timeout: 60000
-});
 
 // Middleware
 app.use(bodyParser.json());
@@ -2419,5 +2405,46 @@ app.put('/api/usuarios/:id/rol', async (req, res) => {
         res.status(500).json({ error: 'Error al actualizar el rol.' });
     }
 });
+
+// Función para probar la conexión a la base de datos
+async function testDatabaseConnection() {
+    try {
+        const connection = await db.getConnection();
+        console.log('✅ Conexión a la base de datos exitosa');
+        connection.release();
+        return true;
+    } catch (error) {
+        console.error('❌ Error al conectar a la base de datos:', error.message);
+        return false;
+    }
+}
+
+// Iniciar el servidor
+async function startServer() {
+    try {
+        // Probar conexión a la base de datos
+        const dbConnected = await testDatabaseConnection();
+        
+        if (!dbConnected) {
+            console.error('❌ No se puede iniciar el servidor sin conexión a la base de datos');
+            process.exit(1);
+        }
+
+        // Iniciar el servidor
+        app.listen(port, '0.0.0.0', () => {
+            console.log(`🚀 Servidor iniciado en puerto ${port}`);
+            console.log(`🌐 Entorno: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`📁 Sirviendo archivos estáticos desde: ${path.join(__dirname, 'public')}`);
+        });
+    } catch (error) {
+        console.error('❌ Error al iniciar el servidor:', error);
+        process.exit(1);
+    }
+}
+
+// Solo iniciar el servidor si este archivo se ejecuta directamente
+if (require.main === module) {
+    startServer();
+}
 
 module.exports = app;

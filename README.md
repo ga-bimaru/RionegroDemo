@@ -2,6 +2,24 @@
 
 Sistema completo de gestión para negocio de billar/pool con control de mesas, pedidos, facturación y estadísticas.
 
+## 🚀 Despliegue en Render
+
+### Configuración Automática
+Este proyecto está configurado para desplegarse automáticamente en Render usando el archivo `render.yaml`.
+
+### Variables de Entorno Requeridas
+- `DB_HOST`: Host de la base de datos
+- `DB_USER`: Usuario de la base de datos  
+- `DB_PASSWORD`: Contraseña de la base de datos
+- `DB_NAME`: Nombre de la base de datos
+- `DB_PORT`: Puerto de la base de datos (3306)
+- `PORT`: Puerto del servidor (asignado automáticamente por Render)
+
+### Credenciales por Defecto
+- **Administrador**: admin@demo.com / admin123
+- **Supervisor**: supervisor@demo.com / supervisor123  
+- **Empleado**: empleado@demo.com / empleado123
+
 ## 🚀 Características
 
 - ✅ Control de mesas y alquileres por tiempo
@@ -50,6 +68,41 @@ PORT=3000
 ## 🎯 Demo
 
 Sistema desarrollado para demostrar capacidades de desarrollo full-stack con gestión completa de negocio.
+
+## 🌐 Despliegue en Render
+
+### Opción 1: Usando GitHub (Recomendado)
+
+1. **Subir a GitHub**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin <tu-repositorio-github>
+   git push -u origin main
+   ```
+
+2. **Conectar con Render**
+   - Ve a [render.com](https://render.com)
+   - Conecta tu cuenta de GitHub
+   - Selecciona "New" → "Blueprint"
+   - Conecta tu repositorio
+   - Render detectará automáticamente el `render.yaml`
+
+### Opción 2: Manual
+
+1. **Crear Web Service**
+   - Runtime: Node
+   - Build Command: `npm install`
+   - Start Command: `npm start`
+
+2. **Crear Base de Datos MySQL**
+   - Tipo: MySQL
+   - Plan: Free
+   - Ejecutar el script `init.sql`
+
+3. **Configurar Variables de Entorno**
+   - Conectar la aplicación con la base de datos
 
 ---
 Desarrollado con ❤️ para el sector de entretenimiento
