@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "init-db": "node init-db.js",
     "test": "echo \"Tests not implemented yet\" && exit 0",
     "build": "echo \"No build step required\" && exit 0"
   },
