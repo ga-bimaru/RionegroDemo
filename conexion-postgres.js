@@ -17,14 +17,19 @@ const dbConfig = {
 const pool = new Pool(dbConfig);
 
 // Función para ejecutar consultas
-const query = (text, params) => {
+const query = (text, params = []) => {
     return new Promise((resolve, reject) => {
         pool.query(text, params, (err, result) => {
             if (err) {
                 console.error('Error en consulta PostgreSQL:', err);
                 reject(err);
             } else {
-                resolve(result);
+                // PostgreSQL devuelve result.rows, no result directamente
+                resolve({ 
+                    rows: result.rows, 
+                    rowCount: result.rowCount,
+                    insertId: result.rows[0]?.id_usuario || result.rows[0]?.id_mesa || null
+                });
             }
         });
     });
@@ -45,8 +50,28 @@ const closePool = () => {
     return pool.end();
 };
 
+// Función de compatibilidad con MySQL - convertir consultas
+const convertMySQLToPostgreSQL = (query, params) => {
+    let pgQuery = query;
+    let paramIndex = 1;
+    
+    // Convertir ? a $1, $2, etc.
+    pgQuery = pgQuery.replace(/\?/g, () => `$${paramIndex++}`);
+    
+    return { query: pgQuery, params };
+};
+
+// Función query compatible con sintaxis MySQL
+const queryMySQL = async (text, params = []) => {
+    const { query: pgQuery, params: pgParams } = convertMySQLToPostgreSQL(text, params);
+    const result = await query(pgQuery, pgParams);
+    
+    // Simular estructura de respuesta MySQL
+    return [result.rows, { insertId: result.insertId, affectedRows: result.rowCount }];
+};
+
 module.exports = {
-    query,
+    query: queryMySQL,  // Usar la versión compatible
     pool,
     closePool
 };
