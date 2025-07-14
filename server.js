@@ -1,8 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-// Usar PostgreSQL en lugar de MySQL
-const db = require('./conexion-postgres'); // Importar el pool de conexión PostgreSQL
+// Usar conexión MySQL original
+const db = require('./conexion'); // Volver a usar conexion.js (MySQL)
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 
