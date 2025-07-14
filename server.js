@@ -7,14 +7,19 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Configuración de conexión (ajusta según tu entorno)
+// Configuración de conexión usando variables de entorno
 const db = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: 'andres123', // tu contraseña
-    database: 'negocio_pool'
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'andres123',
+    database: process.env.DB_NAME || 'negocio_pool',
+    port: process.env.DB_PORT || 3306,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    connectionLimit: 10,
+    acquireTimeout: 60000,
+    timeout: 60000
 });
 
 // Middleware
@@ -772,8 +777,12 @@ app.post('/api/pedidas/agregar-producto', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Servidor corriendo en http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Servidor corriendo en puerto ${port}`);
+    console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`📱 Local: http://localhost:${port}`);
+    }
 });
 
 // API para eliminar producto de una pedida
@@ -2165,7 +2174,7 @@ app.put('/api/facturas/:id', async (req, res) => {
         // Validar métodos de pago
         let suma_metodos = 0;
         for (const m of metodos_pago) {
-            if (!m.metodo_pago || typeof m.valor !== 'number' || !Number.isFinite(m.valor) || m.valor <= 0 || !Number.isInteger(m.valor)) {
+            if (!m.metodo_pago || typeof m.valor !== 'number' || !Number.isFinite(m.valor) || m.valor <= 0) {
                 return res.status(400).json({ error: 'Valores de métodos de pago inválidos' });
             }
             suma_metodos += m.valor;

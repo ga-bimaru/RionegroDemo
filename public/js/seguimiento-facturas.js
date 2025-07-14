@@ -137,9 +137,7 @@ function renderizarFacturas() {
                                     👁️ Ver
                                 </button>
                                 ${factura.estado !== 'anulada' ? `
-                                    <button class="btn-accion btn-editar" onclick="editarFactura(${factura.id_factura})">
-                                        ✏️ Editar
-                                    </button>
+                                    <!-- Botón de editar oculto por solicitud del usuario -->
                                 ` : ''}
                             </div>
                         </td>
@@ -916,14 +914,17 @@ async function guardarCambiosFactura(e) {
     // Para compatibilidad backend, enviar el primer método como string y el array completo si se requiere
     const datosActualizados = {
         metodo_pago: metodos.length > 0 ? metodos.map(m => m.metodo_pago).join(', ') : '',
-        metodos_pago: metodos,
+        metodos_pago: metodos.map(m => ({
+            metodo_pago: m.metodo_pago,
+            valor: parseFloat(m.valor)
+        })),
         total: parseFloat(document.getElementById('editTotal').value),
         total_recibido: parseFloat(document.getElementById('editTotalRecibido').value),
         total_vuelto: parseFloat(document.getElementById('editTotalVuelto').value),
         productos: productosEditados.map(p => ({
-            id_producto: p.id_producto,
-            cantidad: p.cantidad,
-            subtotal: p.subtotal
+            id_producto: parseInt(p.id_producto),
+            cantidad: parseInt(p.cantidad),
+            subtotal: parseFloat(p.subtotal)
         }))
     };
     try {
@@ -934,13 +935,23 @@ async function guardarCambiosFactura(e) {
             },
             body: JSON.stringify(datosActualizados)
         });
-        if (!response.ok) throw new Error('Error al actualizar factura');
+        
+        if (!response.ok) {
+            // Intentar obtener el mensaje de error del servidor
+            try {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al actualizar factura');
+            } catch (parseError) {
+                throw new Error('Error al actualizar factura');
+            }
+        }
+        
         showNotification('✅ Factura actualizada correctamente');
         cerrarModalEditar();
         cargarFacturas(); // Recargar datos
     } catch (error) {
         console.error('Error:', error);
-        showNotification('❌ Error al actualizar la factura');
+        showNotification(`❌ ${error.message}`);
     }
 }
 
