@@ -4,7 +4,8 @@
   "description": "Sistema de gestión para billar/pool con pedidos y facturación - Compatible con Render",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server-test.js",
+    "start-full": "node server.js",
     "dev": "node server.js",
     "init-db": "node init-db.js",
     "test": "echo \"Tests not implemented yet\" && exit 0",
