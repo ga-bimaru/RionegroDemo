@@ -43,7 +43,7 @@ app.post('/api/productos', async (req, res) => {
 
     try {
         // Fuerza los campos en el insert
-        const [results] = await pool.query(
+        const [results] = await db.query(
             'INSERT INTO producto (nombre, precio, categoria, imagen) VALUES (?, ?, ?, ?)',
             [nombre, precio, categoria, imagen]
         );
@@ -58,7 +58,7 @@ app.post('/api/productos', async (req, res) => {
 app.get('/api/productos', async (req, res) => {
     try {
         // stock eliminado del SELECT
-        const [rows] = await pool.query('SELECT id_producto, nombre, precio, categoria, imagen FROM producto');
+        const [rows] = await db.query('SELECT id_producto, nombre, precio, categoria, imagen FROM producto');
         const productos = rows.map(producto => ({
             ...producto,
             precio: parseFloat(producto.precio) || 0,
@@ -76,13 +76,13 @@ app.post('/api/mesas', async (req, res) => {
 
     try {
         // Insertar la nueva mesa en la base de datos
-        const [result] = await pool.query(
+        const [result] = await db.query(
             'INSERT INTO mesa (numero_mesa, estado, precio_hora) VALUES (?, ?, ?)',
             [null, estado, precio_hora]
         );
 
         // Actualizar el número de la mesa con el id autoincrementable
-        await pool.query('UPDATE mesa SET numero_mesa = ? WHERE id_mesa = ?', [result.insertId, result.insertId]);
+        await db.query('UPDATE mesa SET numero_mesa = ? WHERE id_mesa = ?', [result.insertId, result.insertId]);
 
         res.json({ success: true, message: 'Mesa agregada correctamente.', id_mesa: result.insertId });
     } catch (err) {
@@ -119,7 +119,7 @@ app.get('/api/mesas', async (req, res) => {
         let query = 'SELECT id_mesa, numero_mesa, estado, precio_hora FROM mesa';
         let mesas = [];
         
-        const [rows] = await pool.query(query);
+        const [rows] = await db.query(query);
         debug.info(`GET /api/mesas - Se encontraron ${rows.length} mesas en la base de datos`);
         
         if (rows.length === 0) {
@@ -131,7 +131,7 @@ app.get('/api/mesas', async (req, res) => {
         
         // Siempre obtener los alquileres activos para todas las mesas
         debug.info('GET /api/mesas - Consultando alquileres activos...');
-        const [alquileresActivos] = await pool.query(
+        const [alquileresActivos] = await db.query(
             'SELECT id_mesa, id_alquiler, hora_inicio, estado FROM alquiler WHERE estado = "Activo"'
         );
         debug.info(`GET /api/mesas - Se encontraron ${alquileresActivos.length} alquileres activos`);
@@ -153,7 +153,7 @@ app.get('/api/mesas', async (req, res) => {
                 const activosAEliminar = lista.slice(1);
                 for (const alquiler of activosAEliminar) {
                     debug.mesa(id_mesa, 'corrigiendo múltiples alquileres activos', { id_alquiler: alquiler.id_alquiler });
-                    await pool.query(
+                    await db.query(
                         'UPDATE alquiler SET estado = "Finalizado", hora_fin = NOW() WHERE id_alquiler = ?',
                         [alquiler.id_alquiler]
                     );
@@ -161,7 +161,7 @@ app.get('/api/mesas', async (req, res) => {
             }
         }
         // Volver a consultar alquileres activos después de la corrección
-        const [alquileresActivosUnicos] = await pool.query(
+        const [alquileresActivosUnicos] = await db.query(
             'SELECT id_mesa, id_alquiler, hora_inicio, estado FROM alquiler WHERE estado = "Activo"'
         );
         // Crear un mapa de alquileres activos por id_mesa para facilitar la búsqueda
@@ -188,7 +188,7 @@ app.get('/api/mesas', async (req, res) => {
                         estado_anterior: mesa.estado, 
                         nuevo_estado: 'Ocupada' 
                     });
-                    await pool.query(
+                    await db.query(
                         'UPDATE mesa SET estado = "Ocupada" WHERE id_mesa = ?',
                         [mesa.id_mesa]
                     );
@@ -214,7 +214,7 @@ app.get('/api/mesas', async (req, res) => {
                         nuevo_estado: 'Disponible',
                         motivo: 'No tiene alquiler activo'
                     });
-                    await pool.query(
+                    await db.query(
                         'UPDATE mesa SET estado = "Disponible" WHERE id_mesa = ?',
                         [mesa.id_mesa]
                     );
@@ -236,7 +236,7 @@ app.get('/api/alquileres/activos', async (req, res) => {
     debug.info(`GET /api/alquileres/activos - Consultando alquileres activos`);
     try {
         // Incluir hora_inicio en la respuesta
-        const [rows] = await pool.query('SELECT id_mesa, id_alquiler, hora_inicio FROM alquiler WHERE estado = "Activo"');
+        const [rows] = await db.query('SELECT id_mesa, id_alquiler, hora_inicio FROM alquiler WHERE estado = "Activo"');
         debug.info(`GET /api/alquileres/activos - Se encontraron ${rows.length} alquileres activos`);
         rows.forEach(alquiler => {
             debug.mesa(alquiler.id_mesa, 'alquiler activo encontrado', { 
@@ -259,7 +259,7 @@ app.get('/api/mesas/:id_mesa/detalle', async (req, res) => {
     try {
         // Info de la mesa
         debug.info(`GET /api/mesas/${id_mesa}/detalle - Consultando información básica de la mesa`);
-        const [[mesa]] = await pool.query('SELECT numero_mesa, estado, precio_hora FROM mesa WHERE id_mesa = ?', [id_mesa]);
+        const [[mesa]] = await db.query('SELECT numero_mesa, estado, precio_hora FROM mesa WHERE id_mesa = ?', [id_mesa]);
         if (!mesa) {
             debug.info(`GET /api/mesas/${id_mesa}/detalle - Mesa no encontrada`);
             return res.status(404).json({ error: 'Mesa no encontrada' });
@@ -272,7 +272,7 @@ app.get('/api/mesas/:id_mesa/detalle', async (req, res) => {
 
         // Primero verificar si hay un alquiler activo para esta mesa
         debug.info(`GET /api/mesas/${id_mesa}/detalle - Consultando alquileres activos para esta mesa`);
-        const [alquilerActivoRows] = await pool.query(
+        const [alquilerActivoRows] = await db.query(
             'SELECT id_alquiler, hora_inicio, estado FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
             [id_mesa]
         );
@@ -294,7 +294,7 @@ app.get('/api/mesas/:id_mesa/detalle', async (req, res) => {
                 nuevo_estado: 'Ocupada',
                 motivo: 'Tiene alquiler activo'
             });
-            await pool.query('UPDATE mesa SET estado = "Ocupada" WHERE id_mesa = ?', [id_mesa]);
+            await db.query('UPDATE mesa SET estado = "Ocupada" WHERE id_mesa = ?', [id_mesa]);
             mesa.estado = 'Ocupada';
         }
         // Si NO hay alquiler activo pero la mesa está marcada como ocupada, corregir
@@ -304,7 +304,7 @@ app.get('/api/mesas/:id_mesa/detalle', async (req, res) => {
                 nuevo_estado: 'Disponible',
                 motivo: 'No tiene alquiler activo'
             });
-            await pool.query('UPDATE mesa SET estado = "Disponible" WHERE id_mesa = ?', [id_mesa]);
+            await db.query('UPDATE mesa SET estado = "Disponible" WHERE id_mesa = ?', [id_mesa]);
             mesa.estado = 'Disponible';
         }
 
@@ -396,7 +396,7 @@ app.get('/api/mesas/:id_mesa/detalle', async (req, res) => {
         let pedidos = [];
         if (id_alquiler) {
             debug.info(`GET /api/mesas/${id_mesa}/detalle - Consultando pedidos para alquiler ${id_alquiler}`);
-            const [pedidosRows] = await pool.query(
+            const [pedidosRows] = await db.query(
                 `SELECT p.id_alquiler, p.cantidad, p.subtotal, p.hora_pedido, p.estado, 
                         pr.nombre AS nombre_producto, pr.categoria, pr.precio, pr.id_producto
                  FROM pedido p
@@ -469,7 +469,7 @@ app.post('/api/alquileres', async (req, res) => {
     const hora_inicio = `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
 
     try {
-        const [alquileresActivos] = await pool.query(
+        const [alquileresActivos] = await db.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo"',
             [id_mesa]
         );
@@ -477,17 +477,17 @@ app.post('/api/alquileres', async (req, res) => {
             return res.status(400).json({ error: 'Ya existe un alquiler activo para esta mesa' });
         }
 
-        const [[mesaExiste]] = await pool.query('SELECT id_mesa FROM mesa WHERE id_mesa = ?', [id_mesa]);
+        const [[mesaExiste]] = await db.query('SELECT id_mesa FROM mesa WHERE id_mesa = ?', [id_mesa]);
         if (!mesaExiste) {
             return res.status(400).json({ error: 'La mesa especificada no existe' });
         }
 
-        const [result] = await pool.query(
+        const [result] = await db.query(
             'INSERT INTO alquiler (id_mesa, id_usuario, hora_inicio, estado) VALUES (?, ?, ?, "Activo")',
             [id_mesa, id_usuario, hora_inicio]
         );
 
-        await pool.query('UPDATE mesa SET estado = "Ocupada" WHERE id_mesa = ?', [id_mesa]);
+        await db.query('UPDATE mesa SET estado = "Ocupada" WHERE id_mesa = ?', [id_mesa]);
 
         res.status(200).json({ 
             message: 'Alquiler iniciado y mesa ocupada', 
@@ -648,7 +648,7 @@ app.post('/api/pedidos', async (req, res) => {
     }
     try {
         // Buscar el alquiler activo de la mesa
-        const [alquilerRows] = await pool.query(
+        const [alquilerRows] = await db.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
             [id_mesa]
         );
@@ -671,7 +671,7 @@ app.post('/api/pedidos', async (req, res) => {
                 continue;
             }
             // --- Asegúrate de que subtotal y hora_pedido se guardan correctamente ---
-            await pool.query(
+            await db.query(
                 'INSERT INTO pedido (id_alquiler, id_producto, hora_pedido, cantidad, subtotal) VALUES (?, ?, ?, ?, ?)',
                 [id_alquiler, prod.id_producto, horaPedidoSQL, prod.cantidad, prod.subtotal]
             );
@@ -688,7 +688,7 @@ app.post('/api/pedidos', async (req, res) => {
 app.delete('/api/pedidos/:id_pedido', async (req, res) => {
     const { id_pedido } = req.params;
     try {
-        const [result] = await pool.query('DELETE FROM pedido WHERE id_pedido = ?', [id_pedido]);
+        const [result] = await db.query('DELETE FROM pedido WHERE id_pedido = ?', [id_pedido]);
         if (result.affectedRows > 0) {
             res.json({ success: true, message: 'Producto eliminado de la pedida.' });
         } else {
@@ -708,7 +708,7 @@ app.post('/api/pedidas/agregar-producto', async (req, res) => {
         }
 
         // 1. Buscar el alquiler activo para la mesa
-        const [alquilerRows] = await pool.query(
+        const [alquilerRows] = await db.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
             [id_mesa]
         );
@@ -732,7 +732,7 @@ app.post('/api/pedidas/agregar-producto', async (req, res) => {
             params.push(key_pedida);
         }
 
-        const [pedidoRows] = await pool.query(
+        const [pedidoRows] = await db.query(
             `SELECT id_pedido, cantidad, subtotal FROM pedido 
              WHERE id_alquiler = ? AND id_producto = ? AND ${whereHora}
              ORDER BY hora_pedido ASC LIMIT 1`,
@@ -742,7 +742,7 @@ app.post('/api/pedidas/agregar-producto', async (req, res) => {
         if (pedidoRows.length > 0) {
             // Si ya existe, suma la cantidad y el subtotal
             const pedido = pedidoRows[0];
-            await pool.query(
+            await db.query(
                 'UPDATE pedido SET cantidad = cantidad + ?, subtotal = subtotal + ? WHERE id_pedido = ?',
                 [cantidad, subtotal, pedido.id_pedido]
             );
@@ -751,7 +751,7 @@ app.post('/api/pedidas/agregar-producto', async (req, res) => {
             // Usa la hora_pedido original (key_pedida + ":00" si solo tiene minutos)
             let hora_pedido = key_pedida;
             if (hora_pedido.length === 16) hora_pedido += ':00';
-            await pool.query(
+            await db.query(
                 'INSERT INTO pedido (id_alquiler, id_producto, hora_pedido, cantidad, subtotal) VALUES (?, ?, ?, ?, ?)',
                 [id_alquiler, id_producto, hora_pedido, cantidad, subtotal]
             );
@@ -778,7 +778,7 @@ app.post('/api/pedidas/eliminar-producto', async (req, res) => {
         const { id_mesa, key_pedida, id_producto, cantidad } = req.body;
 
         // 1. Buscar el alquiler activo para la mesa
-        const [alquilerRows] = await pool.query(
+        const [alquilerRows] = await db.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
             [id_mesa]
         );
@@ -805,7 +805,7 @@ app.post('/api/pedidas/eliminar-producto', async (req, res) => {
             params.push(key_pedida);
         }
 
-        const [pedidoRows] = await pool.query(
+        const [pedidoRows] = await db.query(
             `SELECT id_pedido, cantidad, hora_pedido FROM pedido 
              WHERE id_alquiler = ? AND id_producto = ? AND ${whereHora}
              ORDER BY hora_pedido ASC LIMIT 1`,
@@ -815,7 +815,7 @@ app.post('/api/pedidas/eliminar-producto', async (req, res) => {
             console.error(`[API][eliminar-producto] Producto no encontrado en la pedida. 
                 Parámetros: id_mesa=${id_mesa}, id_alquiler=${id_alquiler}, id_producto=${id_producto}, key_pedida=${key_pedida}`);
             // Log de todos los pedidos de ese alquiler para depuración
-            const [debugPedidos] = await pool.query(
+            const [debugPedidos] = await db.query(
                 'SELECT id_pedido, id_producto, cantidad, hora_pedido FROM pedido WHERE id_alquiler = ?',
                 [id_alquiler]
             );
@@ -826,13 +826,13 @@ app.post('/api/pedidas/eliminar-producto', async (req, res) => {
 
         // 3. Si la cantidad a eliminar es menor que la cantidad actual, solo resta
         if (pedido.cantidad > cantidad) {
-            await pool.query(
+            await db.query(
                 'UPDATE pedido SET cantidad = cantidad - ?, subtotal = subtotal * (cantidad - ?) / cantidad WHERE id_pedido = ?',
                 [cantidad, cantidad, pedido.id_pedido]
             );
         } else {
             // Si la cantidad es igual o mayor, elimina el pedido
-            await pool.query('DELETE FROM pedido WHERE id_pedido = ?', [pedido.id_pedido]);
+            await db.query('DELETE FROM pedido WHERE id_pedido = ?', [pedido.id_pedido]);
         }
         res.json({ ok: true });
     } catch (err) {
@@ -850,7 +850,7 @@ app.post('/api/pedidas/descontar-producto', async (req, res) => {
         }
 
         // Buscar el alquiler activo para la mesa
-        const [alquilerRows] = await pool.query(
+        const [alquilerRows] = await db.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
             [id_mesa]
         );
@@ -873,7 +873,7 @@ app.post('/api/pedidas/descontar-producto', async (req, res) => {
             params.push(key_pedida);
         }
 
-        const [pedidoRows] = await pool.query(
+        const [pedidoRows] = await db.query(
             `SELECT id_pedido, cantidad, subtotal FROM pedido 
              WHERE id_alquiler = ? AND id_producto = ? AND ${whereHora}
              ORDER BY hora_pedido ASC LIMIT 1`,
@@ -891,13 +891,13 @@ app.post('/api/pedidas/descontar-producto', async (req, res) => {
 
         if (pedido.cantidad > cantidadDescontar) {
             // Resta cantidad y subtotal
-            await pool.query(
+            await db.query(
                 'UPDATE pedido SET cantidad = cantidad - ?, subtotal = subtotal - ? WHERE id_pedido = ?',
                 [cantidadDescontar, subtotalDescontar, pedido.id_pedido]
             );
         } else {
             // Si la cantidad a descontar es igual o mayor, elimina el pedido
-            await pool.query('DELETE FROM pedido WHERE id_pedido = ?', [pedido.id_pedido]);
+            await db.query('DELETE FROM pedido WHERE id_pedido = ?', [pedido.id_pedido]);
         }
 
         res.json({ ok: true, message: 'Producto descontado correctamente.' });
@@ -951,7 +951,7 @@ app.post('/api/pedidos/marcar-pedida-pagada', async (req, res) => {
             return res.status(400).json({ error: 'hora_pedido inválida' });
         }
         // Buscar todos los pedidos de ese alquiler y comparar minuto en hora local
-        const [pedidos] = await pool.query(
+        const [pedidos] = await db.query(
             `SELECT id_pedido, hora_pedido FROM pedido WHERE id_alquiler=?`,
             [idAlquilerNum]
         );
@@ -978,7 +978,7 @@ app.post('/api/pedidos/marcar-pedida-pagada', async (req, res) => {
             return res.status(404).json({ error: 'No se encontró la pedida para actualizar' });
         }
         // Actualizar todos los pedidos encontrados
-        const [result] = await pool.query(
+        const [result] = await db.query(
             `UPDATE pedido SET estado=? WHERE id_pedido IN (${idsActualizar.map(() => '?').join(',')})`,
             [estado, ...idsActualizar]
         );
@@ -1003,7 +1003,7 @@ app.get('/api/pedidas/ultima', async (req, res) => {
 
         // 1. Buscar el alquiler activo para mesa:
         console.log('[API][pedidas/ultima] Buscando alquiler activo para mesa:', mesaId);
-        const [alquilerRows] = await pool.query(
+        const [alquilerRows] = await db.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
             [mesaId]
         );
@@ -1017,7 +1017,7 @@ app.get('/api/pedidas/ultima', async (req, res) => {
         console.log('[API][pedidas/ultima] Alquiler encontrado:', id_alquiler);
 
         // 2. Buscar la última pedida (agrupada por hora_pedido redondeada a minutos)
-        const [ultimaPedidaRows] = await pool.query(
+        const [ultimaPedidaRows] = await db.query(
             `SELECT 
                 LEFT(p.hora_pedido, 16) as hora_pedida_grupo,
                 MAX(p.hora_pedido) as ultima_hora
@@ -1036,7 +1036,7 @@ app.get('/api/pedidas/ultima', async (req, res) => {
         const hora_pedida_grupo = ultimaPedidaRows[0].hora_pedida_grupo;
 
         // 3. Obtener todos los productos de esa pedida
-        const [productosRows] = await pool.query(
+        const [productosRows] = await db.query(
             `SELECT 
                 p.id_producto,
                 p.cantidad,
@@ -1090,7 +1090,7 @@ app.get('/api/estadisticas/ventas-dia', async (req, res) => {
             fechaHoy = `${yyyy}-${mm}-${dd}`;
         }
         // Ahora suma el total de la factura (productos + tiempo)
-        const [rows] = await pool.query(
+        const [rows] = await db.query(
             `SELECT SUM(total) AS ventas FROM factura WHERE DATE(fecha) = ?`, [fechaHoy]
         );
         console.log(`[API][ventas-dia] Fecha consultada: ${fechaHoy}`);
@@ -1127,7 +1127,7 @@ app.get('/api/estadisticas/ganancia-neta', async (req, res) => {
         const fechaIniStr = `${yyyy}-${mm}-${dd}`;
         // Suma de ventas y costos desde la fecha de inicio (ventas = total de factura)
         // Si tienes columna costos en factura, cámbiala aquí. Si no, pon 0
-        const [rows] = await pool.query(
+        const [rows] = await db.query(
             `SELECT SUM(total) AS ventas, SUM(0) AS costos FROM factura WHERE DATE(fecha) >= ?`, [fechaIniStr]
         );
         const ventas = rows[0].ventas || 0;
@@ -1142,7 +1142,7 @@ app.get('/api/estadisticas/ganancia-neta', async (req, res) => {
 app.get('/api/estadisticas/ventas-mes', async (req, res) => {
     try {
         // Suma de ventas agrupadas por mes (últimos 6 meses) usando total de factura
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes, SUM(total) AS ventas
             FROM factura
             WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
@@ -1173,7 +1173,7 @@ app.get('/api/estadisticas/tendencias-hora-dia', async (req, res) => {
         // Inicializa la matriz
         const tendencias = Array.from({length: 16}, () => Array(7).fill(0));
         // Consulta todos los pedidos del último mes
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT hora_pedido FROM pedido
             WHERE hora_pedido >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
         `);
@@ -1203,7 +1203,7 @@ app.get('/api/estadisticas/ventas-dia-por-mesa', async (req, res) => {
             fechaHoy = `${yyyy}-${mm}-${dd}`;
         }
         // Consulta: suma de ventas por mesa en el día
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT m.numero_mesa, m.id_mesa, SUM(p.subtotal) AS total_ventas
             FROM pedido p
             JOIN alquiler a ON p.id_alquiler = a.id_alquiler
@@ -1236,7 +1236,7 @@ app.get('/api/estadisticas/ventas-semana-por-mesa', async (req, res) => {
         const dd = String(fechaInicio.getDate()).padStart(2, '0');
         const fechaIniStr = `${yyyy}-${mm}-${dd}`;
         // Consulta: suma de ventas por mesa en la semana
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT m.numero_mesa, m.id_mesa, SUM(p.subtotal) AS total_ventas
             FROM pedido p
             JOIN alquiler a ON p.id_alquiler = a.id_alquiler
@@ -1266,7 +1266,7 @@ app.get('/api/estadisticas/ventas-mes-por-mesa', async (req, res) => {
         const dd = String(fechaInicio.getDate()).padStart(2, '0');
         const fechaIniStr = `${yyyy}-${mm}-${dd}`;
         // Consulta: suma de ventas por mesa en el mes
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT m.numero_mesa, m.id_mesa, SUM(p.subtotal) AS total_ventas
             FROM pedido p
             JOIN alquiler a ON p.id_alquiler = a.id_alquiler
@@ -1296,7 +1296,7 @@ app.get('/api/estadisticas/debug-pedidos-dia', async (req, res) => {
             const dd = String(hoy.getDate()).padStart(2, '0');
             fechaHoy = `${yyyy}-${mm}-${dd}`;
         }
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT p.*, a.id_mesa, m.numero_mesa, pr.nombre AS nombre_producto
             FROM pedido p
             JOIN alquiler a ON p.id_alquiler = a.id_alquiler
@@ -1318,7 +1318,7 @@ app.post('/api/gastos', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Fecha y monto son obligatorios.' });
     }
     try {
-        await pool.query(
+        await db.query(
             'INSERT INTO gasto (fecha, descripcion, monto, categoria) VALUES (?, ?, ?, ?)',
             [fecha, descripcion, monto, categoria]
         );
@@ -1331,7 +1331,7 @@ app.post('/api/gastos', async (req, res) => {
 // Depuración: Ver todos los pedidos (sin filtro de fecha)
 app.get('/api/estadisticas/debug-todos-pedidos', async (req, res) => {
     try {
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT id_pedido, hora_pedido, subtotal FROM pedido ORDER BY hora_pedido DESC
         `);
         res.json(rows);
@@ -1357,10 +1357,10 @@ app.get('/api/estadisticas/variacion-ventas-dia', async (req, res) => {
         const fechaAyer = `${yyyyA}-${mmA}-${ddA}`;
 
         // Consulta ventas de hoy y ayer
-        const [[{ ventasHoy }]] = await pool.query(
+        const [[{ ventasHoy }]] = await db.query(
             `SELECT SUM(subtotal) AS ventasHoy FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaHoy]
         );
-        const [[{ ventasAyer }]] = await pool.query(
+        const [[{ ventasAyer }]] = await db.query(
             `SELECT SUM(subtotal) AS ventasAyer FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaAyer]
         );
 
@@ -1447,20 +1447,20 @@ app.get('/api/estadisticas/variacion-ventas', async (req, res) => {
 
         let ventasActual = 0, ventasAnterior = 0;
         if (periodo === 'dia') {
-            const [[{ ventasHoy }]] = await pool.query(
+            const [[{ ventasHoy }]] = await db.query(
                 `SELECT SUM(subtotal) AS ventasHoy FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaActualIni]
             );
-            const [[{ ventasAyer }]] = await pool.query(
+            const [[{ ventasAyer }]] = await db.query(
                 `SELECT SUM(subtotal) AS ventasAyer FROM pedido WHERE DATE(hora_pedido) = ?`, [fechaAnteriorIni]
             );
             ventasActual = ventasHoy || 0;
             ventasAnterior = ventasAyer || 0;
         } else {
             // Para semana y mes: BETWEEN fechaIni AND fechaFin
-            const [[{ ventasActualSum }]] = await pool.query(
+            const [[{ ventasActualSum }]] = await db.query(
                 `SELECT SUM(subtotal) AS ventasActualSum FROM pedido WHERE DATE(hora_pedido) >= ?`, [fechaActualIni]
             );
-            const [[{ ventasAnteriorSum }]] = await pool.query(
+            const [[{ ventasAnteriorSum }]] = await db.query(
                 `SELECT SUM(subtotal) AS ventasAnteriorSum FROM pedido WHERE DATE(hora_pedido) BETWEEN ? AND ?`, [fechaAnteriorIni, fechaAnteriorFin]
             );
             ventasActual = ventasActualSum || 0;
@@ -1523,7 +1523,7 @@ app.get('/api/estadisticas/top-productos', async (req, res) => {
         }
 
         // Top 5 productos/bebidas más vendidos por cantidad
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT pr.nombre, pr.categoria, SUM(pedido.cantidad) AS total_cantidad, SUM(pedido.subtotal) AS total_ventas
             FROM pedido
             JOIN producto pr ON pedido.id_producto = pr.id_producto
@@ -1573,7 +1573,7 @@ app.get('/api/estadisticas/top-productos', async (req, res) => {
 app.get('/api/dias-mas-ventas', async (req, res) => {
     try {
         // Obtener ventas por día del mes actual
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT 
                 DAY(hora_pedido) AS dia,
                 SUM(subtotal - descuento) AS total
@@ -1635,7 +1635,7 @@ app.post('/api/registro', async (req, res) => {
     }
     try {
         const hash = await bcrypt.hash(password, 10);
-        await pool.query(
+        await db.query(
             'INSERT INTO usuario (nombre, correo, telefono, password, rol) VALUES (?, ?, ?, ?, ?)',
             [nombre, correo, telefono, hash, 'Empleado']
         );
@@ -1657,7 +1657,7 @@ app.post('/api/login', async (req, res) => {
         return res.json({ ok: false, error: 'Correo y contraseña requeridos.' });
     }
     try {
-        const [rows] = await pool.query('SELECT * FROM usuario WHERE correo = ?', [correo]);
+        const [rows] = await db.query('SELECT * FROM usuario WHERE correo = ?', [correo]);
         if (!rows.length) return res.json({ ok: false, error: 'Usuario no encontrado.' });
         const usuario = rows[0];
         const match = await bcrypt.compare(password, usuario.password) || password === usuario.password;
@@ -1678,7 +1678,7 @@ app.post('/api/admin-login', async (req, res) => {
     }
     try {
         // Busca un usuario con rol Administrador y compara la clave
-        const [rows] = await pool.query('SELECT * FROM usuario WHERE rol = "Administrador"');
+        const [rows] = await db.query('SELECT * FROM usuario WHERE rol = "Administrador"');
         if (!rows.length) {
             return res.json({ ok: false, error: 'No hay usuario administrador registrado.' });
         }
@@ -1704,7 +1704,7 @@ app.post('/api/validar-supervisor', async (req, res) => {
     }
     try {
         // Permitir acceso si el usuario es Supervisor o Administrador
-        const [rows] = await pool.query(
+        const [rows] = await db.query(
             'SELECT * FROM usuario WHERE documento = ? AND (rol = "Supervisor" OR rol = "Administrador") LIMIT 1',
             [documento]
         );
@@ -1723,7 +1723,7 @@ app.post('/api/pedidos/ultima-pedida', async (req, res) => {
     }
     try {
         // Obtener el último alquiler activo de la mesa
-        const [alquilerRows] = await pool.query(
+        const [alquilerRows] = await db.query(
             'SELECT id_alquiler FROM alquiler WHERE id_mesa = ? AND estado = "Activo" ORDER BY hora_inicio DESC LIMIT 1',
             [id_mesa]
         );
@@ -1733,7 +1733,7 @@ app.post('/api/pedidos/ultima-pedida', async (req, res) => {
         const id_alquiler = alquilerRows[0].id_alquiler;
 
         // Obtener la última pedida (por hora_pedido) del alquiler
-        const [pedidosRows] = await pool.query(
+        const [pedidosRows] = await db.query(
             `SELECT id_pedido, hora_pedido, id_producto, cantidad, subtotal, estado
              FROM pedido
              WHERE id_alquiler = ?
@@ -1783,7 +1783,7 @@ app.post('/api/alquileres/transferir', async (req, res) => {
     }
     try {
         // 1. Buscar el alquiler activo de la mesa origen
-        const [alquilerRows] = await pool.query(
+        const [alquilerRows] = await db.query(
             "SELECT * FROM alquiler WHERE id_mesa = ? AND estado = 'Activo' LIMIT 1",
             [id_mesa_origen]
         );
@@ -1793,7 +1793,7 @@ app.post('/api/alquileres/transferir', async (req, res) => {
         const id_alquiler = alquilerRows[0].id_alquiler;
 
         // 2. Verificar que la mesa destino exista y esté disponible
-        const [[mesaDestino]] = await pool.query(
+        const [[mesaDestino]] = await db.query(
             "SELECT * FROM mesa WHERE id_mesa = ?",
             [id_mesa_destino]
         );
@@ -1805,15 +1805,15 @@ app.post('/api/alquileres/transferir', async (req, res) => {
         }
 
         // 3. Actualizar el alquiler para que apunte a la mesa destino
-        await pool.query(
+        await db.query(
             "UPDATE alquiler SET id_mesa = ? WHERE id_alquiler = ?",
             [id_mesa_destino, id_alquiler]
         );
 
         // 4. Cambiar estado de la mesa origen a 'Disponible'
-        await pool.query("UPDATE mesa SET estado = 'Disponible' WHERE id_mesa = ?", [id_mesa_origen]);
+        await db.query("UPDATE mesa SET estado = 'Disponible' WHERE id_mesa = ?", [id_mesa_origen]);
         // 5. Cambiar estado de la mesa destino a 'Ocupada'
-        await pool.query("UPDATE mesa SET estado = 'Ocupada' WHERE id_mesa = ?", [id_mesa_destino]);
+        await db.query("UPDATE mesa SET estado = 'Ocupada' WHERE id_mesa = ?", [id_mesa_destino]);
 
         res.json({
             success: true,
@@ -1844,7 +1844,7 @@ app.get('/api/facturas', async (req, res) => {
             params.push(fecha);
         }
         sql += " ORDER BY f.fecha DESC";
-        const [rows] = await pool.query(sql, params);
+        const [rows] = await db.query(sql, params);
         res.json(rows);
     } catch (err) {
         console.error('Error al obtener facturas:', err);
@@ -1858,7 +1858,7 @@ app.get('/api/facturas/:id/detalle', async (req, res) => {
         const id_factura = req.params.id;
         
         // Info de la factura
-        const [facturaRows] = await pool.query(`
+        const [facturaRows] = await db.query(`
             SELECT f.*, u.nombre AS nombre_usuario
             FROM factura f
             LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
@@ -1873,7 +1873,7 @@ app.get('/api/facturas/:id/detalle', async (req, res) => {
 
         // Productos de la factura (de los pedidos asociados al alquiler)
         // Además, obtener el total del tiempo y las pedidas marcadas como "Ya Pagada"
-        const [productos] = await pool.query(`
+        const [productos] = await db.query(`
             SELECT p.nombre, pd.cantidad, pd.subtotal, pd.id_producto, pd.estado, pd.hora_pedido
             FROM pedido pd
             INNER JOIN producto p ON pd.id_producto = p.id_producto
@@ -1885,7 +1885,7 @@ app.get('/api/facturas/:id/detalle', async (req, res) => {
         let tiempo_horas = 0;
         let tiempo_legible = '';
         try {
-            const [alquilerRows] = await pool.query('SELECT total_tiempo FROM alquiler WHERE id_alquiler = ?', [factura.id_alquiler]);
+            const [alquilerRows] = await db.query('SELECT total_tiempo FROM alquiler WHERE id_alquiler = ?', [factura.id_alquiler]);
             if (alquilerRows.length > 0) {
                 total_tiempo = Number(alquilerRows[0].total_tiempo) || 0;
                 // Si quieres mostrar las horas, puedes calcularlo así:
@@ -1914,7 +1914,7 @@ app.get('/api/facturas/:id/detalle', async (req, res) => {
         let pedidas_ya_pagadas = [];
         try {
             // 1. Obtener todas las horas de pedidas ya pagadas
-            const [pedidas] = await pool.query(`
+            const [pedidas] = await db.query(`
                 SELECT DISTINCT LEFT(hora_pedido, 16) AS hora_pedida
                 FROM pedido
                 WHERE id_alquiler = ? AND estado = 'Ya Pagada'
@@ -1923,7 +1923,7 @@ app.get('/api/facturas/:id/detalle', async (req, res) => {
             // 2. Para cada hora, obtener productos y totales
             for (const pedida of pedidas) {
                 // Productos de la pedida (sin id_producto)
-                const [productosPedida] = await pool.query(`
+                const [productosPedida] = await db.query(`
                     SELECT p.nombre, pd.cantidad, pd.subtotal
                     FROM pedido pd
                     INNER JOIN producto p ON pd.id_producto = p.id_producto
@@ -1954,7 +1954,7 @@ app.get('/api/facturas/:id/detalle', async (req, res) => {
         let metodos_pago_validos = true;
         let error_validacion = '';
         try {
-            const [metodos] = await pool.query(`
+            const [metodos] = await db.query(`
                 SELECT metodo_pago, valor
                 FROM factura_metodo_pago
                 WHERE id_factura = ?
@@ -2040,7 +2040,7 @@ app.get('/api/facturas/:id', async (req, res) => {
     try {
         const id_factura = req.params.id;
         // Info de la factura
-        const [facturaRows] = await pool.query(`
+        const [facturaRows] = await db.query(`
             SELECT f.*, u.nombre AS nombre_usuario
             FROM factura f
             LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
@@ -2052,7 +2052,7 @@ app.get('/api/facturas/:id', async (req, res) => {
         const factura = facturaRows[0];
 
         // Productos de la factura (de los pedidos asociados al alquiler)
-        const [productos] = await pool.query(`
+        const [productos] = await db.query(`
             SELECT p.nombre, pd.cantidad, pd.subtotal, pd.id_producto
             FROM pedido pd
             INNER JOIN producto p ON pd.id_producto = p.id_producto
@@ -2065,7 +2065,7 @@ app.get('/api/facturas/:id', async (req, res) => {
         let metodos_pago_validos = true;
         let error_validacion = '';
         try {
-            const [metodos] = await pool.query(`
+            const [metodos] = await db.query(`
                 SELECT metodo_pago, valor
                 FROM factura_metodo_pago
                 WHERE id_factura = ?
@@ -2268,7 +2268,7 @@ app.put('/api/facturas/:id', async (req, res) => {
 app.get('/api/estadisticas/empleados-mas-venden', async (req, res) => {
     try {
         // Ventas por usuario (empleado/supervisor/administrador) en el mes actual
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT u.nombre, u.rol, COUNT(f.id_factura) AS cantidad_facturas, SUM(f.total) AS total_ventas
             FROM factura f
             LEFT JOIN usuario u ON f.id_usuario = u.id_usuario
@@ -2321,7 +2321,7 @@ app.get('/api/estadisticas/empleado-top', async (req, res) => {
         } else { // mes
             where += ' AND MONTH(f.fecha) = MONTH(CURDATE()) AND YEAR(f.fecha) = YEAR(CURDATE())';
         }
-        const [rows] = await pool.query(`
+        const [rows] = await db.query(`
             SELECT 
                 COALESCE(u.nombre, CONCAT('Usuario ID ', f.id_usuario)) AS nombre,
                 u.documento,
@@ -2355,7 +2355,7 @@ app.put('/api/productos/:id', async (req, res) => {
     }
 
     try {
-        const [result] = await pool.query(
+        const [result] = await db.query(
             'UPDATE producto SET nombre=?, categoria=?, precio=?, imagen=? WHERE id_producto=?',
             [nombre, categoria, precio, imagen, id]
         );
@@ -2373,7 +2373,7 @@ app.put('/api/productos/:id', async (req, res) => {
 });
 app.get('/api/usuarios', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT id_usuario, nombre, correo AS email, documento, rol FROM usuario');
+        const [rows] = await db.query('SELECT id_usuario, nombre, correo AS email, documento, rol FROM usuario');
         res.json(rows);
     } catch (err) {
         console.error('[API][GET /api/usuarios] Error:', err);
@@ -2386,7 +2386,7 @@ app.put('/api/usuarios/:id', async (req, res) => {
     const { nombre, email, rol } = req.body;
     if (!rol) return res.status(400).json({ error: 'El rol es obligatorio.' });
     try {
-        await pool.query('UPDATE usuario SET nombre = ?, correo = ?, rol = ? WHERE id_usuario = ?', [nombre, email, rol, id]);
+        await db.query('UPDATE usuario SET nombre = ?, correo = ?, rol = ? WHERE id_usuario = ?', [nombre, email, rol, id]);
         res.json({ success: true, message: 'Usuario actualizado correctamente.' });
     } catch (err) {
         console.error('[API][PUT /api/usuarios/:id] Error:', err);
@@ -2399,7 +2399,7 @@ app.put('/api/usuarios/:id/rol', async (req, res) => {
     const { rol } = req.body;
     if (!rol) return res.status(400).json({ error: 'El rol es obligatorio.' });
     try {
-        await pool.query('UPDATE usuario SET rol = ? WHERE id_usuario = ?', [rol, id]);
+        await db.query('UPDATE usuario SET rol = ? WHERE id_usuario = ?', [rol, id]);
         res.json({ success: true, message: 'Rol actualizado correctamente.' });
     } catch (err) {
         console.error('[API][PUT /api/usuarios/:id/rol] Error:', err);
