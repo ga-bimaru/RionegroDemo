@@ -1,3 +1,6 @@
+// Verificación de variables de entorno al iniciar
+require('./env-check');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
